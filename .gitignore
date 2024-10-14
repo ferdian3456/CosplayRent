@@ -1,0 +1,5 @@
+To ignore goland setting
+/.idea
+
+To ignore env file (privacy)
+.env
