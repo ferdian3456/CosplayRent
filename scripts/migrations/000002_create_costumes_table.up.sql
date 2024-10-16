@@ -5,6 +5,6 @@ CREATE TABLE IF NOT EXISTS costumes(
     description text NOT NULL,
     price decimal(10,2) NOT NULL,
     picture varchar(255) NOT NULL,
-    available bool NOT NULL,
+    available bool NOT NULL DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )

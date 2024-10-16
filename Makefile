@@ -1,4 +1,4 @@
-export POSTGRES_URL='postgresql://ferdian:secret_password@localhost:5432/cosplayrent?sslmode=disable'
+include .env
 
 migrate-create:
 	@ migrate create -ext sql -dir scripts/migrations -seq $(name)
