@@ -63,8 +63,8 @@ func main() {
 	router.PanicHandler = exception.ErrorHandler
 
 	server := http.Server{
-		Addr:    "localhost:8081",
-		Handler: CORS(router),
+		Addr:    "localhost:8001",
+		Handler: router,
 	}
 
 	err := server.ListenAndServe()
