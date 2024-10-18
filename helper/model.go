@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"cosplayrent/model/web/costume"
 	"cosplayrent/model/web/user"
 )
 
@@ -23,4 +24,26 @@ func ToUserResponses(userResponse []user.UserResponse) []user.UserResponse {
 	}
 
 	return UserResponse
+}
+
+func ToCostumeResponses(costumeResponse costume.CostumeResponse) costume.CostumeResponse {
+	return costume.CostumeResponse{
+		Id:          costumeResponse.Id,
+		User_id:     costumeResponse.User_id,
+		Name:        costumeResponse.Name,
+		Description: costumeResponse.Description,
+		Price:       costumeResponse.Price,
+		Picture:     costumeResponse.Picture,
+		Available:   costumeResponse.Available,
+		Created_at:  costumeResponse.Created_at,
+	}
+}
+
+func ToCostumeResponse(costumeResponse []costume.CostumeResponse) []costume.CostumeResponse {
+	var CostumeResponse []costume.CostumeResponse
+	for _, costumeIteration := range costumeResponse {
+		CostumeResponse = append(CostumeResponse, ToCostumeResponses(costumeIteration))
+	}
+
+	return CostumeResponse
 }
