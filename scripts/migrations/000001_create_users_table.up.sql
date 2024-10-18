@@ -3,9 +3,9 @@ CREATE TABLE IF NOT EXISTS users(
     name varchar(20) NOT NULL,
     email varchar(30),
     address varchar(100),
-    password varchar(20) NOT NULL,
+    password varchar(60) NOT NULL,
     role int NOT NULL,
-    profile_picture varchar(255) NOT NULL,
+    profile_picture varchar(255),
     created_at timestamp NOT NULL,
-    updated_at timestamp NOT NULL DEFAULT NULL
+    updated_at timestamp
 );

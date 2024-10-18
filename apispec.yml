@@ -1,7 +1,7 @@
 openapi: '3.0.3'
 info:
   title: CosplayRent
-  description: API Documentation for CosplayRent website
+  description: API Documentation for CosplayRent
   version: '1.0'
 servers:
   - url: https://localhost:8080/api
@@ -78,7 +78,7 @@ paths:
                   status:
                     type: string
 
-  /user{user_uuid}:
+  /user/{user_uuid}:
     get:
       tags:
         - User
@@ -170,7 +170,7 @@ paths:
                   status:
                     type: string
 
-  /user/{user_uuid}:
+
     delete:
       tags:
         - User
@@ -302,7 +302,7 @@ paths:
 
       responses:
         '200':
-          description: Success to create costumes
+          description: Success to create costume
           content:
             application/json:
               schema:

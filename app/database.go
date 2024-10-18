@@ -23,7 +23,7 @@ func NewDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	dbUri := os.Getenv("DB_URI")
+	dbUri := os.Getenv("POSTGRES_URL")
 
 	db, err := sql.Open("pgx", dbUri)
 	if err != nil {
