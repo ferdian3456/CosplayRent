@@ -91,7 +91,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLogi
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"name":    userDomain.Name,
 		"role":    userDomain.Role,
-		"expired": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
+		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
 
 	tokenString, err := token.SignedString(secretKeyByte)
