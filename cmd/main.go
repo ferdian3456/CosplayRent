@@ -44,7 +44,7 @@ func main() {
 	router.PanicHandler = exception.ErrorHandler
 
 	server := http.Server{
-		Addr:    "localhost:3000",
+		Addr:    "localhost:8081",
 		Handler: router,
 	}
 
