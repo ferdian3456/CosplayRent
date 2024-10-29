@@ -10,7 +10,6 @@ func ToUserResponse(userResponse user.UserResponse) user.UserResponse {
 		Id:              userResponse.Id,
 		Name:            userResponse.Name,
 		Email:           userResponse.Email,
-		Role:            userResponse.Role,
 		Address:         userResponse.Address,
 		Profile_picture: userResponse.Profile_picture,
 		Created_at:      userResponse.Created_at,

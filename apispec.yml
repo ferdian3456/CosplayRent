@@ -20,7 +20,7 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                email:
                   type: string
                 password:
                   type: string
@@ -62,8 +62,6 @@ paths:
                   type: string
                 password:
                   type: string
-                role:
-                  type: integer
 
       responses:
         '200':
@@ -77,6 +75,11 @@ paths:
                     type: number
                   status:
                     type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
 
   /user/{user_uuid}:
     get:
@@ -116,8 +119,6 @@ paths:
                         type: string
                       address:
                         type: string
-                      role:
-                        type: integer
                       profile_picture:
                         type: string
                       created_at:
@@ -152,8 +153,6 @@ paths:
                   type: string
                 address:
                   type: string
-                role:
-                  type: integer
                 profile_picture:
                   type: string
 
@@ -228,8 +227,49 @@ paths:
                         type: string
                       address:
                         type: string
-                      role:
-                        type: integer
+                      profile_picture:
+                        type: string
+                      created_at:
+                        type: string
+
+  /token/{token}:
+    get:
+      tags:
+        - User
+      description: Send a token and get user data from it
+      summary: Send a token and get user data from it
+
+      parameters:
+        - name: token
+          in: path
+          description: You need to add parameter to the url to be able to post
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to send a token and get user data from it
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      address:
+                        type: string
                       profile_picture:
                         type: string
                       created_at:
@@ -472,6 +512,8 @@ paths:
                         type: string
                       rating:
                         type: integer
+                      created_at:
+                        type: string
 
     post:
       tags:
@@ -496,8 +538,6 @@ paths:
               properties:
                 user_id:
                   type: string
-                costume_id:
-                  type: integer
                 description:
                   type: string
                 rating:
@@ -582,348 +622,350 @@ paths:
                   status:
                     type: string
 
-  /shipping:
-    get:
-      tags:
-        - Shipping
-      description: Get all shipping data
-      summary: Get all shipping data
+#  /shipping:
+#    get:
+#      tags:
+#        - Shipping
+#      description: Get all shipping data
+#      summary: Get all shipping data
+#
+#      responses:
+#        '200':
+#          description: Success to get all shipping data
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#                  data:
+#                    type: object
+#                    properties:
+#                      id:
+#                        type: integer
+#                      name:
+#                        type: string
+#                      price:
+#                        type: integer
+#                      origin:
+#                        type: string
+#                      destination:
+#                        type: string
+#
+#    post:
+#      tags:
+#        - Shipping
+#      description: Create shipping data
+#      summary: Create shipping data
+#
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                name:
+#                  type: string
+#                price:
+#                  type: integer
+#                origin:
+#                  type: string
+#                destination:
+#                  type: string
+#
+#      responses:
+#        '200':
+#          description: Success to create shipping
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#
+#
+#  /shipping/{shipping_id}:
+#    get:
+#      tags:
+#        - Shipping
+#      description: Get shipping data by shipping id
+#      summary: Get shipping data by shipping id
+#
+#      parameters:
+#        - name: shipping_id
+#          in: path
+#          description: You need to add parameter to the url to be able to get
+#          required: true
+#          schema:
+#            type: integer
+#
+#      responses:
+#        '200':
+#          description: Success to get all shipping data
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#                  data:
+#                    type: object
+#                    properties:
+#                      id:
+#                        type: integer
+#                      name:
+#                        type: string
+#                      price:
+#                        type: integer
+#                      origin:
+#                        type: string
+#                      destination:
+#                        type: string
+#
+#    put:
+#      tags:
+#        - Shipping
+#      description: Update shipping data by shipping id
+#      summary: Update shipping data by shipping id
+#
+#      parameters:
+#        - name: shipping_id
+#          in: path
+#          description: You need to add parameter to the url to be able to put
+#          required: true
+#          schema:
+#            type: integer
+#
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                price:
+#                  type: integer
+#                origin:
+#                  type: string
+#                destination:
+#                  type: string
+#
+#      responses:
+#        '200':
+#          description: Success to update shipping
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#    delete:
+#      tags:
+#        - Shipping
+#      description: Delete shipping data by shipping id
+#      summary: Delete shipping data by shipping id
+#
+#      parameters:
+#        - name: shipping_id
+#          in: path
+#          description: You need to add parameter to the url to be able to put
+#          required: true
+#          schema:
+#            type: integer
+#
+#      responses:
+#        '200':
+#          description: Success to delete shipping
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#
+#  /paymentmethod:
+#    get:
+#      tags:
+#        - Payment Method
+#      description: Get all payment method
+#      summary: Get all payment method
+#
+#      responses:
+#        '200':
+#          description: Success to get all payment method
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#                  data:
+#                    type: object
+#                    properties:
+#                      id:
+#                        type: integer
+#                      name:
+#                        type: string
+#
+#    post:
+#      tags:
+#        - Payment Method
+#      description: Create payment method data
+#      summary: Create payment method data
+#
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                id:
+#                  type: integer
+#                name:
+#                  type: string
+#
+#      responses:
+#        '200':
+#          description: Success to get all payment method
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#                  data:
+#                    type: object
+#                    properties:
+#                      id:
+#                        type: integer
+#                      name:
+#                        type: string
+#
+#  /paymentmethod/{paymentmethod_id}:
+#    get:
+#      tags:
+#        - Payment Method
+#      description: Get payment method data by payment method id
+#      summary: Get payment method data by payment method id
+#
+#      parameters:
+#        - name: paymentmethod_id
+#          in: path
+#          description: You need to add parameter to the url to be able to get
+#          required: true
+#          schema:
+#            type: integer
+#
+#      responses:
+#        '200':
+#          description: Success to get all payment method
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#                  data:
+#                    type: object
+#                    properties:
+#                      id:
+#                        type: integer
+#                      name:
+#                        type: string
+#
+#    put:
+#      tags:
+#        - Payment Method
+#      description: Update payment method by payment method id
+#      summary: Update payment method by payment method id
+#
+#      parameters:
+#        - name: paymentmethod_id
+#          in: path
+#          description: You need to add parameter to the url to be able to get
+#          required: true
+#          schema:
+#            type: integer
+#
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              type: object
+#              properties:
+#                id:
+#                  type: integer
+#                name:
+#                  type: string
+#
+#      responses:
+#        '200':
+#          description: Success to get update payment method
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
+#
+#    delete:
+#      tags:
+#        - Payment Method
+#      description: Delete payment method by payment method id
+#      summary: Delete payment method by payment method id
+#
+#      parameters:
+#        - name: paymentmethod_id
+#          in: path
+#          description: You need to add parameter to the url to be able to get
+#          required: true
+#          schema:
+#            type: integer
+#
+#      responses:
+#        '200':
+#          description: Success to delete payment method
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
 
-      responses:
-        '200':
-          description: Success to get all shipping data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-                      price:
-                        type: integer
-                      origin:
-                        type: string
-                      destination:
-                        type: string
 
-    post:
-      tags:
-        - Shipping
-      description: Create shipping data
-      summary: Create shipping data
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                price:
-                  type: integer
-                origin:
-                  type: string
-                destination:
-                  type: string
-
-      responses:
-        '200':
-          description: Success to create shipping
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-
-  /shipping/{shipping_id}:
-    get:
-      tags:
-        - Shipping
-      description: Get shipping data by shipping id
-      summary: Get shipping data by shipping id
-
-      parameters:
-        - name: shipping_id
-          in: path
-          description: You need to add parameter to the url to be able to get
-          required: true
-          schema:
-            type: integer
-
-      responses:
-        '200':
-          description: Success to get all shipping data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-                      price:
-                        type: integer
-                      origin:
-                        type: string
-                      destination:
-                        type: string
-
-    put:
-      tags:
-        - Shipping
-      description: Update shipping data by shipping id
-      summary: Update shipping data by shipping id
-
-      parameters:
-        - name: shipping_id
-          in: path
-          description: You need to add parameter to the url to be able to put
-          required: true
-          schema:
-            type: integer
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                price:
-                  type: integer
-                origin:
-                  type: string
-                destination:
-                  type: string
-
-      responses:
-        '200':
-          description: Success to update shipping
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-    delete:
-      tags:
-        - Shipping
-      description: Delete shipping data by shipping id
-      summary: Delete shipping data by shipping id
-
-      parameters:
-        - name: shipping_id
-          in: path
-          description: You need to add parameter to the url to be able to put
-          required: true
-          schema:
-            type: integer
-
-      responses:
-        '200':
-          description: Success to delete shipping
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-  /paymentmethod:
-    get:
-      tags:
-        - Payment Method
-      description: Get all payment method
-      summary: Get all payment method
-
-      responses:
-        '200':
-          description: Success to get all payment method
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-
-    post:
-      tags:
-        - Payment Method
-      description: Create payment method data
-      summary: Create payment method data
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: integer
-                name:
-                  type: string
-
-      responses:
-        '200':
-          description: Success to get all payment method
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-
-  /paymentmethod/{paymentmethod_id}:
-    get:
-      tags:
-        - Payment Method
-      description: Get payment method data by payment method id
-      summary: Get payment method data by payment method id
-
-      parameters:
-        - name: paymentmethod_id
-          in: path
-          description: You need to add parameter to the url to be able to get
-          required: true
-          schema:
-            type: integer
-
-      responses:
-        '200':
-          description: Success to get all payment method
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      name:
-                        type: string
-
-    put:
-      tags:
-        - Payment Method
-      description: Update payment method by payment method id
-      summary: Update payment method by payment method id
-
-      parameters:
-        - name: paymentmethod_id
-          in: path
-          description: You need to add parameter to the url to be able to get
-          required: true
-          schema:
-            type: integer
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: integer
-                name:
-                  type: string
-
-      responses:
-        '200':
-          description: Success to get update payment method
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-    delete:
-      tags:
-        - Payment Method
-      description: Delete payment method by payment method id
-      summary: Delete payment method by payment method id
-
-      parameters:
-        - name: paymentmethod_id
-          in: path
-          description: You need to add parameter to the url to be able to get
-          required: true
-          schema:
-            type: integer
-
-      responses:
-        '200':
-          description: Success to delete payment method
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
   /order:
     get:
       tags:
@@ -952,16 +994,10 @@ paths:
                         type: string
                       costume_id:
                         type: integer
-                      shipping_id:
-                        type: integer
-                      payment_method_id:
-                        type: integer
                       total:
                         type: integer
                       status_payment:
-                        type: integer
-                      status_shipping:
-                        type: integer
+                        type: boolean
 
     post:
       tags:
@@ -979,10 +1015,6 @@ paths:
                 user_id:
                   type: string
                 costume_id:
-                  type: integer
-                shipping_id:
-                  type: integer
-                payment_method_id:
                   type: integer
                 total:
                   type: integer
@@ -1036,16 +1068,10 @@ paths:
                         type: string
                       costume_id:
                         type: integer
-                      shipping_id:
-                        type: integer
-                      payment_method_id:
-                        type: integer
                       total:
                         type: integer
                       status_payment:
-                        type: integer
-                      status_shipping:
-                        type: integer
+                        type: boolean
 
     put:
       tags:
@@ -1070,16 +1096,10 @@ paths:
               properties:
                 costume_id:
                   type: integer
-                shipping_id:
-                  type: integer
-                payment_method_id:
-                  type: integer
                 total:
                   type: integer
                 status_payment:
-                  type: integer
-                status_shipping:
-                  type: integer
+                  type: boolean
 
       responses:
         '200':
@@ -1110,7 +1130,7 @@ paths:
 
       responses:
         '200':
-          description: Success to delet order data
+          description: Success to delete order data
           content:
             application/json:
               schema:
@@ -1121,7 +1141,46 @@ paths:
                   status:
                     type: string
 
+  /order/{user_id}:
+    get:
+      tags:
+        - Order
+      description: Get all order data by user uuid
+      summary: Get all order data by user uuid
 
+      parameters:
+        - name: user_id
+          in: path
+          description: You need to add parameter to the url to be able to get
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to get all order data by user uuid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      user_id:
+                        type: string
+                      costume_id:
+                        type: integer
+                      total:
+                        type: integer
+                      status_payment:
+                        type: boolean
 
 
 #  /payment:

@@ -6,7 +6,9 @@ import (
 	"cosplayrent/model/web/user"
 	users "cosplayrent/service/user"
 	"github.com/julienschmidt/httprouter"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type UserControllerImpl struct {
@@ -23,11 +25,14 @@ func (controller UserControllerImpl) Register(writer http.ResponseWriter, reques
 	userCreateRequest := user.UserCreateRequest{}
 	helper.ReadFromRequestBody(request, &userCreateRequest)
 
-	controller.UserService.Create(request.Context(), userCreateRequest)
-
+	token := controller.UserService.Create(request.Context(), userCreateRequest)
+	tokenResponse := web.TokenResponse{
+		Token: token,
+	}
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",
+		Data:   tokenResponse,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
@@ -38,6 +43,7 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 	helper.ReadFromRequestBody(request, &userLoginRequest)
 
 	token := controller.UserService.Login(request.Context(), userLoginRequest)
+	log.Println(token)
 	tokenResponse := web.TokenResponse{
 		Token: token,
 	}
@@ -46,6 +52,8 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 		Status: "OK",
 		Data:   tokenResponse,
 	}
+	log.Println(token)
+	log.Println(tokenResponse.Token)
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
@@ -104,4 +112,34 @@ func (controller UserControllerImpl) Delete(writer http.ResponseWriter, request 
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserControllerImpl) VerifyAndRetrieve(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	tokenHeader := request.Header.Get("Authorization")
+	if tokenHeader == "" {
+		webResponsel := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "No authorization in header ",
+		}
+		helper.WriteToResponseBody(writer, webResponsel)
+		return
+	}
+
+	tokenAfter := strings.TrimPrefix(tokenHeader, "Bearer ")
+	if tokenAfter == "" {
+		webResponsel := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "No token after beerer ",
+		}
+		helper.WriteToResponseBody(writer, webResponsel)
+	}
+	userDomain, _ := controller.UserService.VerifyAndRetrieve(request.Context(), tokenAfter)
+
+	webResponsel := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userDomain,
+	}
+
+	helper.WriteToResponseBody(writer, webResponsel)
 }

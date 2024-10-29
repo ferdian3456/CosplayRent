@@ -8,8 +8,9 @@ import (
 	"cosplayrent/model/web/costume"
 	costumes "cosplayrent/repository/costume"
 	"database/sql"
-	"github.com/go-playground/validator"
 	"time"
+
+	"github.com/go-playground/validator"
 )
 
 type CostumeServiceImpl struct {
@@ -44,6 +45,7 @@ func (service *CostumeServiceImpl) Create(ctx context.Context, request costume.C
 		Description: request.Description,
 		Price:       request.Price,
 		Available:   request.Available,
+		Picture:     request.Picture,
 		Created_at:  &now,
 	}
 
@@ -84,6 +86,23 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 	return helper.ToCostumeResponse(costume)
 }
 
+func (service *CostumeServiceImpl) FindByName(ctx context.Context, name string) []costume.CostumeResponse {
+	var err error
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	costume, err := service.CostumeRepository.FindByName(ctx, tx, name)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return costume
+}
+
 func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest costume.CostumeUpdateRequest) {
 	tx, err := service.DB.Begin()
 	if err != nil {
@@ -94,7 +113,7 @@ func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest co
 
 	result, err1 := service.CostumeRepository.FindById(ctx, tx, costumeRequest.Id)
 	if err1 != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundError(err1.Error()))
 	}
 
 	updateRequest := costume.CostumeUpdateRequest{

@@ -14,4 +14,5 @@ type UserRepository interface {
 	FindAll(ctx context.Context, tx *sql.Tx) ([]user.UserResponse, error)
 	Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest)
 	Delete(ctx context.Context, tx *sql.Tx, uuid string)
+	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error)
 }

@@ -61,6 +61,29 @@ func (repository *CostumeRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 	return costumes, nil
 }
 
+func (repository *CostumeRepositoryImpl) FindByName(ctx context.Context, tx *sql.Tx, name string) ([]costume.CostumeResponse, error) {
+	query := "SELECT id,user_id,name,description,price,picture,available,created_at FROM costumes WHERE name like $1"
+	rows, err := tx.QueryContext(ctx, query, "%"+name+"%")
+	helper.PanicIfError(err)
+	hasData := false
+
+	defer rows.Close()
+
+	costumes := []costume.CostumeResponse{}
+	for rows.Next() {
+		costume := costume.CostumeResponse{}
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at)
+		helper.PanicIfError(err)
+		costumes = append(costumes, costume)
+		hasData = true
+	}
+	if hasData == false {
+		return costumes, errors.New("costume not found")
+	}
+
+	return costumes, nil
+}
+
 func (repository *CostumeRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, costume costume.CostumeUpdateRequest) {
 	query := "UPDATE costumes SET name=$2,description=$3,price=$4,picture=$5,available=$6  WHERE id=$1"
 	_, err := tx.ExecContext(ctx, query, costume.Id, costume.Name, costume.Description, costume.Price, costume.Picture, costume.Available)

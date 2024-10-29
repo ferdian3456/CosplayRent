@@ -4,6 +4,7 @@ import (
 	"cosplayrent/helper"
 	"cosplayrent/model/web"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"os"
@@ -59,6 +60,9 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 			writer.Write([]byte("Unauthorized: Invalid Authorization header format"))
 			return
 		}
+
+		var err error = godotenv.Load("../.env")
+		helper.PanicIfError(err)
 
 		secretKey := os.Getenv("SECRET_KEY")
 		secretKeyByte := []byte(secretKey)

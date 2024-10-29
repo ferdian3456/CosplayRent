@@ -11,5 +11,6 @@ type UserController interface {
 	FindByUUID(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	Delete(writer http.ResponseWriter, request *http.Request, paras httprouter.Params)
+	Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	VerifyAndRetrieve(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

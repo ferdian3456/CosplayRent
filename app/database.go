@@ -37,6 +37,7 @@ func NewDB() *sql.DB {
 	}
 
 	log.Println("Success to connect and ping database")
+	log.Println("Server is running on port 8081")
 
 	db.SetMaxOpenConns(5)
 	db.SetMaxIdleConns(20)

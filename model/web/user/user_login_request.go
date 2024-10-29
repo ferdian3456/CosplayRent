@@ -1,6 +1,6 @@
 package user
 
 type UserLoginRequest struct {
-	Name     string `validate:"required,min=5,max=20" json:"name"`
+	Email    string `validate:"required,min=5,max=20" json:"email"`
 	Password string `validate:"required,min=5,max=20" json:"password"`
 }
