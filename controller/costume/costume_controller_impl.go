@@ -60,14 +60,14 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 
 	var costumeFixPrice float64
 	costumeFixPrice, err = strconv.ParseFloat(costumePrice, 64)
-	costumeFinalImagePath := strings.TrimPrefix(costumeImagePath, "..")
-
+	costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
+	costumeFinalPath := fmt.Sprintf("https://cosplayrent.site" + costumeImageTrimPath)
 	costumeRequest := costume.CostumeCreateRequest{
 		User_id:     costume_userId,
 		Name:        costumeName,
 		Description: costumeDescription,
 		Price:       costumeFixPrice,
-		Picture:     costumeFinalImagePath,
+		Picture:     costumeFinalPath,
 	}
 
 	controller.CostumeService.Create(request.Context(), costumeRequest)

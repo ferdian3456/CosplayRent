@@ -3,3 +3,6 @@ To ignore goland setting
 
 To ignore env file (privacy)
 .env
+
+To ignore static image
+/static/costume/*
