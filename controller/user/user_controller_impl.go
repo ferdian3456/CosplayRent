@@ -5,10 +5,15 @@ import (
 	"cosplayrent/model/web"
 	"cosplayrent/model/web/user"
 	users "cosplayrent/service/user"
+	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
-	"log"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 type UserControllerImpl struct {
@@ -43,7 +48,6 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 	helper.ReadFromRequestBody(request, &userLoginRequest)
 
 	token := controller.UserService.Login(request.Context(), userLoginRequest)
-	log.Println(token)
 	tokenResponse := web.TokenResponse{
 		Token: token,
 	}
@@ -52,8 +56,6 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 		Status: "OK",
 		Data:   tokenResponse,
 	}
-	log.Println(token)
-	log.Println(tokenResponse.Token)
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
@@ -87,11 +89,55 @@ func (controller UserControllerImpl) FindAll(writer http.ResponseWriter, request
 func (controller UserControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID := params.ByName("userUUID")
 
-	userUpdateRequest := user.UserUpdateRequest{}
-	helper.ReadFromRequestBody(request, &userUpdateRequest)
+	err := request.ParseMultipartForm(10 << 20)
+	helper.PanicIfError(err)
 
-	userUpdateRequest.Id = userUUID
-	controller.UserService.Update(request.Context(), userUpdateRequest)
+	userName := request.FormValue("name")
+	userEmail := request.FormValue("email")
+	userAddress := request.FormValue("address")
+
+	var profilePicturePath *string
+
+	if file, handler, err := request.FormFile("profile_picture"); err == nil {
+		defer file.Close()
+
+		if _, err := os.Stat("../static/profile/"); os.IsNotExist(err) {
+			err = os.MkdirAll("../static/profile/", os.ModePerm)
+			helper.PanicIfError(err)
+		}
+
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		profileImagePath := filepath.Join("../static/profile/", fileName)
+
+		destFile, err := os.Create(profileImagePath)
+		helper.PanicIfError(err)
+
+		_, err = io.Copy(destFile, file)
+		helper.PanicIfError(err)
+
+		defer destFile.Close()
+
+		userImageTrimPath := strings.TrimPrefix(profileImagePath, "..")
+
+		err = godotenv.Load("../.env")
+		helper.PanicIfError(err)
+
+		imageEnv := os.Getenv("IMAGE_ENV")
+
+		userFinalPath := fmt.Sprintf(imageEnv + userImageTrimPath)
+		profilePicturePath = &userFinalPath
+	}
+
+	// Create the user update request
+	userRequest := user.UserUpdateRequest{
+		Id:              userUUID,
+		Name:            &userName,
+		Email:           &userEmail,
+		Address:         &userAddress,
+		Profile_picture: profilePicturePath,
+	}
+
+	controller.UserService.Update(request.Context(), userRequest)
 
 	webResponse := web.WebResponse{
 		Code:   200,

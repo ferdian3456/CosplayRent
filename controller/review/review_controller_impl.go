@@ -21,13 +21,8 @@ func NewReviewController(reviewService reviews.ReviewService) ReviewController {
 }
 
 func (controller ReviewControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	costumeID := params.ByName("costumeID")
-	costumeId, err := strconv.Atoi(costumeID)
-	helper.PanicIfError(err)
-
 	reviewCreateRequest := review.ReviewCreateRequest{}
 	helper.ReadFromRequestBody(request, &reviewCreateRequest)
-	reviewCreateRequest.Costume_id = costumeId
 	controller.ReviewService.Create(request.Context(), reviewCreateRequest)
 
 	webResponse := web.WebResponse{

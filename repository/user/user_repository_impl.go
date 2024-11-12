@@ -7,6 +7,7 @@ import (
 	"cosplayrent/model/web/user"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 type UserRepositoryImpl struct{}
@@ -46,9 +47,11 @@ func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx
 	defer rows.Close()
 
 	users := user.UserResponse{}
+	var createdAt time.Time
 	if rows.Next() {
 		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Created_at)
 		helper.PanicIfError(err)
+		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		return users, nil
 	} else {
 		return users, errors.New("user not found")
@@ -64,10 +67,12 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) (
 	defer rows.Close()
 
 	users := []user.UserResponse{}
+	var createdAt time.Time
 	for rows.Next() {
 		user := user.UserResponse{}
 		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &user.Created_at)
 		helper.PanicIfError(err)
+		user.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		users = append(users, user)
 		hasData = true
 	}
@@ -79,8 +84,8 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) (
 }
 
 func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest) {
-	query := "UPDATE users SET name=$2,email=$3,password=$4,address=$5,profile_picture=$6  WHERE id=$1"
-	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Address, user.Profile_picture)
+	query := "UPDATE users SET name=$2,email=$3,address=$4,profile_picture=$5,updated_at=$6  WHERE id=$1"
+	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Profile_picture, user.Update_at)
 	helper.PanicIfError(err)
 }
 
@@ -98,9 +103,11 @@ func (repository *UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.T
 	defer rows.Close()
 
 	users := user.UserResponse{}
+	var createdAt time.Time
 	if rows.Next() {
 		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Created_at)
 		helper.PanicIfError(err)
+		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		return users, nil
 	} else {
 		return users, errors.New("user not found")

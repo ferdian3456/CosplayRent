@@ -167,13 +167,15 @@ func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.Use
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	now := time.Now()
+
 	updateRequest := user.UserUpdateRequest{
 		Id:              result.Id,
 		Name:            userRequest.Name,
 		Email:           userRequest.Email,
 		Address:         userRequest.Address,
-		Password:        userRequest.Password,
 		Profile_picture: userRequest.Profile_picture,
+		Update_at:       &now,
 	}
 
 	service.UserRepository.Update(ctx, tx, updateRequest)

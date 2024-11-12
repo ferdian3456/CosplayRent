@@ -7,6 +7,7 @@ import (
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/review"
 	reviews "cosplayrent/repository/review"
+	"cosplayrent/repository/user"
 	"database/sql"
 	"github.com/go-playground/validator"
 	"time"
@@ -14,13 +15,15 @@ import (
 
 type ReviewServiceImpl struct {
 	ReviewRepository reviews.ReviewRepository
+	UserRepository   user.UserRepository
 	DB               *sql.DB
 	Validate         *validator.Validate
 }
 
-func NewReviewService(reviewRepository reviews.ReviewRepository, DB *sql.DB, validate *validator.Validate) ReviewService {
+func NewReviewService(reviewRepository reviews.ReviewRepository, userRepository user.UserRepositoryImpl, DB *sql.DB, validate *validator.Validate) ReviewService {
 	return &ReviewServiceImpl{
 		ReviewRepository: reviewRepository,
+		UserRepository:   &userRepository,
 		DB:               DB,
 		Validate:         validate,
 	}
@@ -61,6 +64,13 @@ func (service *ReviewServiceImpl) FindByCostumeId(ctx context.Context, id int) [
 	review, err = service.ReviewRepository.FindByCostumeId(ctx, tx, id)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	for i := range review {
+		userResult, err := service.UserRepository.FindByUUID(ctx, tx, review[i].User_id)
+		helper.PanicIfError(err)
+		review[i].Name = userResult.Name
+		review[i].Profile_picture = userResult.Profile_picture
 	}
 
 	return review

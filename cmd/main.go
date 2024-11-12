@@ -55,7 +55,7 @@ func main() {
 	costumeController := costume_controller.NewCostumeController(costumeService)
 
 	reviewRepository := review_repository.NewReviewRepository()
-	reviewService := review_service.NewReviewService(reviewRepository, DB, validate)
+	reviewService := review_service.NewReviewService(reviewRepository, user_repository.UserRepositoryImpl{}, DB, validate)
 	reviewController := review_controller.NewReviewController(reviewService)
 
 	orderRepository := order_repository.NewOrderRepository()
@@ -86,7 +86,7 @@ func main() {
 	router.DELETE("/api/costume/:costumeID", authMiddleware.ServeHTTP(costumeController.Delete))
 
 	router.GET("/api/review/:costumeID", reviewController.FindByCostumeId)
-	router.POST("/api/review/:costumeID", reviewController.Create)
+	router.POST("/api/review", reviewController.Create)
 
 	router.POST("/api/order", orderController.Create)
 

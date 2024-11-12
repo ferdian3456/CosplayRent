@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS reviews(
     description text NOT NULL,
     rating int NOT NULL DEFAULT NULL,
     created_at timestamp NOT NULL,
+    updated_at timestamp,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (costume_id) REFERENCES costumes(id) ON DELETE CASCADE
 )

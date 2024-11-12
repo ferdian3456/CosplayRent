@@ -6,6 +6,7 @@ import (
 	"cosplayrent/model/web/costume"
 	costumes "cosplayrent/service/costume"
 	"fmt"
+	"github.com/joho/godotenv"
 	"io"
 	"net/http"
 	"os"
@@ -29,15 +30,18 @@ func NewCostumeController(costumeService costumes.CostumeService) CostumeControl
 
 func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	err := request.ParseMultipartForm(10 << 20)
-	//parse the data with max size 10mb
 	helper.PanicIfError(err)
 
 	costume_userId := request.FormValue("user_id")
 	costumeName := request.FormValue("name")
 	costumeDescription := request.FormValue("description")
+	costumeBahan := request.FormValue("bahan")
+	costumeUkuran := request.FormValue("ukuran")
+	costumeBerat := request.FormValue("berat")
+	costumeKategori := request.FormValue("kategori")
 	costumePrice := request.FormValue("price")
 
-	file, handler, err := request.FormFile("picture")
+	file, handler, err := request.FormFile("costume_picture")
 	helper.PanicIfError(err)
 	defer file.Close()
 
@@ -61,11 +65,21 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 	var costumeFixPrice float64
 	costumeFixPrice, err = strconv.ParseFloat(costumePrice, 64)
 	costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
-	costumeFinalPath := fmt.Sprintf("https://cosplayrent.site" + costumeImageTrimPath)
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	costumeFinalPath := fmt.Sprintf(imageEnv + costumeImageTrimPath)
 	costumeRequest := costume.CostumeCreateRequest{
 		User_id:     costume_userId,
 		Name:        costumeName,
 		Description: costumeDescription,
+		Bahan:       costumeBahan,
+		Ukuran:      costumeUkuran,
+		Berat:       costumeBerat,
+		Kategori:    costumeKategori,
 		Price:       costumeFixPrice,
 		Picture:     costumeFinalPath,
 	}

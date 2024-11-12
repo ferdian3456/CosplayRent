@@ -9,7 +9,8 @@ import (
 	"errors"
 )
 
-type ReviewRepositoryImpl struct{}
+type ReviewRepositoryImpl struct {
+}
 
 func NewReviewRepository() ReviewRepository {
 	return &ReviewRepositoryImpl{}
