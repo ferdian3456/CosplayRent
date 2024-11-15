@@ -20,10 +20,10 @@ type ReviewServiceImpl struct {
 	Validate         *validator.Validate
 }
 
-func NewReviewService(reviewRepository reviews.ReviewRepository, userRepository user.UserRepositoryImpl, DB *sql.DB, validate *validator.Validate) ReviewService {
+func NewReviewService(reviewRepository reviews.ReviewRepository, userRepository user.UserRepository, DB *sql.DB, validate *validator.Validate) ReviewService {
 	return &ReviewServiceImpl{
 		ReviewRepository: reviewRepository,
-		UserRepository:   &userRepository,
+		UserRepository:   userRepository,
 		DB:               DB,
 		Validate:         validate,
 	}

@@ -179,6 +179,7 @@ func (controller UserControllerImpl) VerifyAndRetrieve(writer http.ResponseWrite
 		}
 		helper.WriteToResponseBody(writer, webResponsel)
 	}
+
 	userDomain, _ := controller.UserService.VerifyAndRetrieve(request.Context(), tokenAfter)
 
 	webResponsel := web.WebResponse{

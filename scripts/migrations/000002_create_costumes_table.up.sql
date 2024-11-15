@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS costumes(
     berat varchar(30) NOT NULL,
     kategori varchar(30) NOT NULL,
     price decimal(10,2) NOT NULL,
-    costume_picture varchar(255),
+    costume_picture varchar(255) NOT NULL,
     available bool DEFAULT TRUE,
     created_at timestamp NOT NULL,
     updated_at timestamp,

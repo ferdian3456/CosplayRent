@@ -65,7 +65,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request user.UserCre
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"name":    userDomain.Name,
+		"email":   userDomain.Email,
 		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
 
@@ -219,8 +219,6 @@ func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenStri
 			return user.UserResponse{}, fmt.Errorf("name claim does not exist")
 		}
 	}
-
-	//log.Println(name)
 
 	tx, err := service.DB.Begin()
 	if err != nil {

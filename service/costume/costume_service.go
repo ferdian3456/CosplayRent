@@ -12,4 +12,6 @@ type CostumeService interface {
 	FindByName(ctx context.Context, name string) []costume.CostumeResponse
 	Update(ctx context.Context, request costume.CostumeUpdateRequest)
 	Delete(ctx context.Context, id int)
+	FindByUserUUID(ctx context.Context, userUUID string) []costume.CostumeResponse
+	FindSellerCostumeByCostumeID(ctx context.Context, userUUID string, costumeID int) costume.CostumeResponse
 }

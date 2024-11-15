@@ -27,14 +27,20 @@ func ToUserResponses(userResponse []user.UserResponse) []user.UserResponse {
 
 func ToCostumeResponses(costumeResponse costume.CostumeResponse) costume.CostumeResponse {
 	return costume.CostumeResponse{
-		Id:          costumeResponse.Id,
-		User_id:     costumeResponse.User_id,
-		Name:        costumeResponse.Name,
-		Description: costumeResponse.Description,
-		Price:       costumeResponse.Price,
-		Picture:     costumeResponse.Picture,
-		Available:   costumeResponse.Available,
-		Created_at:  costumeResponse.Created_at,
+		Id:              costumeResponse.Id,
+		User_id:         costumeResponse.User_id,
+		Username:        costumeResponse.Username,
+		Profile_picture: costumeResponse.Profile_picture,
+		Name:            costumeResponse.Name,
+		Description:     costumeResponse.Description,
+		Bahan:           costumeResponse.Bahan,
+		Ukuran:          costumeResponse.Ukuran,
+		Berat:           costumeResponse.Berat,
+		Kategori:        costumeResponse.Kategori,
+		Price:           costumeResponse.Price,
+		Picture:         costumeResponse.Picture,
+		Available:       costumeResponse.Available,
+		Created_at:      costumeResponse.Created_at,
 	}
 }
 

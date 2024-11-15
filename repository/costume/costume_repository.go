@@ -14,4 +14,6 @@ type CostumeRepository interface {
 	FindAll(ctx context.Context, tx *sql.Tx) ([]costume.CostumeResponse, error)
 	Update(ctx context.Context, tx *sql.Tx, costume costume.CostumeUpdateRequest)
 	Delete(ctx context.Context, tx *sql.Tx, id int)
+	FindByUserUUID(ctx context.Context, tx *sql.Tx, userUUID string) ([]costume.CostumeResponse, error)
+	FindSellerCostumeByCostumeID(ctx context.Context, tx *sql.Tx, userUUID string, costumeID int) (costume.CostumeResponse, error)
 }

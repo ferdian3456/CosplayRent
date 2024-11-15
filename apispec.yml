@@ -299,7 +299,9 @@ paths:
                     properties:
                       id:
                         type: integer
-                      user_id:
+                      username:
+                        type: string
+                      profile_picture:
                         type: string
                       name:
                         type: string
@@ -369,6 +371,69 @@ paths:
                   status:
                     type: string
 
+  /seller/{user_uuid}/{costume_id}:
+    get:
+      tags:
+        - Costume
+      description: Get seller costume by seller uuid and costume id
+      summary: Get seller costume by seller uuid and costume id
+
+      parameters:
+        - name: user_uuid
+          in: path
+          description: You need to add parameter to the url to be able to get
+          required: true
+          schema:
+            type: string
+
+        - name: costume_id
+          in: path
+          description: You need to add parameter to the url to be able to get
+          required: true
+          schema:
+            type: integer
+
+
+      responses:
+        '200':
+          description: Success to get all costume data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      bahan:
+                        type: string
+                      ukuran:
+                        type: string
+                      berat:
+                        type: string
+                      kategori:
+                        type: string
+                      price:
+                        type: integer
+                      costume_picture:
+                        type: string
+                      available:
+                        type: boolean
+                      created_at:
+                        type: string
+                      updated_at:
+                        type: string
+
   /costumes/{costume_id}:
     get:
       tags:
@@ -401,11 +466,21 @@ paths:
                     properties:
                       id:
                         type: integer
-                      user_id:
+                      username:
+                        type: string
+                      profile_picture:
                         type: string
                       name:
                         type: string
                       description:
+                        type: string
+                      bahan:
+                        type: string
+                      ukuran:
+                        type: string
+                      berat:
+                        type: string
+                      kategori:
                         type: string
                       price:
                         type: integer
@@ -442,6 +517,14 @@ paths:
                 name:
                   type: string
                 description:
+                  type: string
+                bahan:
+                  type: string
+                ukuran:
+                  type: string
+                berat:
+                  type: string
+                kategori:
                   type: string
                 price:
                   type: integer
@@ -1229,6 +1312,41 @@ paths:
                         type: integer
                       status_payment:
                         type: boolean
+
+
+  /chat{sender:
+    get:
+      tags:
+        - Chat
+      description: Get chat history from an existing chat
+      summary: Get chat history from an existing chat
+
+      responses:
+        '200':
+          description: Success to get chat history from an existing chat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      receiver_id:
+                        type: string
+                      receiver_name:
+                        type: string
+                      receiver_profile_picture:
+                        type: string
+                      message:
+                        type: string
+                      created_at:
+                        type: boolean
+
 
 
 #  /payment:

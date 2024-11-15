@@ -7,6 +7,7 @@ import (
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/costume"
 	costumes "cosplayrent/repository/costume"
+	"cosplayrent/repository/user"
 	"database/sql"
 	"time"
 
@@ -15,13 +16,15 @@ import (
 
 type CostumeServiceImpl struct {
 	CostumeRepository costumes.CostumeRepository
+	UserRepository    user.UserRepository
 	DB                *sql.DB
 	Validate          *validator.Validate
 }
 
-func NewCostumeService(costumeRepository costumes.CostumeRepository, DB *sql.DB, validate *validator.Validate) CostumeService {
+func NewCostumeService(costumeRepository costumes.CostumeRepository, userRepository user.UserRepository, DB *sql.DB, validate *validator.Validate) CostumeService {
 	return &CostumeServiceImpl{
 		CostumeRepository: costumeRepository,
+		UserRepository:    userRepository,
 		DB:                DB,
 		Validate:          validate,
 	}
@@ -70,6 +73,12 @@ func (service *CostumeServiceImpl) FindById(ctx context.Context, id int) costume
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	user, err := service.UserRepository.FindByUUID(ctx, tx, costume.User_id)
+	helper.PanicIfError(err)
+
+	costume.Username = user.Name
+	costume.Profile_picture = user.Profile_picture
+
 	return costume
 }
 
@@ -85,6 +94,13 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 	costume, err := service.CostumeRepository.FindAll(ctx, tx)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	for i := range costume {
+		userResult, err := service.UserRepository.FindByUUID(ctx, tx, costume[i].User_id)
+		helper.PanicIfError(err)
+		costume[i].Username = userResult.Name
+		costume[i].Profile_picture = userResult.Profile_picture
 	}
 
 	return helper.ToCostumeResponse(costume)
@@ -120,13 +136,20 @@ func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest co
 		panic(exception.NewNotFoundError(err1.Error()))
 	}
 
+	now := time.Now()
+
 	updateRequest := costume.CostumeUpdateRequest{
 		Id:          result.Id,
 		Name:        costumeRequest.Name,
 		Description: costumeRequest.Description,
+		Bahan:       costumeRequest.Bahan,
+		Ukuran:      costumeRequest.Ukuran,
+		Berat:       costumeRequest.Berat,
+		Kategori:    costumeRequest.Kategori,
 		Price:       costumeRequest.Price,
 		Picture:     costumeRequest.Picture,
 		Available:   costumeRequest.Available,
+		Update_at:   &now,
 	}
 
 	service.CostumeRepository.Update(ctx, tx, updateRequest)
@@ -141,4 +164,38 @@ func (service *CostumeServiceImpl) Delete(ctx context.Context, id int) {
 	defer helper.CommitOrRollback(tx)
 
 	service.CostumeRepository.Delete(ctx, tx, id)
+}
+
+func (service *CostumeServiceImpl) FindByUserUUID(ctx context.Context, userUUID string) []costume.CostumeResponse {
+	var err error
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	costume, err := service.CostumeRepository.FindByUserUUID(ctx, tx, userUUID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return costume
+}
+
+func (service *CostumeServiceImpl) FindSellerCostumeByCostumeID(ctx context.Context, userUUID string, costumeID int) costume.CostumeResponse {
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	costume := costume.CostumeResponse{}
+	costume, err = service.CostumeRepository.FindSellerCostumeByCostumeID(ctx, tx, userUUID, costumeID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return costume
 }
