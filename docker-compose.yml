@@ -13,6 +13,16 @@ services:
         target: "/var/lib/pgsql/data"
         read_only: false
 
+  memcachedb:
+    image: memcached:latest
+    container_name: memcached_db
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
+    ports:
+      - "11211:11211"
+
 volumes:
   db-volume:
     name: postgresql_volume

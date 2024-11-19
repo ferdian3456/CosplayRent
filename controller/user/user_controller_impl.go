@@ -128,7 +128,6 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 		profilePicturePath = &userFinalPath
 	}
 
-	// Create the user update request
 	userRequest := user.UserUpdateRequest{
 		Id:              userUUID,
 		Name:            &userName,
@@ -165,22 +164,13 @@ func (controller UserControllerImpl) VerifyAndRetrieve(writer http.ResponseWrite
 	if tokenHeader == "" {
 		webResponsel := web.WebResponse{
 			Code:   http.StatusBadRequest,
-			Status: "No authorization in header ",
+			Status: "No Authorization in header ",
 		}
 		helper.WriteToResponseBody(writer, webResponsel)
 		return
 	}
 
-	tokenAfter := strings.TrimPrefix(tokenHeader, "Bearer ")
-	if tokenAfter == "" {
-		webResponsel := web.WebResponse{
-			Code:   http.StatusBadRequest,
-			Status: "No token after beerer ",
-		}
-		helper.WriteToResponseBody(writer, webResponsel)
-	}
-
-	userDomain, _ := controller.UserService.VerifyAndRetrieve(request.Context(), tokenAfter)
+	userDomain, _ := controller.UserService.VerifyAndRetrieve(request.Context(), tokenHeader)
 
 	webResponsel := web.WebResponse{
 		Code:   200,

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS chats(
-    id int serial PRIMARY KEY,
+    id serial PRIMARY KEY,
     sender uuid NOT NULL,
     receiver uuid NOT NULL,
     message text NOT NULL,

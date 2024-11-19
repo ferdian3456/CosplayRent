@@ -22,7 +22,7 @@ func (repository *UserRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, us
 }
 
 func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, name string) (domain.User, error) {
-	query := "SELECT email,password FROM users where email=$1"
+	query := "SELECT id,email,password FROM users where email=$1"
 	rows, err := tx.QueryContext(ctx, query, name)
 	helper.PanicIfError(err)
 
@@ -30,7 +30,7 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, nam
 
 	users := domain.User{}
 	if rows.Next() {
-		err := rows.Scan(&users.Email, &users.Password)
+		err := rows.Scan(&users.Id, &users.Email, &users.Password)
 		helper.PanicIfError(err)
 		return users, nil
 	} else {

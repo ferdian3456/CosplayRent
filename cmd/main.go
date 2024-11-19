@@ -34,7 +34,7 @@ func CORS(next http.Handler) http.Handler {
 		// Set CORS headers
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With,Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization, Token")
 		w.Header().Set("Access-Control-Allow-Credentials", "True")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -47,6 +47,7 @@ func CORS(next http.Handler) http.Handler {
 
 func main() {
 	DB := app.NewDB()
+	memcacheClient := app.NewClient()
 	validate := validator.New()
 	userRepository := user_repository.NewUserRepository()
 	userService := user_service.NewUserService(userRepository, DB, validate)
@@ -69,7 +70,7 @@ func main() {
 	midtransService := midtrans_service.NewMidtransService(midtransRepository, DB, validate)
 	midtransController := midtrans_controller.NewMidtransController(midtransService)
 
-	rajaongkirService := rajaongkir_service.NewRajaOngkirService(validate)
+	rajaongkirService := rajaongkir_service.NewRajaOngkirService(validate, memcacheClient)
 	rajaongkirController := rajaongkir_controller.NewRajaOngkirController(rajaongkirService)
 
 	router := httprouter.New()

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"os"
 	"time"
 )
@@ -65,7 +66,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request user.UserCre
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":   userDomain.Email,
+		"id":      userDomain.Id,
 		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
 
@@ -108,7 +109,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLogi
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":   user.Email,
+		"id":      user.Id,
 		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
 
@@ -207,18 +208,20 @@ func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenStri
 		return user.UserResponse{}, errors.New("token is not valid")
 	}
 
-	var email string
+	var id string
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if val, exists := claims["email"]; exists {
+		if val, exists := claims["id"]; exists {
 			if strVal, ok := val.(string); ok {
-				email = strVal
+				id = strVal
 			} else {
-				return user.UserResponse{}, fmt.Errorf("name claim is not a string")
+				return user.UserResponse{}, fmt.Errorf("id claim is not a string")
 			}
 		} else {
-			return user.UserResponse{}, fmt.Errorf("name claim does not exist")
+			return user.UserResponse{}, fmt.Errorf("id claim does not exist")
 		}
 	}
+
+	log.Println(id)
 
 	tx, err := service.DB.Begin()
 	if err != nil {
@@ -226,7 +229,7 @@ func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenStri
 	}
 
 	defer helper.CommitOrRollback(tx)
-	userDomain, err := service.UserRepository.FindByEmail(ctx, tx, email)
+	userDomain, err := service.UserRepository.FindByUUID(ctx, tx, id)
 	helper.PanicIfError(err)
 
 	return userDomain, nil

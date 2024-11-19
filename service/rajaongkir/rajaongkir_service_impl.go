@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/go-playground/validator"
 	"github.com/joho/godotenv"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,17 +24,31 @@ const (
 )
 
 type RajaOngkirServiceImpl struct {
-	validate *validator.Validate
+	validate       *validator.Validate
+	memcacheClient *memcache.Client
 }
 
-func NewRajaOngkirService(validate *validator.Validate) *RajaOngkirServiceImpl {
+func NewRajaOngkirService(validate *validator.Validate, client *memcache.Client) *RajaOngkirServiceImpl {
 	return &RajaOngkirServiceImpl{
-		validate: validate,
+		validate:       validate,
+		memcacheClient: client,
 	}
 }
 
 func (service *RajaOngkirServiceImpl) FindProvince(ctx context.Context) (rajaongkir.RajaOngkirProvinceResponse, error) {
-	err := godotenv.Load("../.env")
+	cachedData, err := service.memcacheClient.Get("RajaOngkirProvinceCache")
+	if err == nil && cachedData != nil {
+		log.Println("Hit province cache")
+
+		var cachedResponse rajaongkir.RajaOngkirProvinceResponse
+		err := json.Unmarshal(cachedData.Value, &cachedResponse)
+		if err != nil {
+			return rajaongkir.RajaOngkirProvinceResponse{}, errors.New("failed to unmarshal cached data")
+		}
+		return cachedResponse, nil
+	}
+
+	err = godotenv.Load("../.env")
 	helper.PanicIfError(err)
 
 	rajaongkirAPIKEY := os.Getenv("RAJAONGKIR_SERVER_KEY")
@@ -62,11 +78,40 @@ func (service *RajaOngkirServiceImpl) FindProvince(ctx context.Context) (rajaong
 		return rajaongkir.RajaOngkirProvinceResponse{}, errors.New("failed to unmarshal response body from RajaOngkir response")
 	}
 
+	cacheData, err := json.Marshal(rajaongkirProvinceResponse)
+	if err == nil {
+		err = service.memcacheClient.Set(&memcache.Item{
+			Key:   "RajaOngkirProvinceCache",
+			Value: cacheData,
+		})
+		if err != nil {
+			log.Println("Failed to set cache", err)
+		}
+		log.Println("Success to create cache for RajaOngkirProvince's response")
+	}
+
 	return rajaongkirProvinceResponse, nil
 }
 
 func (service *RajaOngkirServiceImpl) FindCity(ctx context.Context, provinceID string) (rajaongkir.RajaOngkirCityResponse, error) {
-	err := godotenv.Load("../.env")
+	cacheKey := fmt.Sprintf("RajaOngkirCityCache_%s", provinceID)
+
+	cachedData, err := service.memcacheClient.Get(cacheKey)
+	if err == nil && cachedData != nil {
+		log.Println("Hit city cache for province:", provinceID)
+
+		var cachedResponse rajaongkir.RajaOngkirCityResponse
+		err := json.Unmarshal(cachedData.Value, &cachedResponse)
+		if err != nil {
+			return rajaongkir.RajaOngkirCityResponse{}, errors.New("failed to unmarshal cached data")
+		}
+
+		return cachedResponse, nil
+	}
+
+	log.Println("Cache miss for province:", provinceID)
+
+	err = godotenv.Load("../.env")
 	helper.PanicIfError(err)
 
 	rajaongkirAPIKEY := os.Getenv("RAJAONGKIR_SERVER_KEY")
@@ -93,6 +138,17 @@ func (service *RajaOngkirServiceImpl) FindCity(ctx context.Context, provinceID s
 	err = json.Unmarshal(body, &rajaOngkirCityResponse)
 	if err != nil {
 		return rajaongkir.RajaOngkirCityResponse{}, errors.New("failed to unmarshal response body from RajaOngkir response")
+	}
+
+	cacheData, err := json.Marshal(rajaOngkirCityResponse)
+	if err == nil {
+		err = service.memcacheClient.Set(&memcache.Item{
+			Key:   cacheKey,
+			Value: cacheData,
+		})
+		if err != nil {
+			log.Println("Failed to set cache for province:", provinceID, err)
+		}
 	}
 
 	return rajaOngkirCityResponse, nil

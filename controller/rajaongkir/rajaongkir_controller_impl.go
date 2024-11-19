@@ -20,12 +20,12 @@ func NewRajaOngkirController(rajaongkirService rajaongkirs.RajaOngkirService) Ra
 }
 
 func (controller RajaOngkirControllerImpl) FindProvince(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-
 	rajaOngkirProvinceResponse, err := controller.RajaOngkirService.FindProvince(request.Context())
 	var data interface{}
 	if err != nil {
 		data = err
 	} else {
+
 		data = rajaOngkirProvinceResponse.Rajaongkir.Results
 	}
 
@@ -39,7 +39,7 @@ func (controller RajaOngkirControllerImpl) FindProvince(writer http.ResponseWrit
 }
 
 func (controller RajaOngkirControllerImpl) FindCity(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	provinceID := params.ByName("province_id")
+	provinceID := params.ByName("provinceID")
 
 	rajaOngkirCityResponse, err := controller.RajaOngkirService.FindCity(request.Context(), provinceID)
 	var data interface{}
