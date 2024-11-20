@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS reviews(
     user_id uuid NOT NULL,
     costume_id int NOT NULL,
     description text NOT NULL,
+    review_picture varchar(255) NOT NULL,
     rating int NOT NULL DEFAULT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp,

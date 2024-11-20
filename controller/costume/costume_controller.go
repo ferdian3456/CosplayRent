@@ -15,4 +15,5 @@ type CostumeController interface {
 	Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindByUserUUID(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindSellerCostumeByCostumeID(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	FindSellerCostume(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

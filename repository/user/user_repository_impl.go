@@ -7,6 +7,7 @@ import (
 	"cosplayrent/model/web/user"
 	"database/sql"
 	"errors"
+	"log"
 )
 
 type UserRepositoryImpl struct{}
@@ -39,6 +40,7 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, nam
 }
 
 func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx, uuid string) (user.UserResponse, error) {
+	log.Printf("User with uuid: %s enter User Repository: FindByUUID", uuid)
 	query := "SELECT id,name,email,address,profile_picture,created_at FROM users where id=$1"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
@@ -55,7 +57,9 @@ func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx
 	}
 }
 
-func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) ([]user.UserResponse, error) {
+func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserResponse, error) {
+	log.Printf("User with uuid: %s enter User Repository: FindAll", uuid)
+
 	query := "SELECT id,name,email,address,profile_picture,created_at FROM users"
 	rows, err := tx.QueryContext(ctx, query)
 	helper.PanicIfError(err)
@@ -78,7 +82,9 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) (
 	return users, nil
 }
 
-func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest) {
+func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest, uuid string) {
+	log.Printf("User with uuid: %s enter User Repository: Update", uuid)
+
 	if user.Profile_picture == nil {
 		query := "UPDATE users SET name=$2,email=$3,address=$4,updated_at=$5  WHERE id=$1"
 		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Update_at)
@@ -91,6 +97,7 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 }
 
 func (repository *UserRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, uuid string) {
+	log.Printf("User with uuid: %s enter User Repository: Delete", uuid)
 	query := "DELETE FROM users WHERE id=$1"
 	_, err := tx.ExecContext(ctx, query, uuid)
 	helper.PanicIfError(err)

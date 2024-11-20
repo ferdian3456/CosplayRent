@@ -11,8 +11,8 @@ type UserRepository interface {
 	Create(ctx context.Context, tx *sql.Tx, user domain.User)
 	Login(ctx context.Context, tx *sql.Tx, name string) (domain.User, error)
 	FindByUUID(ctx context.Context, tx *sql.Tx, uuid string) (user.UserResponse, error)
-	FindAll(ctx context.Context, tx *sql.Tx) ([]user.UserResponse, error)
-	Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest)
+	FindAll(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserResponse, error)
+	Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest, uuid string)
 	Delete(ctx context.Context, tx *sql.Tx, uuid string)
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error)
 }

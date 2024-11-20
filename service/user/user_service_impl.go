@@ -122,6 +122,8 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLogi
 }
 
 func (service *UserServiceImpl) FindByUUID(ctx context.Context, uuid string) user.UserResponse {
+	log.Printf("User with uuid: %s enter User Service: FindByUUID", uuid)
+
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -138,7 +140,9 @@ func (service *UserServiceImpl) FindByUUID(ctx context.Context, uuid string) use
 	return user
 }
 
-func (service *UserServiceImpl) FindAll(ctx context.Context) []user.UserResponse {
+func (service *UserServiceImpl) FindAll(ctx context.Context, uuid string) []user.UserResponse {
+	log.Printf("User with uuid: %s enter User Controller: FindAll", uuid)
+
 	var err error
 	tx, err := service.DB.Begin()
 	if err != nil {
@@ -147,7 +151,7 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) []user.UserResponse
 
 	defer helper.CommitOrRollback(tx)
 
-	user, err := service.UserRepository.FindAll(ctx, tx)
+	user, err := service.UserRepository.FindAll(ctx, tx, uuid)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
@@ -155,7 +159,12 @@ func (service *UserServiceImpl) FindAll(ctx context.Context) []user.UserResponse
 	return helper.ToUserResponses(user)
 }
 
-func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.UserUpdateRequest) {
+func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.UserUpdateRequest, uuid string) {
+	log.Printf("User with uuid: %s enter User Service: Update", uuid)
+
+	err := service.Validate.Struct(userRequest)
+	helper.PanicIfError(err)
+
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -179,10 +188,12 @@ func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.Use
 		Update_at:       &now,
 	}
 
-	service.UserRepository.Update(ctx, tx, updateRequest)
+	service.UserRepository.Update(ctx, tx, updateRequest, uuid)
 }
 
 func (service *UserServiceImpl) Delete(ctx context.Context, uuid string) {
+	log.Printf("User with uuid: %s enter User Service: Delete", uuid)
+
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))

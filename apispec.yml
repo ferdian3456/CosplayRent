@@ -81,17 +81,17 @@ paths:
                       token:
                         type: string
 
-  /user/{user_uuid}:
+  /userdetail:
     get:
       tags:
         - User
-      description: Get all user data by user uuid
-      summary: Get all user data by user uuid
+      description: Get all user detail data by user uuid,  user uuid is retrieved from token that was provided in Authorization
+      summary: Get all user detail data by user uuid
 
       parameters:
-        - name: user_uuid
-          in: path
-          description: You need to add parameter to the url to be able to update
+        - name: Authorization
+          in: header
+          description: You need to add Authorization in the header
           required: true
           schema:
             type: string
@@ -127,13 +127,13 @@ paths:
     put:
       tags:
         - User
-      description: Update user account by user uuid
+      description: Update user account by user uuid,  user uuid is retrieved from token that was provided in Authorization
       summary: Update user account by user uuid
 
       parameters:
-        - name: user_uuid
-          in: path
-          description: You need to add parameter to the url to be able to update
+        - name: Authorization
+          in: header
+          description: You need to add Authorization in the header
           required: true
           schema:
             type: string
@@ -167,17 +167,17 @@ paths:
                   status:
                     type: string
 
-
+  /useraccount:
     delete:
       tags:
         - User
-      description: Delete user account by user uuid
+      description: Delete user account by user uuid, user uuid is retrieved from token that was provided in Authorization
       summary: Delete user account by user uuid
 
       parameters:
-        - name: user_uuid
-          in: path
-          description: You need to add parameter to the url to be able to delete
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the header to be able to delete
           required: true
           schema:
             type: string
@@ -232,48 +232,6 @@ paths:
                       updated_at:
                         type: string
 
-  /verifytoken:
-    get:
-      tags:
-        - User
-      description: Send a token and get user data from it
-      summary: Send a token and get user data from it
-
-      parameters:
-        - name: token
-          in: header
-          description: You need to add parameter to the url to be able to post
-          required: true
-          schema:
-            type: string
-
-      responses:
-        '200':
-          description: Success to send a token and get user data from it
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      name:
-                        type: string
-                      email:
-                        type: string
-                      address:
-                        type: string
-                      profile_picture:
-                        type: string
-                      created_at:
-                        type: string
 
   /costumes:
     get:
@@ -332,6 +290,15 @@ paths:
       description: Create a costume
       summary: Create a costume
 
+      parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the header to be able to post data
+          required: true
+          schema:
+            type: string
+
+
       requestBody:
         required: true
         content:
@@ -339,8 +306,6 @@ paths:
             schema:
               type: object
               properties:
-                user_id:
-                  type: string
                 name:
                   type: string
                 description:
@@ -371,28 +336,20 @@ paths:
                   status:
                     type: string
 
-  /seller/{user_uuid}/{costume_id}:
+  /seller:
     get:
       tags:
         - Costume
-      description: Get seller costume by seller uuid and costume id
-      summary: Get seller costume by seller uuid and costume id
+      description: Get all seller costume by user uuid
+      summary: Get all seller costume by user uuid
 
       parameters:
-        - name: user_uuid
+        - name: Authorization
           in: path
-          description: You need to add parameter to the url to be able to get
+          description: You need to add parameter to the header to be able to get
           required: true
           schema:
             type: string
-
-        - name: costume_id
-          in: path
-          description: You need to add parameter to the url to be able to get
-          required: true
-          schema:
-            type: integer
-
 
       responses:
         '200':
@@ -433,6 +390,155 @@ paths:
                         type: string
                       updated_at:
                         type: string
+
+  /seller/{costume_id}:
+    get:
+      tags:
+        - Costume
+      description: Get seller costume by costume id
+      summary: Get seller costume by costume id
+
+      parameters:
+        - name: Authorization
+          in: path
+          description: You need to add parameter to the header to be able to get
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to get all costume data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      bahan:
+                        type: string
+                      ukuran:
+                        type: string
+                      berat:
+                        type: string
+                      kategori:
+                        type: string
+                      price:
+                        type: integer
+                      costume_picture:
+                        type: string
+                      available:
+                        type: boolean
+                      created_at:
+                        type: string
+                      updated_at:
+                        type: string
+
+    put:
+      tags:
+        - Costume
+      description: Update costume by costume id
+      summary: Update costume by costume id
+
+      parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the header to be able to update
+          required: true
+          schema:
+            type: string
+
+        - name: costume_id
+          in: path
+          description: You need to add costume_id to the path of url
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                bahan:
+                  type: string
+                ukuran:
+                  type: string
+                berat:
+                  type: string
+                kategori:
+                  type: string
+                price:
+                  type: integer
+                costume_picture:
+                  type: string
+                available:
+                  type: boolean
+
+      responses:
+        '200':
+          description: Success to update costume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+
+    delete:
+      tags:
+        - Costume
+      description: Delete costume by costume id
+      summary: Delete costume by costume id
+
+      parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the url to be able to delete
+          required: true
+          schema:
+            type: string
+
+        - name: costume_id
+          in: path
+          description: You need to add costume_id to the path of url
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to delete costume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
 
   /costumes/{costume_id}:
     get:
@@ -493,123 +599,8 @@ paths:
                       updated_at:
                         type: string
 
-    put:
-      tags:
-        - Costume
-      description: Update costume by costume id
-      summary: Update costume by costume id
 
-      parameters:
-        - name: costume_id
-          in: path
-          description: You need to add parameter to the url to be able to update
-          required: true
-          schema:
-            type: integer
-
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                bahan:
-                  type: string
-                ukuran:
-                  type: string
-                berat:
-                  type: string
-                kategori:
-                  type: string
-                price:
-                  type: integer
-                costume_picture:
-                  type: string
-                available:
-                  type: boolean
-
-      responses:
-        '200':
-          description: Success to update costume
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-    delete:
-      tags:
-        - Costume
-      description: Delete costume by costume id
-      summary: Delete costume by costume id
-
-      parameters:
-        - name: costume_id
-          in: path
-          description: You need to add parameter to the url to be able to delete
-          required: true
-          schema:
-            type: integer
-
-      responses:
-        '200':
-          description: Success to delete costume
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-  /review:
-    post:
-      tags:
-        - Review
-      description: Create a review by costume id
-      summary: Create a review by costume id
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-                costume_id:
-                  type: string
-                description:
-                  type: string
-                rating:
-                  type: integer
-
-      responses:
-        '200':
-          description: Success to delete costume
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-  /review/{costume_id}:
+  /costume/{costume_id}/review:
     get:
       tags:
         - Review
@@ -650,7 +641,137 @@ paths:
                       created_at:
                         type: string
 
+  /review:
+    get:
+      tags:
+        - Review
+      description: Get your list review by using user uuid
+      summary: Get your own review by using user uuid
+
+      parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the header
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to update review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      costume_name:
+                        type: string
+                      costume_picture:
+                        type: string
+                      ukuran:
+                        type: string
+                      rating:
+                        type: string
+                      description:
+                        type: string
+                      created_at:
+                        type: string
+
+    post:
+      tags:
+        - Review
+      description: Create a review by costume id
+      summary: Create a review by costume id
+
+      parameters:
+        - name: Authorization
+          in: path
+          description: You need to add Authorization to the header to be able to post data
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                costume_id:
+                  type: string
+                review_picture:
+                  type: string
+                description:
+                  type: string
+                rating:
+                  type: integer
+
+      responses:
+        '200':
+          description: Success to delete costume
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+
+
+
   /review/{review_id}:
+    get:
+      tags:
+        - Review
+      description: Get your list review by using user uuid
+      summary: Get your own review by using user uuid
+
+      parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to the header
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success to get review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      costume_name:
+                        type: string
+                      rating:
+                        type: integer
+                      description:
+                        type: string
+                      created_at:
+                        type: string
+
     put:
       tags:
         - Review
@@ -658,20 +779,29 @@ paths:
       summary: Update review by review id
 
       parameters:
+        - name: Authorization
+          in: header
+          description: You need to add Authorization to header
+          required: true
+          schema:
+            type: string
+
         - name: review_id
           in: path
           description: You need to add parameter to the url to be able to put
           required: true
           schema:
-            type: integer
+            type: number
 
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
+                review_picture:
+                  type: string
                 description:
                   type: string
                 rating:
@@ -696,6 +826,13 @@ paths:
       summary: Delete review by review id
 
       parameters:
+        - name: Authorization
+          in: path
+          description: You need to add Authorization to the header
+          required: true
+          schema:
+            type: string
+
         - name: review_id
           in: path
           description: You need to add parameter to the url to be able to delete
@@ -1101,6 +1238,14 @@ paths:
       description: Create order data
       summary: Create order data
 
+      parameters:
+        - name: Authorization
+          in: path
+          description: You need to add Authorization to the header
+          required: true
+          schema:
+            type: string
+
       requestBody:
         required: true
         content:
@@ -1108,8 +1253,6 @@ paths:
             schema:
               type: object
               properties:
-                user_id:
-                  type: string
                 costume_id:
                   type: integer
                 total:
@@ -1243,36 +1386,36 @@ paths:
                   status:
                     type: string
 
-  /cancelorder/{order_id}:
-    put:
-      tags:
-        - Order
-      description: Update order data by order uuid to cancel order
-      summary: Update order data by order uuid to cancel order
+#  /cancelorder/{order_id}:
+#    put:
+#      tags:
+#        - Order
+#      description: Update order data by order uuid to cancel order
+#      summary: Update order data by order uuid to cancel order
+#
+#      parameters:
+#        - name: order_id
+#          in: path
+#          description: You need to add parameter to the url to be able to put
+#          required: true
+#          schema:
+#            type: string
+#
+#      responses:
+#        '200':
+#          description: Success to update order data
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  code:
+#                    type: number
+#                  status:
+#                    type: string
 
-      parameters:
-        - name: order_id
-          in: path
-          description: You need to add parameter to the url to be able to put
-          required: true
-          schema:
-            type: string
 
-      responses:
-        '200':
-          description: Success to update order data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: number
-                  status:
-                    type: string
-
-
-  /order/{user_id}:
+  /history/order:
     get:
       tags:
         - Order
@@ -1280,8 +1423,8 @@ paths:
       summary: Get all order data by user uuid
 
       parameters:
-        - name: user_id
-          in: path
+        - name: Authorization
+          in: header
           description: You need to add parameter to the url to be able to get
           required: true
           schema:

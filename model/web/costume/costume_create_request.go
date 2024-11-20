@@ -5,7 +5,7 @@ import (
 )
 
 type CostumeCreateRequest struct {
-	User_id     string  `validate:"required,min=36,max=36" json:"user_id"`
+	User_id     string
 	Name        string  `validate:"required,min=5,max=30" json:"name"`
 	Description string  `validate:"required,min=5,max=1000" json:"description"`
 	Bahan       string  `validate:"required,min=3,max=30" json:"bahan"`

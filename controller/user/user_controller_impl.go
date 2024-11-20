@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -61,7 +62,18 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 }
 
 func (controller UserControllerImpl) FindByUUID(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userUUID := params.ByName("userUUID")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: FindByUUID", userUUID)
 
 	userResponse := controller.UserService.FindByUUID(request.Context(), userUUID)
 
@@ -75,7 +87,20 @@ func (controller UserControllerImpl) FindByUUID(writer http.ResponseWriter, requ
 }
 
 func (controller UserControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
-	userResponse := controller.UserService.FindAll(request.Context())
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: FindAll", userUUID)
+
+	userResponse := controller.UserService.FindAll(request.Context(), userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
@@ -87,7 +112,17 @@ func (controller UserControllerImpl) FindAll(writer http.ResponseWriter, request
 }
 
 func (controller UserControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userUUID := params.ByName("userUUID")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: Update", userUUID)
 
 	err := request.ParseMultipartForm(10 << 20)
 	helper.PanicIfError(err)
@@ -136,7 +171,7 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 		Profile_picture: profilePicturePath,
 	}
 
-	controller.UserService.Update(request.Context(), userRequest)
+	controller.UserService.Update(request.Context(), userRequest, userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
@@ -147,7 +182,18 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 }
 
 func (controller UserControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userUUID := params.ByName("userUUID")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: Delete", userUUID)
 
 	controller.UserService.Delete(request.Context(), userUUID)
 

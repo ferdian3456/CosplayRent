@@ -58,7 +58,7 @@ func main() {
 	costumeController := costume_controller.NewCostumeController(costumeService)
 
 	reviewRepository := review_repository.NewReviewRepository()
-	reviewService := review_service.NewReviewService(reviewRepository, user_repository.NewUserRepository(), DB, validate)
+	reviewService := review_service.NewReviewService(reviewRepository, costume_repository.NewCostumeRepository(), user_repository.NewUserRepository(), DB, validate)
 	reviewController := review_controller.NewReviewController(reviewService)
 
 	orderRepository := order_repository.NewOrderRepository()
@@ -67,7 +67,7 @@ func main() {
 	//log.Println(orderController)
 
 	midtransRepository := midtrans_repository.NewMidtransRepository()
-	midtransService := midtrans_service.NewMidtransService(midtransRepository, DB, validate)
+	midtransService := midtrans_service.NewMidtransService(midtransRepository, user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate)
 	midtransController := midtrans_controller.NewMidtransController(midtransService)
 
 	rajaongkirService := rajaongkir_service.NewRajaOngkirService(validate, memcacheClient)
@@ -78,23 +78,26 @@ func main() {
 
 	router.POST("/api/register", userController.Register)
 	router.POST("/api/login", userController.Login)
-	router.GET("/api/user/:userUUID", userController.FindByUUID)
-	router.GET("/api/user", userController.FindAll)
-	router.PUT("/api/user/:userUUID", userController.Update)
-	router.DELETE("/api/user/:userUUID", userController.Delete)
-	router.GET("/api/verifytoken", userController.VerifyAndRetrieve)
+	router.GET("/api/userdetail", authMiddleware.ServeHTTP(userController.FindByUUID))
+	router.GET("/api/user", authMiddleware.ServeHTTP(userController.FindAll))
+	router.PUT("/api/userdetail", authMiddleware.ServeHTTP(userController.Update))
+	router.DELETE("/api/useraccount", authMiddleware.ServeHTTP(userController.Delete))
 
-	router.GET("/api/search/:costumeName", authMiddleware.ServeHTTP(costumeController.FindByName))
-	router.GET("/api/seller/:userUUID/:costumeID", costumeController.FindSellerCostumeByCostumeID)
+	//router.GET("/api/search/:costumeName", authMiddleware.ServeHTTP(costumeController.FindByName))
 	router.POST("/api/costume", authMiddleware.ServeHTTP(costumeController.Create))
 	router.GET("/api/costume", costumeController.FindAll)
-	router.GET("/api/find/user/costume/:userUUID", costumeController.FindByUserUUID)
+	router.GET("/api/seller", authMiddleware.ServeHTTP(costumeController.FindSellerCostume))
 	router.GET("/api/costume/:costumeID", costumeController.FindById)
-	router.PUT("/api/costume/:costumeID", authMiddleware.ServeHTTP(costumeController.Update))
-	router.DELETE("/api/costume/:costumeID", authMiddleware.ServeHTTP(costumeController.Delete))
+	router.GET("/api/seller/:costumeID", authMiddleware.ServeHTTP(costumeController.FindSellerCostumeByCostumeID)) // find by costume id
+	router.PUT("/api/seller/:costumeID", authMiddleware.ServeHTTP(costumeController.Update))
+	router.DELETE("/api/seller/:costumeID", authMiddleware.ServeHTTP(costumeController.Delete))
 
-	router.GET("/api/review/:costumeID", reviewController.FindByCostumeId)
-	router.POST("/api/review", reviewController.Create)
+	router.GET("/api/review", authMiddleware.ServeHTTP(reviewController.FindUserReview))
+	router.POST("/api/review", authMiddleware.ServeHTTP(reviewController.Create))
+	router.GET("/api/review/:reviewID", authMiddleware.ServeHTTP(reviewController.FindUserReviewByReviewID))
+	router.PUT("/api/review/:reviewID", authMiddleware.ServeHTTP(reviewController.Update))
+	router.DELETE("/api/review/:reviewID", authMiddleware.ServeHTTP(reviewController.DeleteUserReviewByReviewID))
+	router.GET("/api/costume/:costumeID/review", reviewController.FindByCostumeId)
 
 	router.POST("/api/order", orderController.Create)
 
@@ -102,7 +105,7 @@ func main() {
 	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)
 	router.POST("/api/checkshippment", rajaongkirController.CheckShippment)
 
-	router.POST("/api/midtrans/transaction/:orderID", midtransController.CreateTransaction)
+	router.POST("/api/midtrans/transaction/:orderID", authMiddleware.ServeHTTP(midtransController.CreateTransaction))
 	router.POST("/api/midtrans/callback", midtransController.MidtransCallBack)
 
 	router.ServeFiles("/static/*filepath", http.Dir("../static"))

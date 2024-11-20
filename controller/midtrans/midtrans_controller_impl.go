@@ -7,6 +7,7 @@ import (
 	midtranss "cosplayrent/service/midtrans"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"log"
 	"net/http"
 )
 
@@ -21,11 +22,22 @@ func NewMidtransController(midtransService midtranss.MidtransService) MidtransCo
 }
 
 func (controller MidtransControllerImpl) CreateTransaction(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	orderID := params.ByName("orderID")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Review Controller: FindUserReview", userUUID)
 
 	midtransCreateRequest := midtrans.MidtransRequest{}
 	helper.ReadFromRequestBody(request, &midtransCreateRequest)
-	midtransResponse := controller.MidtransService.CreateTransaction(request.Context(), midtransCreateRequest, orderID)
+	midtransResponse := controller.MidtransService.CreateTransaction(request.Context(), midtransCreateRequest, userUUID)
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",

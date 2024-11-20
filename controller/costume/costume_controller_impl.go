@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -32,7 +33,19 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 	err := request.ParseMultipartForm(10 << 20)
 	helper.PanicIfError(err)
 
-	costume_userId := request.FormValue("user_id")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Costume Controller: Create", userUUID)
+
 	costumeName := request.FormValue("name")
 	costumeDescription := request.FormValue("description")
 	costumeBahan := request.FormValue("bahan")
@@ -76,7 +89,7 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 	helper.PanicIfError(err)
 
 	costumeRequest := costume.CostumeCreateRequest{
-		User_id:     costume_userId,
+		User_id:     userUUID,
 		Name:        costumeName,
 		Description: costumeDescription,
 		Bahan:       costumeBahan,
@@ -100,6 +113,19 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 func (controller CostumeControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	err := request.ParseMultipartForm(10 << 20)
 	helper.PanicIfError(err)
+
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Costume Controller: Update", userUUID)
 
 	costumeID := params.ByName("costumeID")
 	costumeId, err := strconv.Atoi(costumeID)
@@ -149,17 +175,17 @@ func (controller CostumeControllerImpl) Update(writer http.ResponseWriter, reque
 
 	costumeRequest := costume.CostumeUpdateRequest{
 		Id:          costumeId,
-		Name:        costumeName,
-		Description: costumeDescription,
-		Bahan:       costumeBahan,
-		Ukuran:      costumeUkuran,
-		Berat:       costumeBerat,
-		Kategori:    costumeKategori,
-		Price:       fixPrice,
+		Name:        &costumeName,
+		Description: &costumeDescription,
+		Bahan:       &costumeBahan,
+		Ukuran:      &costumeUkuran,
+		Berat:       &costumeBerat,
+		Kategori:    &costumeKategori,
+		Price:       &fixPrice,
 		Picture:     costumePicturePath,
 	}
 
-	controller.CostumeService.Update(request.Context(), costumeRequest)
+	controller.CostumeService.Update(request.Context(), costumeRequest, userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
@@ -212,11 +238,24 @@ func (controller CostumeControllerImpl) FindAll(writer http.ResponseWriter, requ
 }
 
 func (controller CostumeControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Costume Controller: Delete", userUUID)
+
 	costumeID := params.ByName("costumeID")
 	id, err := strconv.Atoi(costumeID)
 	helper.PanicIfError(err)
 
-	controller.CostumeService.Delete(request.Context(), id)
+	controller.CostumeService.Delete(request.Context(), id, userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
@@ -241,12 +280,49 @@ func (controller CostumeControllerImpl) FindByUserUUID(writer http.ResponseWrite
 }
 
 func (controller CostumeControllerImpl) FindSellerCostumeByCostumeID(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userID := params.ByName("userUUID")
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Costume Controller: FindSellerCostumeByCostumeID", userUUID)
+
 	costumeID := params.ByName("costumeID")
 	finalCostumeID, err := strconv.Atoi(costumeID)
 	helper.PanicIfError(err)
 
-	costumeReturn := controller.CostumeService.FindSellerCostumeByCostumeID(request.Context(), userID, finalCostumeID)
+	costumeReturn := controller.CostumeService.FindSellerCostumeByCostumeID(request.Context(), userUUID, finalCostumeID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   costumeReturn,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller CostumeControllerImpl) FindSellerCostume(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Costume Controller: FindSellerCostume", userUUID)
+
+	costumeReturn := controller.CostumeService.FindSellerCostume(request.Context(), userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,

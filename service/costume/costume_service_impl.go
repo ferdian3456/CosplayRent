@@ -9,6 +9,7 @@ import (
 	costumes "cosplayrent/repository/costume"
 	"cosplayrent/repository/user"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -31,6 +32,8 @@ func NewCostumeService(costumeRepository costumes.CostumeRepository, userReposit
 }
 
 func (service *CostumeServiceImpl) Create(ctx context.Context, request costume.CostumeCreateRequest) {
+	log.Printf("User with uuid: %s enter Costume Service: Create", request.User_id)
+
 	err := service.Validate.Struct(request)
 	helper.PanicIfError(err)
 
@@ -123,7 +126,8 @@ func (service *CostumeServiceImpl) FindByName(ctx context.Context, name string) 
 	return costume
 }
 
-func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest costume.CostumeUpdateRequest) {
+func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest costume.CostumeUpdateRequest, uuid string) {
+	log.Printf("User with uuid: %s enter Costume Service: Update", uuid)
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -152,10 +156,11 @@ func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest co
 		Update_at:   &now,
 	}
 
-	service.CostumeRepository.Update(ctx, tx, updateRequest)
+	service.CostumeRepository.Update(ctx, tx, updateRequest, uuid)
 }
 
-func (service *CostumeServiceImpl) Delete(ctx context.Context, id int) {
+func (service *CostumeServiceImpl) Delete(ctx context.Context, id int, uuid string) {
+	log.Printf("User with uuid: %s enter Costume Service: Delete", uuid)
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -163,7 +168,7 @@ func (service *CostumeServiceImpl) Delete(ctx context.Context, id int) {
 
 	defer helper.CommitOrRollback(tx)
 
-	service.CostumeRepository.Delete(ctx, tx, id)
+	service.CostumeRepository.Delete(ctx, tx, id, uuid)
 }
 
 func (service *CostumeServiceImpl) FindByUserUUID(ctx context.Context, userUUID string) []costume.CostumeResponse {
@@ -184,6 +189,7 @@ func (service *CostumeServiceImpl) FindByUserUUID(ctx context.Context, userUUID 
 }
 
 func (service *CostumeServiceImpl) FindSellerCostumeByCostumeID(ctx context.Context, userUUID string, costumeID int) costume.CostumeResponse {
+	log.Printf("User with uuid: %s enter Costume Service: FindSellerCostumeByCostumeID", userUUID)
 	tx, err := service.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -193,6 +199,24 @@ func (service *CostumeServiceImpl) FindSellerCostumeByCostumeID(ctx context.Cont
 
 	costume := costume.CostumeResponse{}
 	costume, err = service.CostumeRepository.FindSellerCostumeByCostumeID(ctx, tx, userUUID, costumeID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return costume
+}
+
+func (service *CostumeServiceImpl) FindSellerCostume(ctx context.Context, userUUID string) []costume.CostumeResponse {
+	log.Printf("User with uuid: %s enter Costume Service: FindSellerCostume", userUUID)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	costume, err := service.CostumeRepository.FindSellerCostume(ctx, tx, userUUID)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
