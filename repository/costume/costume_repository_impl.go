@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"time"
 )
 
 type CostumeRepositoryImpl struct{}
@@ -24,16 +25,20 @@ func (repository *CostumeRepositoryImpl) Create(ctx context.Context, tx *sql.Tx,
 }
 
 func (repository *CostumeRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, id int) (costume.CostumeResponse, error) {
-	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at FROM costumes where id=$1"
+	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at, updated_at FROM costumes where id=$1"
 	rows, err := tx.QueryContext(ctx, query, id)
 	helper.PanicIfError(err)
 
 	defer rows.Close()
 
 	costumes := costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	if rows.Next() {
-		err := rows.Scan(&costumes.Id, &costumes.User_id, &costumes.Name, &costumes.Description, &costumes.Bahan, &costumes.Ukuran, &costumes.Berat, &costumes.Kategori, &costumes.Price, &costumes.Picture, &costumes.Available, &costumes.Created_at)
+		err := rows.Scan(&costumes.Id, &costumes.User_id, &costumes.Name, &costumes.Description, &costumes.Bahan, &costumes.Ukuran, &costumes.Berat, &costumes.Kategori, &costumes.Price, &costumes.Picture, &costumes.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costumes.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costumes.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		return costumes, nil
 	} else {
 		return costumes, errors.New("costume not found")
@@ -41,7 +46,7 @@ func (repository *CostumeRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 }
 
 func (repository *CostumeRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) ([]costume.CostumeResponse, error) {
-	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at FROM costumes"
+	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at, updated_at FROM costumes"
 	rows, err := tx.QueryContext(ctx, query)
 	helper.PanicIfError(err)
 	hasData := false
@@ -49,10 +54,14 @@ func (repository *CostumeRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 	defer rows.Close()
 
 	costumes := []costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
 		costume := costume.CostumeResponse{}
-		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at)
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costume.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costume.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		costumes = append(costumes, costume)
 		hasData = true
 	}
@@ -64,7 +73,7 @@ func (repository *CostumeRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 }
 
 func (repository *CostumeRepositoryImpl) FindByName(ctx context.Context, tx *sql.Tx, name string) ([]costume.CostumeResponse, error) {
-	query := "SELECT id,user_id,name,description,price,costume_picture,available,created_at FROM costumes WHERE name like $1"
+	query := "SELECT id,user_id,name,description,price,costume_picture,available,created_at,updated_at FROM costumes WHERE name like $1"
 	rows, err := tx.QueryContext(ctx, query, "%"+name+"%")
 	helper.PanicIfError(err)
 	hasData := false
@@ -72,10 +81,14 @@ func (repository *CostumeRepositoryImpl) FindByName(ctx context.Context, tx *sql
 	defer rows.Close()
 
 	costumes := []costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
 		costume := costume.CostumeResponse{}
-		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at)
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Price, &costume.Picture, &costume.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costume.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costume.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		costumes = append(costumes, costume)
 		hasData = true
 	}
@@ -115,10 +128,14 @@ func (repository *CostumeRepositoryImpl) FindByUserUUID(ctx context.Context, tx 
 	defer rows.Close()
 
 	costumes := []costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
 		costume := costume.CostumeResponse{}
-		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at, &costume.Updated_at)
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costume.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costume.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		costumes = append(costumes, costume)
 		hasData = true
 	}
@@ -131,28 +148,34 @@ func (repository *CostumeRepositoryImpl) FindByUserUUID(ctx context.Context, tx 
 
 func (repository *CostumeRepositoryImpl) FindSellerCostumeByCostumeID(ctx context.Context, tx *sql.Tx, userUUID string, costumeID int) (costume.CostumeResponse, error) {
 	log.Printf("User with uuid: %s enter Costume Repository: FindSellerCostumeByCostumeID", userUUID)
-	query := "SELECT id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at,updated_at WHERE user_id=$1 AND id=$2"
+	//log.Printf("SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at,updated_at FROM costumes WHERE user_id=%s AND id=%d", userUUID, costumeID)
+	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at,updated_at FROM costumes WHERE user_id = $1 AND id = $2"
 	rows, err := tx.QueryContext(ctx, query, userUUID, costumeID)
 	helper.PanicIfError(err)
 	hasData := false
 
-	costumes := costume.CostumeResponse{}
+	defer rows.Close()
+
+	costume := costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	if rows.Next() {
-		costume := costume.CostumeResponse{}
-		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at, &costume.Updated_at)
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costume.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costume.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		hasData = true
 	}
 	if hasData == false {
-		return costumes, errors.New("costume not found")
+		return costume, errors.New("costume not found")
 	}
 
-	return costumes, nil
+	return costume, nil
 }
 
 func (repository *CostumeRepositoryImpl) FindSellerCostume(ctx context.Context, tx *sql.Tx, uuid string) ([]costume.CostumeResponse, error) {
 	log.Printf("User with uuid: %s enter Costume Repository: FindSellerCostume", uuid)
-	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at FROM costumes where user_id=$1"
+	query := "SELECT id,user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,available,created_at, updated_at FROM costumes where user_id=$1"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 	hasData := false
@@ -160,10 +183,14 @@ func (repository *CostumeRepositoryImpl) FindSellerCostume(ctx context.Context, 
 	defer rows.Close()
 
 	costumes := []costume.CostumeResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
 		costume := costume.CostumeResponse{}
-		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &costume.Created_at)
+		err = rows.Scan(&costume.Id, &costume.User_id, &costume.Name, &costume.Description, &costume.Bahan, &costume.Ukuran, &costume.Berat, &costume.Kategori, &costume.Price, &costume.Picture, &costume.Available, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
+		costume.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		costume.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		costumes = append(costumes, costume)
 		hasData = true
 	}

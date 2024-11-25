@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
-	"log"
 	"time"
 )
 
@@ -40,7 +39,6 @@ func (service *OrderServiceImpl) Create(ctx context.Context, request order.Order
 
 	defer helper.CommitOrRollback(tx)
 	now := time.Now()
-	log.Println("service")
 	uuid := uuid.New()
 	orderDomain := domain.Order{
 		Id:         uuid.String(),

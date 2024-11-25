@@ -13,7 +13,7 @@ type CostumeCreateRequest struct {
 	Berat       string  `validate:"required,min=3,max=30" json:"berat"`
 	Kategori    string  `validate:"required,min=3,max=30" json:"kategori"`
 	Price       float64 `validate:"required" json:"price"`
-	Picture     *string `validate:"required" json:"picture"`
+	Picture     *string `json:"costume_picture"`
 	Available   bool    `json:"available"`
 	Created_at  *time.Time
 }

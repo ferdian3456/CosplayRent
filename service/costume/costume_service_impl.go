@@ -9,7 +9,9 @@ import (
 	costumes "cosplayrent/repository/costume"
 	"cosplayrent/repository/user"
 	"database/sql"
+	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -80,7 +82,21 @@ func (service *CostumeServiceImpl) FindById(ctx context.Context, id int) costume
 	helper.PanicIfError(err)
 
 	costume.Username = user.Name
-	costume.Profile_picture = user.Profile_picture
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	if user.Profile_picture != nil {
+		value := imageEnv + *user.Profile_picture
+		costume.Profile_picture = &value
+	}
+
+	if costume.Picture != nil {
+		value := imageEnv + *costume.Picture
+		costume.Picture = &value
+	}
 
 	return costume
 }
@@ -99,11 +115,21 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
 	for i := range costume {
 		userResult, err := service.UserRepository.FindByUUID(ctx, tx, costume[i].User_id)
 		helper.PanicIfError(err)
 		costume[i].Username = userResult.Name
-		costume[i].Profile_picture = userResult.Profile_picture
+		if costume[i].Picture != nil {
+			value := imageEnv + *costume[i].Picture
+			costume[i].Picture = &value
+		}
+		value := imageEnv + *userResult.Profile_picture
+		costume[i].Profile_picture = &value
 	}
 
 	return helper.ToCostumeResponse(costume)
@@ -203,6 +229,26 @@ func (service *CostumeServiceImpl) FindSellerCostumeByCostumeID(ctx context.Cont
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	userResult, err := service.UserRepository.FindByUUID(ctx, tx, costume.User_id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	costume.Username = userResult.Name
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	value := imageEnv + *userResult.Profile_picture
+	costume.Profile_picture = &value
+
+	if costume.Picture != nil {
+		value := imageEnv + *costume.Picture
+		costume.Picture = &value
+	}
+
 	return costume
 }
 
@@ -219,6 +265,18 @@ func (service *CostumeServiceImpl) FindSellerCostume(ctx context.Context, userUU
 	costume, err := service.CostumeRepository.FindSellerCostume(ctx, tx, userUUID)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	for i := range costume {
+		if costume[i].Picture != nil {
+			value := imageEnv + *costume[i].Picture
+			costume[i].Picture = &value
+		}
 	}
 
 	return costume

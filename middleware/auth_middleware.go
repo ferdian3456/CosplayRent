@@ -42,7 +42,18 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 		}
 
 		splitToken := strings.Split(headerToken, "Bearer ")
-		log.Println(splitToken[1])
+		if len(splitToken) != 2 {
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusUnauthorized)
+
+			webResponse := web.WebResponse{
+				Code:   http.StatusUnauthorized,
+				Status: "Unauthorized",
+				Data:   "Token format is not match",
+			}
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		}
 
 		var err error = godotenv.Load("../.env")
 		helper.PanicIfError(err)

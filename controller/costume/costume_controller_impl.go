@@ -6,7 +6,6 @@ import (
 	"cosplayrent/model/web/costume"
 	costumes "cosplayrent/service/costume"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
@@ -77,17 +76,11 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 
 		costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
 
-		err = godotenv.Load("../.env")
-		helper.PanicIfError(err)
-
-		imageEnv := os.Getenv("IMAGE_ENV")
-
-		costumeFinalPath := fmt.Sprintf(imageEnv + costumeImageTrimPath)
-		costumePicturePath = &costumeFinalPath
+		costumePicturePath = &costumeImageTrimPath
 	}
 	fixPrice, err := strconv.ParseFloat(costumePrice, 64)
 	helper.PanicIfError(err)
-
+	
 	costumeRequest := costume.CostumeCreateRequest{
 		User_id:     userUUID,
 		Name:        costumeName,
@@ -161,13 +154,7 @@ func (controller CostumeControllerImpl) Update(writer http.ResponseWriter, reque
 
 		costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
 
-		err = godotenv.Load("../.env")
-		helper.PanicIfError(err)
-
-		imageEnv := os.Getenv("IMAGE_ENV")
-
-		costumeFinalPath := fmt.Sprintf(imageEnv + costumeImageTrimPath)
-		costumePicturePath = &costumeFinalPath
+		costumePicturePath = &costumeImageTrimPath
 	}
 
 	fixPrice, err := strconv.ParseFloat(costumePrice, 64)

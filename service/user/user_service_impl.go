@@ -147,7 +147,6 @@ func (service *UserServiceImpl) FindByUUID(ctx context.Context, uuid string) use
 	if user.Profile_picture != nil {
 		value := imageEnv + *user.Profile_picture
 		user.Profile_picture = &value
-		log.Println(user.Profile_picture)
 	}
 
 	return user
@@ -256,8 +255,6 @@ func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenStri
 			return user.UserResponse{}, fmt.Errorf("id claim does not exist")
 		}
 	}
-
-	log.Println(id)
 
 	tx, err := service.DB.Begin()
 	if err != nil {

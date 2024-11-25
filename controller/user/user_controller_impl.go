@@ -164,8 +164,7 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 
 		userImageTrimPath := strings.TrimPrefix(profileImagePath, "..")
 
-		userFinalPath := userImageTrimPath
-		profilePicturePath = &userFinalPath
+		profilePicturePath = &userImageTrimPath
 	}
 
 	userRequest := user.UserUpdateRequest{

@@ -6,3 +6,5 @@ To ignore env file (privacy)
 
 To ignore static image
 /static/costume/*
+/static/profile/*
+/static/review/*

@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS users(
     password varchar(60) NOT NULL,
     profile_picture varchar(255),
     created_at timestamp NOT NULL,
-    updated_at timestamp
+    updated_at timestamp NOT NULL DEFAULT NOW()
 );
