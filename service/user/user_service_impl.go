@@ -78,7 +78,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request user.UserCre
 	return tokenString
 }
 
-func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLoginRequest) string {
+func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLoginRequest) (string, error) {
 	err := service.Validate.Struct(request)
 	helper.PanicIfError(err)
 
@@ -100,7 +100,9 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLogi
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userDomain.Password))
-	helper.PanicIfError(err)
+	if err != nil {
+		return "", err
+	}
 
 	err = godotenv.Load("../.env")
 	helper.PanicIfError(err)
@@ -118,7 +120,7 @@ func (service *UserServiceImpl) Login(ctx context.Context, request user.UserLogi
 		panic(err)
 	}
 
-	return tokenString
+	return tokenString, nil
 }
 
 func (service *UserServiceImpl) FindByUUID(ctx context.Context, uuid string) user.UserResponse {

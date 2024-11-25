@@ -48,7 +48,18 @@ func (controller UserControllerImpl) Login(writer http.ResponseWriter, request *
 	userLoginRequest := user.UserLoginRequest{}
 	helper.ReadFromRequestBody(request, &userLoginRequest)
 
-	token := controller.UserService.Login(request.Context(), userLoginRequest)
+	token, err := controller.UserService.Login(request.Context(), userLoginRequest)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Unauthorized",
+			Data:   "Wrong email or password",
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
 	tokenResponse := web.TokenResponse{
 		Token: token,
 	}

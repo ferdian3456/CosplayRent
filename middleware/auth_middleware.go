@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const (
@@ -40,13 +41,16 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 			return
 		}
 
+		splitToken := strings.Split(headerToken, "Bearer ")
+		log.Println(splitToken[1])
+
 		var err error = godotenv.Load("../.env")
 		helper.PanicIfError(err)
 
 		secretKey := os.Getenv("SECRET_KEY")
 		secretKeyByte := []byte(secretKey)
 
-		token, err := jwt.Parse(headerToken, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(splitToken[1], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, http.ErrNotSupported
 			}
