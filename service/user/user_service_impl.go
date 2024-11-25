@@ -139,6 +139,17 @@ func (service *UserServiceImpl) FindByUUID(ctx context.Context, uuid string) use
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	if user.Profile_picture != nil {
+		value := imageEnv + *user.Profile_picture
+		user.Profile_picture = &value
+		log.Println(user.Profile_picture)
+	}
+
 	return user
 }
 
@@ -158,6 +169,18 @@ func (service *UserServiceImpl) FindAll(ctx context.Context, uuid string) []user
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	for i := range user {
+		if user[i].Profile_picture != nil {
+			value := imageEnv + *user[i].Profile_picture
+			user[i].Profile_picture = &value
+		}
+	}
+
 	return helper.ToUserResponses(user)
 }
 
@@ -174,8 +197,8 @@ func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.Use
 
 	defer helper.CommitOrRollback(tx)
 
-	result, err1 := service.UserRepository.FindByUUID(ctx, tx, userRequest.Id)
-	if err1 != nil {
+	result, err := service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 

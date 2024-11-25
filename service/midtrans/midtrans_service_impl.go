@@ -7,7 +7,7 @@ import (
 	midtransWeb "cosplayrent/model/web/midtrans"
 	midtranss "cosplayrent/repository/midtrans"
 	"cosplayrent/repository/order"
-	users "cosplayrent/repository/user"
+	"cosplayrent/repository/user"
 	"database/sql"
 	"github.com/go-playground/validator"
 	"github.com/midtrans/midtrans-go"
@@ -18,14 +18,14 @@ import (
 )
 
 type MidtransServiceImpl struct {
-	UserRepository     users.UserRepository
+	UserRepository     user.UserRepository
 	OrderRepository    order.OrderRepository
 	MidtransRepository midtranss.MidtransRepository
 	DB                 *sql.DB
 	Validate           *validator.Validate
 }
 
-func NewMidtransService(midtransRepository midtranss.MidtransRepository, userRepository users.UserRepository, orderRepository order.OrderRepository, DB *sql.DB, validate *validator.Validate) MidtransService {
+func NewMidtransService(midtransRepository midtranss.MidtransRepository, userRepository user.UserRepository, orderRepository order.OrderRepository, DB *sql.DB, validate *validator.Validate) MidtransService {
 	return &MidtransServiceImpl{
 		OrderRepository:    orderRepository,
 		MidtransRepository: midtransRepository,

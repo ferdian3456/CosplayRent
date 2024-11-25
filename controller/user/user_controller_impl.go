@@ -6,7 +6,6 @@ import (
 	"cosplayrent/model/web/user"
 	users "cosplayrent/service/user"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"log"
@@ -165,12 +164,7 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 
 		userImageTrimPath := strings.TrimPrefix(profileImagePath, "..")
 
-		err = godotenv.Load("../.env")
-		helper.PanicIfError(err)
-
-		imageEnv := os.Getenv("IMAGE_ENV")
-
-		userFinalPath := fmt.Sprintf(imageEnv + userImageTrimPath)
+		userFinalPath := userImageTrimPath
 		profilePicturePath = &userFinalPath
 	}
 

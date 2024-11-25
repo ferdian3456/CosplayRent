@@ -77,6 +77,7 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, u
 		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &createdAt)
 		helper.PanicIfError(err)
 		user.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		//user.Profile_picture = fmt.Sprintf()
 		users = append(users, user)
 		hasData = true
 	}
