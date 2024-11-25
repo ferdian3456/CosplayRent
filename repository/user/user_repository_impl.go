@@ -18,8 +18,8 @@ func NewUserRepository() UserRepository {
 }
 
 func (repository *UserRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, user domain.User) {
-	query := "INSERT INTO users (id,name,email,password,created_at) VALUES ($1,$2,$3,$4,$5)"
-	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at)
+	query := "INSERT INTO users (id,name,email,password,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6)"
+	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at, user.Created_at)
 	helper.PanicIfError(err)
 }
 

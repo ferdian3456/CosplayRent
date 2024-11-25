@@ -19,8 +19,8 @@ func NewCostumeRepository() CostumeRepository {
 
 func (repository *CostumeRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, costume domain.Costume) {
 	log.Printf("User with uuid: %s enter Costume Repository: Create", costume.User_id)
-	query := "INSERT INTO costumes (user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)"
-	_, err := tx.ExecContext(ctx, query, costume.User_id, costume.Name, costume.Description, costume.Bahan, costume.Ukuran, costume.Berat, costume.Kategori, costume.Price, costume.Picture, costume.Created_at)
+	query := "INSERT INTO costumes (user_id,name,description,bahan,ukuran,berat,kategori,price,costume_picture,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)"
+	_, err := tx.ExecContext(ctx, query, costume.User_id, costume.Name, costume.Description, costume.Bahan, costume.Ukuran, costume.Berat, costume.Kategori, costume.Price, costume.Picture, costume.Created_at, costume.Created_at)
 	helper.PanicIfError(err)
 }
 
@@ -107,7 +107,7 @@ func (repository *CostumeRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 		helper.PanicIfError(err)
 	} else {
 		query := "UPDATE costumes SET name=$2,description=$3,bahan=$4,ukuran=$5,berat=$6,kategori=$7,price=$8,costume_picture=$9,updated_at=$10  WHERE id=$1"
-		_, err := tx.ExecContext(ctx, query, costume.Id, costume.Name, costume.Description, costume.Bahan, costume.Ukuran, costume.Berat, costume.Kategori, costume.Price, costume.Picture, costume.Available, costume.Update_at)
+		_, err := tx.ExecContext(ctx, query, costume.Id, costume.Name, costume.Description, costume.Bahan, costume.Ukuran, costume.Berat, costume.Kategori, costume.Price, costume.Picture, costume.Update_at)
 		helper.PanicIfError(err)
 	}
 }

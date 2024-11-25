@@ -194,6 +194,16 @@ func (service *CostumeServiceImpl) Delete(ctx context.Context, id int, uuid stri
 
 	defer helper.CommitOrRollback(tx)
 
+	costumeResult, err := service.CostumeRepository.FindById(ctx, tx, id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	finalCostumePicturePath := ".." + *costumeResult.Picture
+
+	err = os.Remove(finalCostumePicturePath)
+	helper.PanicIfError(err)
+
 	service.CostumeRepository.Delete(ctx, tx, id, uuid)
 }
 

@@ -225,7 +225,17 @@ func (service *UserServiceImpl) Delete(ctx context.Context, uuid string) {
 
 	defer helper.CommitOrRollback(tx)
 
+	userResult, err := service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
 	service.UserRepository.Delete(ctx, tx, uuid)
+
+	finalProfilePicturePath := ".." + *userResult.Profile_picture
+
+	err = os.Remove(finalProfilePicturePath)
+	helper.PanicIfError(err)
 }
 
 func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenString string) (user.UserResponse, error) {

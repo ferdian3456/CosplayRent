@@ -6,7 +6,6 @@ import (
 	"cosplayrent/model/web/review"
 	reviews "cosplayrent/service/review"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"log"
@@ -72,13 +71,7 @@ func (controller ReviewControllerImpl) Create(writer http.ResponseWriter, reques
 
 		reviewImageTrimPath := strings.TrimPrefix(reviewImagePath, "..")
 
-		err = godotenv.Load("../.env")
-		helper.PanicIfError(err)
-
-		imageEnv := os.Getenv("IMAGE_ENV")
-
-		reviewFinalPath := fmt.Sprintf(imageEnv + reviewImageTrimPath)
-		reviewPicturePath = &reviewFinalPath
+		reviewPicturePath = &reviewImageTrimPath
 	}
 
 	finalCostumeID, err := strconv.Atoi(costumeID)
@@ -148,13 +141,7 @@ func (controller ReviewControllerImpl) Update(writer http.ResponseWriter, reques
 
 		reviewImageTrimPath := strings.TrimPrefix(reviewImagePath, "..")
 
-		err = godotenv.Load("../.env")
-		helper.PanicIfError(err)
-
-		imageEnv := os.Getenv("IMAGE_ENV")
-
-		reviewFinalPath := fmt.Sprintf(imageEnv + reviewImageTrimPath)
-		reviewPicturePath = &reviewFinalPath
+		reviewPicturePath = &reviewImageTrimPath
 	}
 
 	finalReviewID, err := strconv.Atoi(reviewID)

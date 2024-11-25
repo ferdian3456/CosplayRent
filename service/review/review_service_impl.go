@@ -11,7 +11,9 @@ import (
 	"cosplayrent/repository/user"
 	"database/sql"
 	"github.com/go-playground/validator"
+	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"time"
 )
 
@@ -73,11 +75,19 @@ func (service *ReviewServiceImpl) FindByCostumeId(ctx context.Context, id int) [
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
 	for i := range review {
 		userResult, err := service.UserRepository.FindByUUID(ctx, tx, review[i].User_id)
 		helper.PanicIfError(err)
 		review[i].Name = userResult.Name
-		review[i].Profile_picture = userResult.Profile_picture
+		if userResult.Profile_picture != nil {
+			value := imageEnv + *userResult.Profile_picture
+			review[i].Profile_picture = &value
+		}
 	}
 
 	return review
@@ -99,11 +109,20 @@ func (service *ReviewServiceImpl) FindUserReview(ctx context.Context, uuid strin
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
 	for i := range review {
-		costumeResult, err := service.CostumeRepository.FindById(ctx, tx, review[i].Id)
+		costumeResult, err := service.CostumeRepository.FindById(ctx, tx, review[i].Costume_Id)
 		helper.PanicIfError(err)
 		review[i].Costume_name = costumeResult.Name
-		review[i].Costume_picture = costumeResult.Picture
+		if review[i].Costume_picture != nil {
+			value := imageEnv + *review[i].Costume_picture
+			review[i].Costume_picture = &value
+		}
+		//log.Println(review[i].Rating)
 		review[i].Ukuran = costumeResult.Ukuran
 	}
 
@@ -119,6 +138,11 @@ func (service *ReviewServiceImpl) Update(ctx context.Context, request review.Rev
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.ReviewRepository.FindUserReviewByReviewID(ctx, tx, uuid, request.ReviewId)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	now := time.Now()
 
@@ -176,5 +200,15 @@ func (service *ReviewServiceImpl) DeleteUserReviewByReviewID(ctx context.Context
 
 	defer helper.CommitOrRollback(tx)
 
+	reviewResult, err := service.ReviewRepository.FindUserReviewByReviewID(ctx, tx, uuid, reviewid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
 	service.ReviewRepository.DeleteUserReviewByReviewID(ctx, tx, uuid, reviewid)
+
+	finalReviewPicturePath := ".." + *reviewResult.Review_picture
+
+	err = os.Remove(finalReviewPicturePath)
+	helper.PanicIfError(err)
 }
