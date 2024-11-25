@@ -6,5 +6,10 @@ To ignore env file (privacy)
 
 To ignore static image
 /static/costume/*
+!/static/costume/.gitkeep
+
 /static/profile/*
+!/static/profile/.gitkeep
+
 /static/review/*
+!/static/review/.gitkeep
