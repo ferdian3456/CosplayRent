@@ -13,4 +13,7 @@ type UserService interface {
 	Update(ctx context.Context, request user.UserUpdateRequest, uuid string)
 	Delete(ctx context.Context, uuid string)
 	VerifyAndRetrieve(ctx context.Context, token string) (user.UserResponse, error)
+	AddIdentityCard(ctx context.Context, uuid string, IdentityCardImage string)
+	GetIdentityCard(ctx context.Context, uuid string) (identityCardImage string)
+	UpdateIdentityCard(ctx context.Context, uuid string, IdentityCardImage string)
 }

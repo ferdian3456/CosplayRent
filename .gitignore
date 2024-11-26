@@ -13,3 +13,6 @@ To ignore static image
 
 /static/review/*
 !/static/review/.gitkeep
+
+/static/identity_card/*
+!/static/identity_card/.gitkeep

@@ -15,4 +15,6 @@ type UserRepository interface {
 	Update(ctx context.Context, tx *sql.Tx, user user.UserUpdateRequest, uuid string)
 	Delete(ctx context.Context, tx *sql.Tx, uuid string)
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error)
+	AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string)
+	GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
 }

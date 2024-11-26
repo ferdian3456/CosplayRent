@@ -76,6 +76,11 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(router)
 
 	router.POST("/api/register", userController.Register)
+	router.GET("/api/identitycard", authMiddleware.ServeHTTP(userController.GetIdentityCard))
+	router.POST("/api/identitycard", authMiddleware.ServeHTTP(userController.AddIdentityCard))
+	router.PUT("/api/identitycard", authMiddleware.ServeHTTP(userController.UpdateIdentityCard))
+	router.GET("/api/emoney", authMiddleware.ServeHTTP(userController.GetEMoneyAmount))
+	router.PUT("/api/emoney", authMiddleware.ServeHTTP(userController.TopUp))
 	router.POST("/api/login", userController.Login)
 	router.GET("/api/userdetail", authMiddleware.ServeHTTP(userController.FindByUUID))
 	router.GET("/api/user", authMiddleware.ServeHTTP(userController.FindAll))

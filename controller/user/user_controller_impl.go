@@ -230,3 +230,139 @@ func (controller UserControllerImpl) VerifyAndRetrieve(writer http.ResponseWrite
 
 	helper.WriteToResponseBody(writer, webResponsel)
 }
+
+func (controller *UserControllerImpl) AddIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: AddIdentityCard", userUUID)
+
+	err := request.ParseMultipartForm(10 << 20)
+	helper.PanicIfError(err)
+
+	log.Printf("User with uuid: %s enter User Controller: Update", userUUID)
+
+	err = request.ParseMultipartForm(10 << 20)
+	helper.PanicIfError(err)
+
+	var IdentityCardPicturePath *string
+
+	if file, handler, err := request.FormFile("identity_card"); err == nil {
+		defer file.Close()
+
+		if _, err := os.Stat("../static/identity_card/"); os.IsNotExist(err) {
+			err = os.MkdirAll("../static/identity_card/", os.ModePerm)
+			helper.PanicIfError(err)
+		}
+
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		IdentityCardImagePath := filepath.Join("../static/identity_card/", fileName)
+
+		destFile, err := os.Create(IdentityCardImagePath)
+		helper.PanicIfError(err)
+
+		_, err = io.Copy(destFile, file)
+		helper.PanicIfError(err)
+
+		defer destFile.Close()
+
+		IdentityCardImageTrimPath := strings.TrimPrefix(IdentityCardImagePath, "..")
+
+		IdentityCardPicturePath = &IdentityCardImageTrimPath
+	}
+
+	controller.UserService.AddIdentityCard(request.Context(), userUUID, *IdentityCardPicturePath)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserControllerImpl) GetIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: GetIdentityCard", userUUID)
+
+	identityCardResult := controller.UserService.GetIdentityCard(request.Context(), userUUID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   identityCardResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserControllerImpl) UpdateIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: UpdateIdentityCard", userUUID)
+
+	err := request.ParseMultipartForm(10 << 20)
+	helper.PanicIfError(err)
+
+	var IdentityCardPicturePath *string
+
+	if file, handler, err := request.FormFile("identity_card"); err == nil {
+		defer file.Close()
+
+		if _, err := os.Stat("../static/identity_card/"); os.IsNotExist(err) {
+			err = os.MkdirAll("../static/identity_card/", os.ModePerm)
+			helper.PanicIfError(err)
+		}
+
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		IdentityCardImagePath := filepath.Join("../static/identity_card/", fileName)
+
+		destFile, err := os.Create(IdentityCardImagePath)
+		helper.PanicIfError(err)
+
+		_, err = io.Copy(destFile, file)
+		helper.PanicIfError(err)
+
+		defer destFile.Close()
+
+		IdentityCardImageTrimPath := strings.TrimPrefix(IdentityCardImagePath, "..")
+
+		IdentityCardPicturePath = &IdentityCardImageTrimPath
+	}
+
+	controller.UserService.UpdateIdentityCard(request.Context(), userUUID, *IdentityCardPicturePath)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

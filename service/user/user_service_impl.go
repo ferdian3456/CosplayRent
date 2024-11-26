@@ -277,3 +277,69 @@ func (service *UserServiceImpl) VerifyAndRetrieve(ctx context.Context, tokenStri
 
 	return userDomain, nil
 }
+
+func (service *UserServiceImpl) AddIdentityCard(ctx context.Context, uuid string, IdentityCardImage string) {
+	log.Printf("User with uuid: %s enter User Service: AddIdentityCard", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	service.UserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
+}
+
+func (service *UserServiceImpl) GetIdentityCard(ctx context.Context, uuid string) (identityCardImage string) {
+	log.Printf("User with uuid: %s enter User Service: GetIdentityCard", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	identityCardResult, err := service.UserRepository.GetIdentityCard(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	identityCardResult = imageEnv + identityCardResult
+
+	return identityCardResult
+}
+
+func (service *UserServiceImpl) UpdateIdentityCard(ctx context.Context, uuid string, IdentityCardImage string) {
+	log.Printf("User with uuid: %s enter User Service: UpdateIdentityCard", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	service.UserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
+}

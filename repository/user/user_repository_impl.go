@@ -125,3 +125,34 @@ func (repository *UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.T
 		return users, errors.New("user not found")
 	}
 }
+
+func (repository *UserRepositoryImpl) AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string) {
+	log.Printf("User with uuid: %s enter User Repository: AddOrUpdateIdentityCard", uuid)
+
+	query := "UPDATE users SET identitycard_picture = $1 WHERE id = $2"
+	_, err := tx.ExecContext(ctx, query, IdentityCardImage, uuid)
+	helper.PanicIfError(err)
+}
+
+func (repository *UserRepositoryImpl) GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error) {
+	log.Printf("User with uuid: %s enter User Repository: GetIdentityCard", uuid)
+
+	query := "SELECT identitycard_picture FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	var IdentityCardImage *string
+	if row.Next() {
+		err := row.Scan(&IdentityCardImage)
+		helper.PanicIfError(err)
+		if IdentityCardImage != nil {
+			return *IdentityCardImage, nil
+		} else {
+			return "", errors.New("identity card is empty")
+		}
+	} else {
+		return "", errors.New("identity card not found")
+	}
+}

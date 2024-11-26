@@ -8,3 +8,7 @@ type UserCreateRequest struct {
 	Password   string `validate:"required,min=5,max=20" json:"password"`
 	Created_at *time.Time
 }
+
+type IdentityCardRequest struct {
+	IdentityCard_picture string `json:"identitycard_picture"`
+}
