@@ -11,3 +11,7 @@ type UserUpdateRequest struct {
 	Created_at      *time.Time
 	Update_at       *time.Time
 }
+
+type TopUpEmoney struct {
+	Emoney_amont float64 `json:"emoney_amount"`
+}

@@ -343,3 +343,47 @@ func (service *UserServiceImpl) UpdateIdentityCard(ctx context.Context, uuid str
 
 	service.UserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
 }
+
+func (service *UserServiceImpl) GetEMoneyAmount(ctx context.Context, uuid string) (emoneyAmount float64) {
+	log.Printf("User with uuid: %s enter User Service: GetEMoneyAmount", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	eMoneyAmountResult, err := service.UserRepository.GetEMoneyAmount(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return eMoneyAmountResult
+}
+
+func (service *UserServiceImpl) TopUp(ctx context.Context, topUpEMoneyRequest user.TopUpEmoney, uuid string) {
+	log.Printf("User with uuid: %s enter User Service: TopUp", uuid)
+
+	err := service.Validate.Struct(topUpEMoneyRequest)
+	helper.PanicIfError(err)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	service.UserRepository.TopUp(ctx, tx, topUpEMoneyRequest, uuid)
+}

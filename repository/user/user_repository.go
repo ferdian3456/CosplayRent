@@ -17,4 +17,6 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error)
 	AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string)
 	GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
+	GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (float64, error)
+	TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string)
 }

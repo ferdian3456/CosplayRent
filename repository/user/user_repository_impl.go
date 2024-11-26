@@ -156,3 +156,31 @@ func (repository *UserRepositoryImpl) GetIdentityCard(ctx context.Context, tx *s
 		return "", errors.New("identity card not found")
 	}
 }
+
+func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (float64, error) {
+	log.Printf("User with uuid: %s enter User Repository: GetEMoneyAmount", uuid)
+
+	query := "SELECT emoney_amount FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	var eMoneyAmount float64
+
+	if row.Next() {
+		err = row.Scan(&eMoneyAmount)
+		helper.PanicIfError(err)
+		return eMoneyAmount, nil
+	} else {
+		return 0, errors.New("Emoney Amount is Not Found")
+	}
+}
+
+func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string) {
+	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
+
+	query := "UPDATE users SET emoney_amount = $1 WHERE id = $2"
+	_, err := tx.ExecContext(ctx, query, emoney.Emoney_amont, uuid)
+	helper.PanicIfError(err)
+}
