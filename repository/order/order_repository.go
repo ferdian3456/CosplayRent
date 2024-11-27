@@ -10,4 +10,5 @@ import (
 type OrderRepository interface {
 	Create(ctx context.Context, tx *sql.Tx, costume domain.Order)
 	FindByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.OrderResponse, error)
+	DirectlyOrderToMidtrans(ctx context.Context, tx *sql.Tx, uuid string, sendOrderToDatabase order.DirectlyOrderToMidtrans)
 }

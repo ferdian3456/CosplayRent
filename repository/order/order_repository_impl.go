@@ -7,6 +7,7 @@ import (
 	"cosplayrent/model/web/order"
 	"database/sql"
 	"errors"
+	"log"
 )
 
 type OrderRepositoryImpl struct{}
@@ -42,4 +43,12 @@ func (repository *OrderRepositoryImpl) FindByUserId(ctx context.Context, tx *sql
 	}
 
 	return orders, nil
+}
+
+func (repository *OrderRepositoryImpl) DirectlyOrderToMidtrans(ctx context.Context, tx *sql.Tx, uuid string, sendOrderToDatabase order.DirectlyOrderToMidtrans) {
+	log.Printf("User with uuid: %s enter Order Repository: DirectlyOrderToMidtrans", uuid)
+
+	query := "INSERT INTO orders (id,user_id,costume_id,total,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6)"
+	_, err := tx.ExecContext(ctx, query, sendOrderToDatabase.Id, sendOrderToDatabase.Costumer_id, sendOrderToDatabase.Costume_id, sendOrderToDatabase.TotalAmount, sendOrderToDatabase.Created_at, sendOrderToDatabase.Created_at)
+	helper.PanicIfError(err)
 }

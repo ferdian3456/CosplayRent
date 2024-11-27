@@ -61,7 +61,7 @@ func main() {
 	reviewController := review_controller.NewReviewController(reviewService)
 
 	orderRepository := order_repository.NewOrderRepository()
-	orderService := order_service.NewOrderService(orderRepository, DB, validate)
+	orderService := order_service.NewOrderService(orderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
 	orderController := order_controller.NewOrderController(orderService)
 	//log.Println(orderController)
 
@@ -103,7 +103,8 @@ func main() {
 	router.DELETE("/api/review/:reviewID", authMiddleware.ServeHTTP(reviewController.DeleteUserReviewByReviewID))
 	router.GET("/api/costume/:costumeID/review", reviewController.FindByCostumeId)
 
-	router.POST("/api/order", orderController.Create)
+	router.POST("/api/order", authMiddleware.ServeHTTP(orderController.Create))
+	router.POST("/api/order/midtrans", authMiddleware.ServeHTTP(orderController.DirectlyOrderToMidtrans))
 
 	router.GET("/api/provinces", rajaongkirController.FindProvince)
 	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)

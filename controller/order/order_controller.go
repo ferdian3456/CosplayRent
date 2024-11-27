@@ -9,4 +9,5 @@ import (
 type OrderController interface {
 	Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindByUserId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	DirectlyOrderToMidtrans(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

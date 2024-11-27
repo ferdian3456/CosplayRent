@@ -128,8 +128,10 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 			value := imageEnv + *costume[i].Picture
 			costume[i].Picture = &value
 		}
-		value := imageEnv + *userResult.Profile_picture
-		costume[i].Profile_picture = &value
+		if userResult.Profile_picture != nil {
+			value := imageEnv + *userResult.Profile_picture
+			costume[i].Profile_picture = &value
+		}
 	}
 
 	return helper.ToCostumeResponse(costume)
@@ -251,8 +253,10 @@ func (service *CostumeServiceImpl) FindSellerCostumeByCostumeID(ctx context.Cont
 
 	imageEnv := os.Getenv("IMAGE_ENV")
 
-	value := imageEnv + *userResult.Profile_picture
-	costume.Profile_picture = &value
+	if userResult.Profile_picture != nil {
+		value := imageEnv + *userResult.Profile_picture
+		costume.Profile_picture = &value
+	}
 
 	if costume.Picture != nil {
 		value := imageEnv + *costume.Picture
