@@ -18,6 +18,7 @@ type DirectlyOrderToMidtrans struct {
 	Costumer_id      string
 	Costumer_email   string
 	Costumer_name    string
+	Seller_id        string  `validate:"required" json:"seller_id"`
 	Costume_id       int     `validate:"required" json:"costume_id"`
 	Costume_name     string  `validate:"required" json:"costume_name"`
 	Costume_category string  `validate:"required" json:"costume_category"`

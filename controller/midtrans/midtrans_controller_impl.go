@@ -51,21 +51,23 @@ func (controller MidtransControllerImpl) MidtransCallBack(writer http.ResponseWr
 	helper.ReadFromRequestBody(request, &midtransCallBack)
 	//log.Println(midtransCallBack.OrderID)
 
-	//fmt.Println("Transaction Success")
-	//fmt.Println(midtransCallBack.Status_Code)
-	//fmt.Println(midtransCallBack.TransactionStatus)
-	//fmt.Println(midtransCallBack.OrderID)
-	//fmt.Println(midtransCallBack.GrossAmount)
-	//fmt.Println(midtransCallBack.PaymentType)
-	//fmt.Println(midtransCallBack.TransactionTime)
-	//fmt.Println(midtransCallBack.TransactionID)
-	//fmt.Println(midtransCallBack.SignatureKey)
+	if midtransCallBack.TransactionStatus == "settlement" {
+		//fmt.Println("Transaction Success")
+		//fmt.Println(midtransCallBack.Status_Code)
+		//fmt.Println(midtransCallBack.TransactionStatus)
+		//fmt.Println(midtransCallBack.OrderID)
+		//fmt.Println(midtransCallBack.GrossAmount)
+		//fmt.Println(midtransCallBack.PaymentType)
+		//fmt.Println(midtransCallBack.TransactionTime)
+		//fmt.Println(midtransCallBack.TransactionID)
+		//fmt.Println(midtransCallBack.SignatureKey)
 
-	controller.MidtransService.MidtransCallBack(request.Context(), midtransCallBack.OrderID)
+		controller.MidtransService.MidtransCallBack(request.Context(), midtransCallBack.OrderID)
 
-	webResponse := web.WebResponse{
-		Code:   200,
-		Status: "OK",
+		webResponse := web.WebResponse{
+			Code:   200,
+			Status: "OK",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
 	}
-	helper.WriteToResponseBody(writer, webResponse)
 }

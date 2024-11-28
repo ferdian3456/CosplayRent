@@ -19,4 +19,5 @@ type UserRepository interface {
 	GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
 	GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (float64, error)
 	TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string)
+	AfterBuy(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, buyeruuid string, selleruuid string)
 }

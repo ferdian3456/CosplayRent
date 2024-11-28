@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS orders(
     id uuid PRIMARY KEY,
     user_id UUID NOT NULL,
+    seller_id UUID NOT NULL,
     costume_id int NOT NULL,
     total decimal(10,2) NOT NULL,
     status_payment bool default false,
@@ -9,5 +10,6 @@ CREATE TABLE IF NOT EXISTS orders(
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (costume_id) REFERENCES costumes(id) ON DELETE CASCADE
 )

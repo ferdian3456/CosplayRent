@@ -17,8 +17,9 @@ func NewOrderRepository() OrderRepository {
 }
 
 func (repository *OrderRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, order domain.Order) {
-	query := "INSERT INTO orders (id,user_id,costume_id,total,created_at) VALUES ($1,$2,$3,$4,$5)"
-	_, err := tx.ExecContext(ctx, query, order.Id, order.User_id, order.Costume_id, order.Total, order.Created_at)
+	log.Println(order.Seller_id)
+	query := "INSERT INTO orders (id,user_id,seller_id,costume_id,total,created_at) VALUES ($1,$2,$3,$4,$5,$6)"
+	_, err := tx.ExecContext(ctx, query, order.Id, order.User_id, order.Seller_id, order.Costume_id, order.Total, order.Created_at)
 	helper.PanicIfError(err)
 }
 
@@ -48,7 +49,7 @@ func (repository *OrderRepositoryImpl) FindByUserId(ctx context.Context, tx *sql
 func (repository *OrderRepositoryImpl) DirectlyOrderToMidtrans(ctx context.Context, tx *sql.Tx, uuid string, sendOrderToDatabase order.DirectlyOrderToMidtrans) {
 	log.Printf("User with uuid: %s enter Order Repository: DirectlyOrderToMidtrans", uuid)
 
-	query := "INSERT INTO orders (id,user_id,costume_id,total,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6)"
-	_, err := tx.ExecContext(ctx, query, sendOrderToDatabase.Id, sendOrderToDatabase.Costumer_id, sendOrderToDatabase.Costume_id, sendOrderToDatabase.TotalAmount, sendOrderToDatabase.Created_at, sendOrderToDatabase.Created_at)
+	query := "INSERT INTO orders (id,user_id,seller_id,costume_id,total,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)"
+	_, err := tx.ExecContext(ctx, query, sendOrderToDatabase.Id, sendOrderToDatabase.Costumer_id, sendOrderToDatabase.Seller_id, sendOrderToDatabase.Costume_id, sendOrderToDatabase.TotalAmount, sendOrderToDatabase.Created_at, sendOrderToDatabase.Created_at)
 	helper.PanicIfError(err)
 }

@@ -99,6 +99,7 @@ func (service *OrderServiceImpl) DirectlyOrderToMidtrans(ctx context.Context, uu
 	SendOrderToDatabase := order.DirectlyOrderToMidtrans{
 		Id:          googleUUID.New(),
 		Costumer_id: directOrderToMidtrans.Costumer_id,
+		Seller_id:   directOrderToMidtrans.Seller_id,
 		Costume_id:  directOrderToMidtrans.Costume_id,
 		TotalAmount: directOrderToMidtrans.TotalAmount,
 		Created_at:  &now,
@@ -110,6 +111,7 @@ func (service *OrderServiceImpl) DirectlyOrderToMidtrans(ctx context.Context, uu
 
 	SendOrderToMidtrans := order.DirectlyOrderToMidtrans{
 		Id:               SendOrderToDatabase.Id,
+		Seller_id:        directOrderToMidtrans.Seller_id,
 		Costumer_id:      userResult.Id,
 		Costumer_name:    userResult.Name,
 		Costumer_email:   userResult.Email,

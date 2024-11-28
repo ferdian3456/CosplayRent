@@ -38,7 +38,7 @@ func NewMidtransService(midtransRepository midtranss.MidtransRepository, userRep
 }
 
 func (service *MidtransServiceImpl) CreateTransaction(ctx context.Context, request orders.DirectlyOrderToMidtrans, userUUID string) midtransWeb.MidtransResponse {
-	//log.Printf("User with uuid: %s enter Midtrans Service: CreateTransaction", userUUID)
+	log.Printf("User with uuid: %s enter Midtrans Service: CreateTransaction", userUUID)
 	//fmt.Println("test")
 	err := service.Validate.Struct(request)
 	helper.PanicIfError(err)
@@ -111,4 +111,13 @@ func (service *MidtransServiceImpl) MidtransCallBack(ctx context.Context, orderi
 
 	now := time.Now()
 	service.MidtransRepository.Update(ctx, tx, orderid, &now)
+
+	//// Find buyer id by orderid
+	//id, err := service.MidtransRepository.FindBuyerId(ctx, tx, orderid)
+	//if err != nil {
+	//	panic(exception.NewNotFoundError(err.Error()))
+	//}
+	//
+	//// Find seller id by order_id
+	//id, err := serv
 }

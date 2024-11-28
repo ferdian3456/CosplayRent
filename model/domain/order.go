@@ -1,12 +1,13 @@
 package domain
 
 import (
-  "time"
+	"time"
 )
 
 type Order struct {
 	Id             string
 	User_id        string
+	Seller_id      string
 	Costume_id     int
 	Shipping_id    int
 	Total          float64

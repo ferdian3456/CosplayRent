@@ -173,14 +173,30 @@ func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *s
 		helper.PanicIfError(err)
 		return eMoneyAmount, nil
 	} else {
-		return 0, errors.New("Emoney Amount is Not Found")
+		return 0, errors.New("emoney Amount is Not Found")
 	}
 }
 
 func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string) {
 	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
 
-	query := "UPDATE users SET emoney_amount = $1 WHERE id = $2"
+	query := "UPDATE users SET emoney_amount = emoney_amount + $1 WHERE id = $2"
 	_, err := tx.ExecContext(ctx, query, emoney.Emoney_amont, uuid)
+	helper.PanicIfError(err)
+}
+
+func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, buyermoney user.TopUpEmoney, buyeruuid string, selleruuid string) {
+	log.Printf("User with uuid: %s enter User Repository: AfterBuy", buyeruuid)
+
+	// substract buyer money
+	query := "UPDATE users SET emoney_amount = emoney_amount - $1 WHERE id = $2"
+	_, err := tx.ExecContext(ctx, query, buyermoney.Emoney_amont, buyeruuid)
+
+	helper.PanicIfError(err)
+
+	// add seller money
+	query = "UPDATE users SET emoney_amount = emoney_amount + $1 WHERE id = $2"
+	_, err = tx.ExecContext(ctx, query, buyermoney.Emoney_amont, selleruuid)
+
 	helper.PanicIfError(err)
 }
