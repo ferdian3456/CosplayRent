@@ -42,7 +42,7 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, nam
 
 func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx, uuid string) (user.UserResponse, error) {
 	log.Printf("User with uuid: %s enter User Repository: FindByUUID", uuid)
-	query := "SELECT id,name,email,address,profile_picture,created_at FROM users where id=$1"
+	query := "SELECT id,name,email,address,profile_picture,originprovince_name,origincity_name,created_at,updated_at FROM users where id=$1"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 
@@ -50,10 +50,12 @@ func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx
 
 	users := user.UserResponse{}
 	var createdAt time.Time
+	var updatedAt time.Time
 	if rows.Next() {
-		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &createdAt)
+		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Origin_province_name, &users.Origin_city_name, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
 		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		users.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		return users, nil
 	} else {
 		return users, errors.New("user not found")
@@ -63,7 +65,7 @@ func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx
 func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserResponse, error) {
 	log.Printf("User with uuid: %s enter User Repository: FindAll", uuid)
 
-	query := "SELECT id,name,email,address,profile_picture,created_at FROM users"
+	query := "SELECT id,name,email,address,profile_picture,origincity_name,originprovince_name,created_at,updated_at FROM users"
 	rows, err := tx.QueryContext(ctx, query)
 	helper.PanicIfError(err)
 	hasData := false
@@ -72,11 +74,13 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, u
 
 	users := []user.UserResponse{}
 	var createdAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
 		user := user.UserResponse{}
-		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &createdAt)
+		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &user.Origin_city_name, &user.Origin_province_name, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
 		user.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		user.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		//user.Profile_picture = fmt.Sprintf()
 		users = append(users, user)
 		hasData = true
@@ -92,12 +96,12 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 	log.Printf("User with uuid: %s enter User Repository: Update", uuid)
 
 	if user.Profile_picture == nil {
-		query := "UPDATE users SET name=$2,email=$3,address=$4,updated_at=$5  WHERE id=$1"
-		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Update_at)
+		query := "UPDATE users SET name=$2,email=$3,address=$4,origincity_name=$5,originprovince_name=$6,updated_at=$7  WHERE id=$1"
+		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Origin_city_name, user.Origin_province_name, user.Update_at)
 		helper.PanicIfError(err)
 	} else {
-		query := "UPDATE users SET name=$2,email=$3,address=$4,profile_picture=$5,updated_at=$6  WHERE id=$1"
-		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Profile_picture, user.Update_at)
+		query := "UPDATE users SET name=$2,email=$3,address=$4,profile_picture=$5,origincity_name=$6,originprovince_name=$7,updated_at=$8  WHERE id=$1"
+		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Profile_picture, user.Origin_city_name, user.Origin_province_name, user.Update_at)
 		helper.PanicIfError(err)
 	}
 }
@@ -185,18 +189,18 @@ func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emo
 	helper.PanicIfError(err)
 }
 
-func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, buyermoney user.TopUpEmoney, buyeruuid string, selleruuid string) {
-	log.Printf("User with uuid: %s enter User Repository: AfterBuy", buyeruuid)
+func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string) {
+	log.Printf("Buye with uuid: %s and Seller with uuid: %s enter User Repository: AfterBuy", buyeruuid, selleruuid)
 
 	// substract buyer money
 	query := "UPDATE users SET emoney_amount = emoney_amount - $1 WHERE id = $2"
-	_, err := tx.ExecContext(ctx, query, buyermoney.Emoney_amont, buyeruuid)
+	_, err := tx.ExecContext(ctx, query, orderamount, buyeruuid)
 
 	helper.PanicIfError(err)
 
 	// add seller money
 	query = "UPDATE users SET emoney_amount = emoney_amount + $1 WHERE id = $2"
-	_, err = tx.ExecContext(ctx, query, buyermoney.Emoney_amont, selleruuid)
+	_, err = tx.ExecContext(ctx, query, orderamount, selleruuid)
 
 	helper.PanicIfError(err)
 }

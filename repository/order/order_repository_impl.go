@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"time"
 )
 
 type OrderRepositoryImpl struct{}
@@ -52,4 +53,66 @@ func (repository *OrderRepositoryImpl) DirectlyOrderToMidtrans(ctx context.Conte
 	query := "INSERT INTO orders (id,user_id,seller_id,costume_id,total,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)"
 	_, err := tx.ExecContext(ctx, query, sendOrderToDatabase.Id, sendOrderToDatabase.Costumer_id, sendOrderToDatabase.Seller_id, sendOrderToDatabase.Costume_id, sendOrderToDatabase.TotalAmount, sendOrderToDatabase.Created_at, sendOrderToDatabase.Created_at)
 	helper.PanicIfError(err)
+}
+
+func (repository *OrderRepositoryImpl) FindBuyerIdByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (string, error) {
+	log.Println("From Midtrans Callback enter Order Repository: FindBuyerIdByOrderId")
+
+	query := "SELECT user_id FROM orders WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, orderid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	var UserId string
+	if row.Next() {
+		err = row.Scan(&UserId)
+		helper.PanicIfError(err)
+		return UserId, nil
+	} else {
+		return "", errors.New("order not found")
+	}
+}
+
+func (repository *OrderRepositoryImpl) FindSellerIdByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (string, error) {
+	log.Println("From Midtrans Callback enter Order Repository: FindSellerIdByOrderId")
+
+	query := "SELECT seller_id FROM orders WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, orderid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	var SellerId string
+	if row.Next() {
+		err = row.Scan(&SellerId)
+		helper.PanicIfError(err)
+		return SellerId, nil
+	} else {
+		return "", errors.New("order not found")
+	}
+}
+
+func (repository *OrderRepositoryImpl) FindOrderDetailByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (order.OrderResponse, error) {
+
+	query := "SELECT id, user_id, seller_id, costume_id, total, status_payment, status_shipping, is_cancelled, created_at, updated_at FROM orders WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, orderid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	order := order.OrderResponse{}
+	var createdAt time.Time
+	var updatedAt time.Time
+
+	if row.Next() {
+		err = row.Scan(&order.Id, &order.User_id, &order.Seller_id, &order.Costume_id, &order.Total, &order.Status_payment, &order.Status_shipping, &order.Is_canceled, &createdAt, &updatedAt)
+		helper.PanicIfError(err)
+		order.Created_at = createdAt.Format("2006-01-02 15:04:05")
+		order.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
+	} else {
+		return order, errors.New("order not found")
+	}
+
+	return order, nil
 }

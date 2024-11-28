@@ -6,7 +6,7 @@ import (
 )
 
 type CostumeService interface {
-	Create(ctx context.Context, request costume.CostumeCreateRequest)
+	Create(ctx context.Context, request costume.CostumeCreateRequest, userUUID string)
 	FindById(ctx context.Context, id int) costume.CostumeResponse
 	FindAll(ctx context.Context) []costume.CostumeResponse
 	FindByName(ctx context.Context, name string) []costume.CostumeResponse

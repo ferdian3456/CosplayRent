@@ -105,6 +105,7 @@ func main() {
 
 	router.POST("/api/order", authMiddleware.ServeHTTP(orderController.Create))
 	router.POST("/api/order/midtrans", authMiddleware.ServeHTTP(orderController.DirectlyOrderToMidtrans))
+	router.GET("/api/checkorder/:orderID", orderController.CheckStatusPayment)
 
 	router.GET("/api/provinces", rajaongkirController.FindProvince)
 	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)

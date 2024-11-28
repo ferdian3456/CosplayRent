@@ -46,6 +46,11 @@ func (service *ReviewServiceImpl) Create(ctx context.Context, request review.Rev
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
+	_, err = service.UserRepository.FindByUUID(ctx, tx, request.User_id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
 	defer helper.CommitOrRollback(tx)
 
 	now := time.Now()
@@ -103,6 +108,11 @@ func (service *ReviewServiceImpl) FindUserReview(ctx context.Context, uuid strin
 
 	defer helper.CommitOrRollback(tx)
 
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
 	review := []review.OwnReviewResponse{}
 	review, err = service.ReviewRepository.FindUserReview(ctx, tx, uuid)
 	if err != nil {
@@ -138,6 +148,11 @@ func (service *ReviewServiceImpl) Update(ctx context.Context, request review.Rev
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	_, err = service.ReviewRepository.FindUserReviewByReviewID(ctx, tx, uuid, request.ReviewId)
 	if err != nil {
@@ -199,6 +214,11 @@ func (service *ReviewServiceImpl) DeleteUserReviewByReviewID(ctx context.Context
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	reviewResult, err := service.ReviewRepository.FindUserReviewByReviewID(ctx, tx, uuid, reviewid)
 	if err != nil {

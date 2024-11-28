@@ -163,6 +163,11 @@ func (service *UserServiceImpl) FindAll(ctx context.Context, uuid string) []user
 
 	defer helper.CommitOrRollback(tx)
 
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
 	user, err := service.UserRepository.FindAll(ctx, tx, uuid)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
@@ -180,7 +185,7 @@ func (service *UserServiceImpl) FindAll(ctx context.Context, uuid string) []user
 		}
 	}
 
-	return helper.ToUserResponses(user)
+	return user
 }
 
 func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.UserUpdateRequest, uuid string) {
@@ -204,12 +209,14 @@ func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.Use
 	now := time.Now()
 
 	updateRequest := user.UserUpdateRequest{
-		Id:              result.Id,
-		Name:            userRequest.Name,
-		Email:           userRequest.Email,
-		Address:         userRequest.Address,
-		Profile_picture: userRequest.Profile_picture,
-		Update_at:       &now,
+		Id:                   result.Id,
+		Name:                 userRequest.Name,
+		Email:                userRequest.Email,
+		Address:              userRequest.Address,
+		Profile_picture:      userRequest.Profile_picture,
+		Origin_city_name:     userRequest.Origin_city_name,
+		Origin_province_name: userRequest.Origin_province_name,
+		Update_at:            &now,
 	}
 
 	service.UserRepository.Update(ctx, tx, updateRequest, uuid)

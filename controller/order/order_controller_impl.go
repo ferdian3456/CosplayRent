@@ -90,3 +90,16 @@ func (controller OrderControllerImpl) DirectlyOrderToMidtrans(writer http.Respon
 	helper.WriteToResponseBody(writer, webResponse)
 
 }
+
+func (controller OrderControllerImpl) CheckStatusPayment(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	orderId := params.ByName("orderID")
+
+	orderResult := controller.OrderService.FindOrderDetailByOrderId(request.Context(), orderId)
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   orderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

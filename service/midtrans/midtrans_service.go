@@ -8,5 +8,5 @@ import (
 
 type MidtransService interface {
 	CreateTransaction(ctx context.Context, request order.DirectlyOrderToMidtrans, uuid string) midtrans.MidtransResponse
-	MidtransCallBack(ctx context.Context, orderid string)
+	MidtransCallBack(ctx context.Context, orderid string, orderamount string)
 }

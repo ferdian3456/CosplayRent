@@ -140,6 +140,8 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 	userName := request.FormValue("name")
 	userEmail := request.FormValue("email")
 	userAddress := request.FormValue("address")
+	userOriginCityName := request.FormValue("origin_city_name")
+	userOriginProvinceName := request.FormValue("origin_province_name")
 
 	var profilePicturePath *string
 
@@ -168,11 +170,13 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 	}
 
 	userRequest := user.UserUpdateRequest{
-		Id:              userUUID,
-		Name:            &userName,
-		Email:           &userEmail,
-		Address:         &userAddress,
-		Profile_picture: profilePicturePath,
+		Id:                   userUUID,
+		Name:                 &userName,
+		Email:                &userEmail,
+		Address:              &userAddress,
+		Profile_picture:      profilePicturePath,
+		Origin_province_name: &userOriginProvinceName,
+		Origin_city_name:     &userOriginCityName,
 	}
 
 	controller.UserService.Update(request.Context(), userRequest, userUUID)

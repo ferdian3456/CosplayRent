@@ -62,7 +62,7 @@ func (controller MidtransControllerImpl) MidtransCallBack(writer http.ResponseWr
 		//fmt.Println(midtransCallBack.TransactionID)
 		//fmt.Println(midtransCallBack.SignatureKey)
 
-		controller.MidtransService.MidtransCallBack(request.Context(), midtransCallBack.OrderID)
+		controller.MidtransService.MidtransCallBack(request.Context(), midtransCallBack.OrderID, midtransCallBack.GrossAmount)
 
 		webResponse := web.WebResponse{
 			Code:   200,

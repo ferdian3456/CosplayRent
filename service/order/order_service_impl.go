@@ -107,8 +107,6 @@ func (service *OrderServiceImpl) DirectlyOrderToMidtrans(ctx context.Context, uu
 
 	service.OrderRepository.DirectlyOrderToMidtrans(ctx, tx, uuid, SendOrderToDatabase)
 
-	log.Println("hi")
-
 	SendOrderToMidtrans := order.DirectlyOrderToMidtrans{
 		Id:               SendOrderToDatabase.Id,
 		Seller_id:        directOrderToMidtrans.Seller_id,
@@ -168,4 +166,20 @@ func (service *OrderServiceImpl) DirectlyOrderToMidtrans(ctx context.Context, uu
 	return result
 
 	//return midtrans.MidtransResponse{}
+}
+
+func (service *OrderServiceImpl) FindOrderDetailByOrderId(ctx context.Context, orderid string) order.OrderResponse {
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	orderResult, err := service.OrderRepository.FindOrderDetailByOrderId(ctx, tx, orderid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return orderResult
 }

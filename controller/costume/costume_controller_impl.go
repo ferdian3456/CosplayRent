@@ -80,7 +80,7 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 	}
 	fixPrice, err := strconv.ParseFloat(costumePrice, 64)
 	helper.PanicIfError(err)
-	
+
 	costumeRequest := costume.CostumeCreateRequest{
 		User_id:     userUUID,
 		Name:        costumeName,
@@ -93,7 +93,7 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 		Picture:     costumePicturePath,
 	}
 
-	controller.CostumeService.Create(request.Context(), costumeRequest)
+	controller.CostumeService.Create(request.Context(), costumeRequest, userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,

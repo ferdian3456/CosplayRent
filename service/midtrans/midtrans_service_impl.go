@@ -100,7 +100,7 @@ func (service *MidtransServiceImpl) CreateTransaction(ctx context.Context, reque
 	return midtransResponse
 }
 
-func (service *MidtransServiceImpl) MidtransCallBack(ctx context.Context, orderid string) {
+func (service *MidtransServiceImpl) MidtransCallBack(ctx context.Context, orderid string, orderamount string) {
 	log.Printf("Midtrans Callback with orderid:%s enter MidtransService: MidtransCallback", orderid)
 	tx, err := service.DB.Begin()
 	if err != nil {
@@ -112,12 +112,21 @@ func (service *MidtransServiceImpl) MidtransCallBack(ctx context.Context, orderi
 	now := time.Now()
 	service.MidtransRepository.Update(ctx, tx, orderid, &now)
 
-	//// Find buyer id by orderid
-	//id, err := service.MidtransRepository.FindBuyerId(ctx, tx, orderid)
-	//if err != nil {
-	//	panic(exception.NewNotFoundError(err.Error()))
-	//}
-	//
-	//// Find seller id by order_id
-	//id, err := serv
+	// Find buyer id by orderid
+	buyerid, err := service.OrderRepository.FindBuyerIdByOrderId(ctx, tx, orderid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	// Find seller id by order_id
+	var sellerid string
+	sellerid, err = service.OrderRepository.FindSellerIdByOrderId(ctx, tx, orderid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	orderAmount, err := strconv.ParseFloat(orderamount, 64)
+	helper.PanicIfError(err)
+
+	service.UserRepository.AfterBuy(ctx, tx, orderAmount, buyerid, sellerid)
 }

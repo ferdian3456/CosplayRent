@@ -33,7 +33,7 @@ func NewCostumeService(costumeRepository costumes.CostumeRepository, userReposit
 	}
 }
 
-func (service *CostumeServiceImpl) Create(ctx context.Context, request costume.CostumeCreateRequest) {
+func (service *CostumeServiceImpl) Create(ctx context.Context, request costume.CostumeCreateRequest, userUUID string) {
 	log.Printf("User with uuid: %s enter Costume Service: Create", request.User_id)
 
 	err := service.Validate.Struct(request)
@@ -45,6 +45,11 @@ func (service *CostumeServiceImpl) Create(ctx context.Context, request costume.C
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, userUUID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	now := time.Now()
 	costumeDomain := domain.Costume{
@@ -134,7 +139,7 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 		}
 	}
 
-	return helper.ToCostumeResponse(costume)
+	return costume
 }
 
 func (service *CostumeServiceImpl) FindByName(ctx context.Context, name string) []costume.CostumeResponse {
@@ -162,6 +167,11 @@ func (service *CostumeServiceImpl) Update(ctx context.Context, costumeRequest co
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	result, err1 := service.CostumeRepository.FindById(ctx, tx, costumeRequest.Id)
 	if err1 != nil {
@@ -195,6 +205,11 @@ func (service *CostumeServiceImpl) Delete(ctx context.Context, id int, uuid stri
 	}
 
 	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
 
 	costumeResult, err := service.CostumeRepository.FindById(ctx, tx, id)
 	if err != nil {
