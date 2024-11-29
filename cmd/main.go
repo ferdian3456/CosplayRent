@@ -9,6 +9,7 @@ import (
 	review_controller "cosplayrent/controller/review"
 	topup_order_controller "cosplayrent/controller/topup_order"
 	user_controller "cosplayrent/controller/user"
+	wishlist_controller "cosplayrent/controller/wishlist"
 	"cosplayrent/exception"
 	"cosplayrent/helper"
 	"cosplayrent/middleware"
@@ -19,6 +20,7 @@ import (
 	"cosplayrent/repository/topup_order"
 	topup_order_repository "cosplayrent/repository/topup_order"
 	user_repository "cosplayrent/repository/user"
+	wishlist_repository "cosplayrent/repository/wishlist"
 	costume_service "cosplayrent/service/costume"
 	midtrans_service "cosplayrent/service/midtrans"
 	order_service "cosplayrent/service/order"
@@ -26,6 +28,7 @@ import (
 	review_service "cosplayrent/service/review"
 	topup_order_service "cosplayrent/service/topup_order"
 	user_service "cosplayrent/service/user"
+	wishlist_service "cosplayrent/service/wishlist"
 	"log"
 	"net/http"
 
@@ -73,6 +76,10 @@ func main() {
 	topuporderService := topup_order_service.NewTopUpOrderService(topuporderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
 	topuporderController := topup_order_controller.NewTopUpOrderController(topuporderService)
 
+	wishlistRepository := wishlist_repository.NewWishListRepository()
+	wishlistService := wishlist_service.NewWishlistService(wishlistRepository, user_repository.NewUserRepository(), costume_repository.NewCostumeRepository(), DB, validate)
+	wishlistController := wishlist_controller.NewWishlistController(wishlistService)
+
 	midtransRepository := midtrans_repository.NewMidtransRepository()
 	midtransService := midtrans_service.NewMidtransService(midtransRepository, topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate)
 	midtransController := midtrans_controller.NewMidtransController(midtransService)
@@ -117,6 +124,10 @@ func main() {
 
 	router.PUT("/api/topup", authMiddleware.ServeHTTP(topuporderController.CreateTopUpOrder))
 	//router.GET("/api/check/topuporder", topup_order.n)
+
+	router.GET("/api/wishlist", authMiddleware.ServeHTTP(wishlistController.FindAllWishListByUserId))
+	router.POST("/api/wishlist/:costumeID", authMiddleware.ServeHTTP(wishlistController.AddWishlist))
+	router.DELETE("/api/wishlist/:costumeID", authMiddleware.ServeHTTP(wishlistController.DeleteWishlist))
 
 	router.GET("/api/provinces", rajaongkirController.FindProvince)
 	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)

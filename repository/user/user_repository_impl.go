@@ -185,23 +185,26 @@ func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *s
 func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, timeNow *time.Time) {
 	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
 
+	log.Println("timenow: ", timeNow)
 	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
 	_, err := tx.ExecContext(ctx, query, emoney, timeNow, uuid)
 	helper.PanicIfError(err)
 }
 
-func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string) {
-	log.Printf("Buye with uuid: %s and Seller with uuid: %s enter User Repository: AfterBuy", buyeruuid, selleruuid)
+func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string, timeNow *time.Time) {
+	log.Printf("Buy with uuid: %s and Seller with uuid: %s enter User Repository: AfterBuy", buyeruuid, selleruuid)
 
+	log.Println("TimeNow:", timeNow)
 	// substract buyer money
-	query := "UPDATE users SET emoney_amount = emoney_amount - $1 WHERE id = $2"
-	_, err := tx.ExecContext(ctx, query, orderamount, buyeruuid)
+	query := "UPDATE users SET emoney_amount = emoney_amount - $1,emoney_updated_at=$2 WHERE id = $3"
+	_, err := tx.ExecContext(ctx, query, orderamount, timeNow, buyeruuid)
 
 	helper.PanicIfError(err)
 
 	// add seller money
-	query = "UPDATE users SET emoney_amount = emoney_amount + $1 WHERE id = $2"
-	_, err = tx.ExecContext(ctx, query, orderamount, selleruuid)
+
+	query = "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
+	_, err = tx.ExecContext(ctx, query, orderamount, timeNow, selleruuid)
 
 	helper.PanicIfError(err)
 }

@@ -148,7 +148,7 @@ func (service *MidtransServiceImpl) MidtransCallBack(ctx context.Context, orderi
 				panic(exception.NewNotFoundError(err.Error()))
 			}
 
-			service.UserRepository.AfterBuy(ctx, tx, orderAmount, buyerResult, sellerid)
+			service.UserRepository.AfterBuy(ctx, tx, orderAmount, buyerResult, sellerid, &now)
 			//log.Println("Success to buy")
 		}
 	} else {

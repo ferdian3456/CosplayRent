@@ -20,6 +20,6 @@ type UserRepository interface {
 	GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
 	GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (user.UserEmoneyResponse, error)
 	TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, time *time.Time)
-	AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string)
+	AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string, timeNow *time.Time)
 	//CreateTopUpOrder(ctx context.Context, tx *sql.Tx, orderid string, uuid string, emoney user.TopUpEmoney, time *time.Time)
 }
