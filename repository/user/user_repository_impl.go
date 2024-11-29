@@ -18,8 +18,8 @@ func NewUserRepository() UserRepository {
 }
 
 func (repository *UserRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, user domain.User) {
-	query := "INSERT INTO users (id,name,email,password,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6)"
-	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at, user.Created_at)
+	query := "INSERT INTO users (id,name,email,password,emoney_updated_at,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)"
+	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at, user.Created_at, user.Created_at)
 	helper.PanicIfError(err)
 }
 
@@ -161,31 +161,32 @@ func (repository *UserRepositoryImpl) GetIdentityCard(ctx context.Context, tx *s
 	}
 }
 
-func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (float64, error) {
+func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (user.UserEmoneyResponse, error) {
 	log.Printf("User with uuid: %s enter User Repository: GetEMoneyAmount", uuid)
 
-	query := "SELECT emoney_amount FROM users WHERE id=$1"
+	query := "SELECT emoney_amount,emoney_updated_at FROM users WHERE id=$1"
 	row, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 
 	defer row.Close()
 
-	var eMoneyAmount float64
-
+	userEmoney := user.UserEmoneyResponse{}
+	var updatedAt time.Time
 	if row.Next() {
-		err = row.Scan(&eMoneyAmount)
+		err = row.Scan(&userEmoney.Emoney_amont, &updatedAt)
 		helper.PanicIfError(err)
-		return eMoneyAmount, nil
+		userEmoney.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
+		return userEmoney, nil
 	} else {
-		return 0, errors.New("emoney Amount is Not Found")
+		return user.UserEmoneyResponse{}, errors.New("emoney amount is not found")
 	}
 }
 
-func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string) {
+func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, timeNow *time.Time) {
 	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
 
-	query := "UPDATE users SET emoney_amount = emoney_amount + $1 WHERE id = $2"
-	_, err := tx.ExecContext(ctx, query, emoney.Emoney_amont, uuid)
+	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
+	_, err := tx.ExecContext(ctx, query, emoney, timeNow, uuid)
 	helper.PanicIfError(err)
 }
 

@@ -396,29 +396,29 @@ func (controller UserControllerImpl) GetEMoneyAmount(writer http.ResponseWriter,
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
-func (controller UserControllerImpl) TopUp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userUUID, ok := request.Context().Value("user_uuid").(string)
-	if !ok {
-		webResponse := web.WebResponse{
-			Code:   http.StatusInternalServerError,
-			Status: "Unauthorized",
-			Data:   "Invalid Token",
-		}
-		helper.WriteToResponseBody(writer, webResponse)
-		return
-	}
-
-	log.Printf("User with uuid: %s enter User Controller: TopUp", userUUID)
-
-	topUpEMoneyRequest := user.TopUpEmoney{}
-	helper.ReadFromRequestBody(request, &topUpEMoneyRequest)
-
-	controller.UserService.TopUp(request.Context(), topUpEMoneyRequest, userUUID)
-
-	webResponse := web.WebResponse{
-		Code:   200,
-		Status: "OK",
-	}
-
-	helper.WriteToResponseBody(writer, webResponse)
-}
+//func (controller UserControllerImpl) TopUp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+//	userUUID, ok := request.Context().Value("user_uuid").(string)
+//	if !ok {
+//		webResponse := web.WebResponse{
+//			Code:   http.StatusInternalServerError,
+//			Status: "Unauthorized",
+//			Data:   "Invalid Token",
+//		}
+//		helper.WriteToResponseBody(writer, webResponse)
+//		return
+//	}
+//
+//	log.Printf("User with uuid: %s enter User Controller: TopUp", userUUID)
+//
+//	topUpEMoneyRequest := user.TopUpEmoney{}
+//	helper.ReadFromRequestBody(request, &topUpEMoneyRequest)
+//
+//	controller.UserService.TopUp(request.Context(), topUpEMoneyRequest, userUUID)
+//
+//	webResponse := web.WebResponse{
+//		Code:   200,
+//		Status: "OK",
+//	}
+//
+//	helper.WriteToResponseBody(writer, webResponse)
+//}

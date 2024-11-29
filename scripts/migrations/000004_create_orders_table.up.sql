@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS orders(
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (costume_id) REFERENCES costumes(id) ON DELETE CASCADE
-)
+);

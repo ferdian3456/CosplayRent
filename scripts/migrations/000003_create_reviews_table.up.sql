@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS reviews(
     updated_at timestamp NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (costume_id) REFERENCES costumes(id) ON DELETE CASCADE
-)
+);

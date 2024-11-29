@@ -5,6 +5,7 @@ import (
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/user"
 	"database/sql"
+	"time"
 )
 
 type UserRepository interface {
@@ -17,7 +18,8 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error)
 	AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string)
 	GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
-	GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (float64, error)
-	TopUp(ctx context.Context, tx *sql.Tx, emoney user.TopUpEmoney, uuid string)
+	GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (user.UserEmoneyResponse, error)
+	TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, time *time.Time)
 	AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string)
+	//CreateTopUpOrder(ctx context.Context, tx *sql.Tx, orderid string, uuid string, emoney user.TopUpEmoney, time *time.Time)
 }

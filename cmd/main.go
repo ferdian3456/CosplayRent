@@ -7,6 +7,7 @@ import (
 	order_controller "cosplayrent/controller/order"
 	rajaongkir_controller "cosplayrent/controller/rajaongkir"
 	review_controller "cosplayrent/controller/review"
+	topup_order_controller "cosplayrent/controller/topup_order"
 	user_controller "cosplayrent/controller/user"
 	"cosplayrent/exception"
 	"cosplayrent/helper"
@@ -15,12 +16,15 @@ import (
 	midtrans_repository "cosplayrent/repository/midtrans"
 	order_repository "cosplayrent/repository/order"
 	review_repository "cosplayrent/repository/review"
+	"cosplayrent/repository/topup_order"
+	topup_order_repository "cosplayrent/repository/topup_order"
 	user_repository "cosplayrent/repository/user"
 	costume_service "cosplayrent/service/costume"
 	midtrans_service "cosplayrent/service/midtrans"
 	order_service "cosplayrent/service/order"
 	rajaongkir_service "cosplayrent/service/rajaongkir"
 	review_service "cosplayrent/service/review"
+	topup_order_service "cosplayrent/service/topup_order"
 	user_service "cosplayrent/service/user"
 	"log"
 	"net/http"
@@ -61,12 +65,16 @@ func main() {
 	reviewController := review_controller.NewReviewController(reviewService)
 
 	orderRepository := order_repository.NewOrderRepository()
-	orderService := order_service.NewOrderService(orderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
+	orderService := order_service.NewOrderService(orderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
 	orderController := order_controller.NewOrderController(orderService)
 	//log.Println(orderController)
 
+	topuporderRepository := topup_order_repository.NewTopUpOrderRepository()
+	topuporderService := topup_order_service.NewTopUpOrderService(topuporderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
+	topuporderController := topup_order_controller.NewTopUpOrderController(topuporderService)
+
 	midtransRepository := midtrans_repository.NewMidtransRepository()
-	midtransService := midtrans_service.NewMidtransService(midtransRepository, user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate)
+	midtransService := midtrans_service.NewMidtransService(midtransRepository, topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate)
 	midtransController := midtrans_controller.NewMidtransController(midtransService)
 
 	rajaongkirService := rajaongkir_service.NewRajaOngkirService(validate, memcacheClient)
@@ -80,7 +88,7 @@ func main() {
 	router.POST("/api/identitycard", authMiddleware.ServeHTTP(userController.AddIdentityCard))
 	router.PUT("/api/identitycard", authMiddleware.ServeHTTP(userController.UpdateIdentityCard))
 	router.GET("/api/emoney", authMiddleware.ServeHTTP(userController.GetEMoneyAmount))
-	router.PUT("/api/emoney", authMiddleware.ServeHTTP(userController.TopUp))
+	//router.PUT("/api/emoney", authMiddleware.ServeHTTP(userController.TopUp))
 	router.POST("/api/login", userController.Login)
 	router.GET("/api/userdetail", authMiddleware.ServeHTTP(userController.FindByUUID))
 	router.GET("/api/user", authMiddleware.ServeHTTP(userController.FindAll))
@@ -106,6 +114,9 @@ func main() {
 	router.POST("/api/order", authMiddleware.ServeHTTP(orderController.Create))
 	router.POST("/api/order/midtrans", authMiddleware.ServeHTTP(orderController.DirectlyOrderToMidtrans))
 	router.GET("/api/checkorder/:orderID", orderController.CheckStatusPayment)
+
+	router.PUT("/api/topup", authMiddleware.ServeHTTP(topuporderController.CreateTopUpOrder))
+	//router.GET("/api/check/topuporder", topup_order.n)
 
 	router.GET("/api/provinces", rajaongkirController.FindProvince)
 	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)

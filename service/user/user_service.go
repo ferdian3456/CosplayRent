@@ -16,6 +16,5 @@ type UserService interface {
 	AddIdentityCard(ctx context.Context, uuid string, IdentityCardImage string)
 	GetIdentityCard(ctx context.Context, uuid string) (identityCardImage string)
 	UpdateIdentityCard(ctx context.Context, uuid string, IdentityCardImage string)
-	GetEMoneyAmount(ctx context.Context, uuid string) (emoneyAmount float64)
-	TopUp(ctx context.Context, topUpEMoneyRequest user.TopUpEmoney, uuid string)
+	GetEMoneyAmount(ctx context.Context, uuid string) user.UserEmoneyResponse
 }

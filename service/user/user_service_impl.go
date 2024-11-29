@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	googleuuid "github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -50,7 +50,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request user.UserCre
 	helper.PanicIfError(err)
 
 	userDomain := domain.User{
-		Id:         uuid.New(),
+		Id:         googleuuid.New(),
 		Name:       request.Name,
 		Email:      request.Email,
 		Password:   string(hashedPassword),
@@ -351,7 +351,7 @@ func (service *UserServiceImpl) UpdateIdentityCard(ctx context.Context, uuid str
 	service.UserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
 }
 
-func (service *UserServiceImpl) GetEMoneyAmount(ctx context.Context, uuid string) (emoneyAmount float64) {
+func (service *UserServiceImpl) GetEMoneyAmount(ctx context.Context, uuid string) (userEmoneyResult user.UserEmoneyResponse) {
 	log.Printf("User with uuid: %s enter User Service: GetEMoneyAmount", uuid)
 
 	tx, err := service.DB.Begin()
@@ -366,31 +366,10 @@ func (service *UserServiceImpl) GetEMoneyAmount(ctx context.Context, uuid string
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	eMoneyAmountResult, err := service.UserRepository.GetEMoneyAmount(ctx, tx, uuid)
+	userEmoneyResult, err = service.UserRepository.GetEMoneyAmount(ctx, tx, uuid)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	return eMoneyAmountResult
-}
-
-func (service *UserServiceImpl) TopUp(ctx context.Context, topUpEMoneyRequest user.TopUpEmoney, uuid string) {
-	log.Printf("User with uuid: %s enter User Service: TopUp", uuid)
-
-	err := service.Validate.Struct(topUpEMoneyRequest)
-	helper.PanicIfError(err)
-
-	tx, err := service.DB.Begin()
-	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-	}
-
-	defer helper.CommitOrRollback(tx)
-
-	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
-	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-	}
-
-	service.UserRepository.TopUp(ctx, tx, topUpEMoneyRequest, uuid)
+	return userEmoneyResult
 }
