@@ -309,10 +309,14 @@ func (controller UserControllerImpl) GetIdentityCard(writer http.ResponseWriter,
 
 	identityCardResult := controller.UserService.GetIdentityCard(request.Context(), userUUID)
 
+	identityCardResponse := user.IdentityCardRequest{
+		IdentityCard_picture: identityCardResult,
+	}
+
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",
-		Data:   identityCardResult,
+		Data:   identityCardResponse,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
