@@ -124,7 +124,7 @@ func main() {
 	router.GET("/api/checkorder/:orderID", orderController.CheckStatusPayment)
 
 	router.PUT("/api/topup", authMiddleware.ServeHTTP(topuporderController.CreateTopUpOrder))
-	//router.GET("/api/check/topuporder", topup_order.n)
+	router.GET("/api/checktopuporder/:orderID", topuporderController.CheckTopUpOrderByOrderId)
 
 	router.GET("/api/wishlist", authMiddleware.ServeHTTP(wishlistController.FindAllWishListByUserId))
 	router.POST("/api/wishlist/:costumeID", authMiddleware.ServeHTTP(wishlistController.AddWishlist))

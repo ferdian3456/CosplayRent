@@ -7,5 +7,5 @@ import (
 
 type TopupOrderController interface {
 	CreateTopUpOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	FindUserIdByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	CheckTopUpOrderByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

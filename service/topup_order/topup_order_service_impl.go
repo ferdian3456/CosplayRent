@@ -5,6 +5,7 @@ import (
 	"cosplayrent/exception"
 	"cosplayrent/helper"
 	midtranss "cosplayrent/model/web/midtrans"
+	topup_orders "cosplayrent/model/web/topup_order"
 	"cosplayrent/model/web/user"
 	"cosplayrent/repository/topup_order"
 	users "cosplayrent/repository/user"
@@ -63,7 +64,18 @@ func (service *TopUpOrderServiceImpl) CreateTopUpOrder(ctx context.Context, topU
 	return midtransResult
 }
 
-func (TopUpOrderServiceImpl) FindUserIdByOrderId(ctx context.Context) {
-	//TODO implement me
-	panic("implement me")
+func (service *TopUpOrderServiceImpl) CheckTopUpOrderByOrderId(ctx context.Context, orderID string) topup_orders.TopupOrderResponse {
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+	
+	topuporderResult, err := service.TopUpOrderRepository.CheckTopUpOrderByOrderId(ctx, tx, orderID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	return topuporderResult
 }

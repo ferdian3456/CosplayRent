@@ -3,6 +3,7 @@ package topup_order
 import (
 	"context"
 	"cosplayrent/helper"
+	"cosplayrent/model/web/topup_order"
 	"cosplayrent/model/web/user"
 	"database/sql"
 	"errors"
@@ -79,4 +80,22 @@ func (repository *TopUpOrderRepositoryImpl) FindTopUpOrderHistoryByUserId(ctx co
 	}
 
 	return topUpOrders, nil
+}
+
+func (repository *TopUpOrderRepositoryImpl) CheckTopUpOrderByOrderId(ctx context.Context, tx *sql.Tx, orderId string) (topup_order.TopupOrderResponse, error) {
+	query := "SELECT status_payment FROM topup_orders WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, orderId)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	orderResult := topup_order.TopupOrderResponse{}
+
+	if row.Next() {
+		err = row.Scan(&orderResult.TopUpStatusPayment)
+		helper.PanicIfError(err)
+		return orderResult, nil
+	} else {
+		return topup_order.TopupOrderResponse{}, errors.New("topuporder is not found")
+	}
 }

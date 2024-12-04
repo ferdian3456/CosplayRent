@@ -2,6 +2,7 @@ package topup_order
 
 import (
 	"context"
+	"cosplayrent/model/web/topup_order"
 	"cosplayrent/model/web/user"
 	"database/sql"
 	"time"
@@ -12,4 +13,5 @@ type TopUpOrderRepository interface {
 	FindUserIdByOrderId(ctx context.Context, tx *sql.Tx, orderId string) (userId string, err error)
 	UpdateTopUpOrder(ctx context.Context, tx *sql.Tx, topuporderid string, time *time.Time)
 	FindTopUpOrderHistoryByUserId(ctx context.Context, tx *sql.Tx, userid string) ([]user.UserEmoneyResponse, error)
+	CheckTopUpOrderByOrderId(ctx context.Context, tx *sql.Tx, orderId string) (topup_order.TopupOrderResponse, error)
 }

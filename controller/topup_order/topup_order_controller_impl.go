@@ -48,7 +48,15 @@ func (controller TopUpOrderControllerImpl) CreateTopUpOrder(writer http.Response
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
-func (controller TopUpOrderControllerImpl) FindUserIdByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	//TODO implement me
-	panic("implement me")
+func (controller TopUpOrderControllerImpl) CheckTopUpOrderByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	orderID := params.ByName("orderID")
+
+	topuporderResult := controller.TopUpOrderService.CheckTopUpOrderByOrderId(request.Context(), orderID)
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   topuporderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
 }
