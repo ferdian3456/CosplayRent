@@ -6,6 +6,8 @@ import (
 	"cosplayrent/helper"
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/user"
+	"cosplayrent/repository/order"
+	"cosplayrent/repository/topup_order"
 	users "cosplayrent/repository/user"
 	"database/sql"
 	"errors"
@@ -17,20 +19,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
+	"sort"
 	"time"
 )
 
 type UserServiceImpl struct {
-	UserRepository users.UserRepository
-	DB             *sql.DB
-	Validate       *validator.Validate
+	UserRepository       users.UserRepository
+	OrderRepository      order.OrderRepository
+	TopUpOrderRepository topup_order.TopUpOrderRepository
+	DB                   *sql.DB
+	Validate             *validator.Validate
 }
 
-func NewUserService(userRepository users.UserRepository, DB *sql.DB, validate *validator.Validate) UserService {
+func NewUserService(userRepository users.UserRepository, orderRepository order.OrderRepository, topUpOrderRepository topup_order.TopUpOrderRepository, DB *sql.DB, validate *validator.Validate) UserService {
 	return &UserServiceImpl{
-		UserRepository: userRepository,
-		DB:             DB,
-		Validate:       validate,
+		UserRepository:       userRepository,
+		OrderRepository:      orderRepository,
+		TopUpOrderRepository: topUpOrderRepository,
+		DB:                   DB,
+		Validate:             validate,
 	}
 }
 
@@ -372,4 +379,76 @@ func (service *UserServiceImpl) GetEMoneyAmount(ctx context.Context, uuid string
 	}
 
 	return userEmoneyResult
+}
+
+func (service *UserServiceImpl) GetEMoneyTransactionHistory(ctx context.Context, uuid string) []user.UserEMoneyTransactionHistory {
+	log.Printf("User with uuid: %s enter User Service: GetEMoneyTransactionHistory", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	orderHistoryResult, err1 := service.OrderRepository.FindOrderHistoryByUserId(ctx, tx, uuid)
+
+	orderHistorySellerResult, err := service.OrderRepository.FindOrderHistoryBySellerId(ctx, tx, uuid)
+
+	topupOrderHistoryResult, err2 := service.TopUpOrderRepository.FindTopUpOrderHistoryByUserId(ctx, tx, uuid)
+
+	err3 := errors.New("order and topup order is not found")
+
+	if err != nil && err1 != nil && err2 != nil {
+		panic(exception.NewNotFoundError(err3.Error()))
+	}
+
+	EMoneyOrderHistory := []user.UserEMoneyTransactionHistory{}
+	EMoneyOrderSellerHistory := []user.UserEMoneyTransactionHistory{}
+	EMoneyTopUpOrderHistory := []user.UserEMoneyTransactionHistory{}
+
+	for _, order := range orderHistoryResult {
+		EMoneyOrderHistory = append(EMoneyOrderHistory, user.UserEMoneyTransactionHistory{
+			Transaction_amount: order.Emoney_amont,
+			Transaction_type:   "Order (Buyer)",
+			Transaction_date:   order.Emoney_updated_at,
+		})
+	}
+
+	for _, order := range orderHistorySellerResult {
+		EMoneyOrderSellerHistory = append(EMoneyOrderSellerHistory, user.UserEMoneyTransactionHistory{
+			Transaction_amount: order.Emoney_amont,
+			Transaction_type:   "Order (Seller)",
+			Transaction_date:   order.Emoney_updated_at,
+		})
+	}
+
+	for _, topup := range topupOrderHistoryResult {
+		EMoneyTopUpOrderHistory = append(EMoneyTopUpOrderHistory, user.UserEMoneyTransactionHistory{
+			Transaction_amount: topup.Emoney_amont,
+			Transaction_type:   "Top Up",
+			Transaction_date:   topup.Emoney_updated_at,
+		})
+	}
+
+	EMoneyTransactionHistory := append(EMoneyOrderHistory, EMoneyOrderSellerHistory...)
+	EMoneyTransactionHistory = append(EMoneyTransactionHistory, EMoneyTopUpOrderHistory...)
+
+	layout := "2006-01-02 15:04:05"
+	sort.Slice(EMoneyTransactionHistory, func(i, j int) bool {
+		date1, _ := time.Parse(layout, EMoneyTransactionHistory[i].Transaction_date)
+		date2, _ := time.Parse(layout, EMoneyTransactionHistory[j].Transaction_date)
+		return date1.Before(date2)
+	})
+
+	for i := range EMoneyTransactionHistory {
+		log.Println(EMoneyTransactionHistory[i])
+	}
+
+	return EMoneyTransactionHistory
 }

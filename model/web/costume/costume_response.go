@@ -12,6 +12,7 @@ type CostumeResponse struct {
 	Berat           string  `json:"berat"`
 	Kategori        string  `json:"kategori"`
 	Price           float64 `json:"price"`
+	KotaAsal        string  `json:"kota_asal"`
 	Picture         *string `json:"costume_picture"`
 	Available       string  `json:"available"`
 	Created_at      string  `json:"created_at"`

@@ -56,7 +56,7 @@ func main() {
 	memcacheClient := app.NewClient()
 	validate := validator.New()
 	userRepository := user_repository.NewUserRepository()
-	userService := user_service.NewUserService(userRepository, DB, validate)
+	userService := user_service.NewUserService(userRepository, order_repository.NewOrderRepository(), topup_order_repository.NewTopUpOrderRepository(), DB, validate)
 	userController := user_controller.NewUserController(userService)
 
 	costumerRepository := costume_repository.NewCostumeRepository()
@@ -95,6 +95,7 @@ func main() {
 	router.POST("/api/identitycard", authMiddleware.ServeHTTP(userController.AddIdentityCard))
 	router.PUT("/api/identitycard", authMiddleware.ServeHTTP(userController.UpdateIdentityCard))
 	router.GET("/api/emoney", authMiddleware.ServeHTTP(userController.GetEMoneyAmount))
+	router.GET("/api/emoneyhistory", authMiddleware.ServeHTTP(userController.GetEMoneyTransactionHistory))
 	//router.PUT("/api/emoney", authMiddleware.ServeHTTP(userController.TopUp))
 	router.POST("/api/login", userController.Login)
 	router.GET("/api/userdetail", authMiddleware.ServeHTTP(userController.FindByUUID))

@@ -5,6 +5,7 @@ import (
 	"cosplayrent/helper"
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/order"
+	"cosplayrent/model/web/user"
 	"database/sql"
 	"errors"
 	"log"
@@ -94,7 +95,6 @@ func (repository *OrderRepositoryImpl) FindSellerIdByOrderId(ctx context.Context
 }
 
 func (repository *OrderRepositoryImpl) FindOrderDetailByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (order.OrderResponse, error) {
-
 	query := "SELECT id, user_id, seller_id, costume_id, total, status_payment, status_shipping, is_cancelled, created_at, updated_at FROM orders WHERE id=$1"
 	row, err := tx.QueryContext(ctx, query, orderid)
 	helper.PanicIfError(err)
@@ -115,4 +115,62 @@ func (repository *OrderRepositoryImpl) FindOrderDetailByOrderId(ctx context.Cont
 	}
 
 	return order, nil
+}
+
+func (repository *OrderRepositoryImpl) FindOrderHistoryByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error) {
+	log.Println("User with : FindSellerIdByOrderId")
+
+	query := "SELECT total,updated_at FROM orders WHERE user_id=$1 AND status_payment=true"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	orders := []user.UserEmoneyResponse{}
+	var updatedAt time.Time
+	var hasData bool = false
+
+	for rows.Next() {
+		order := user.UserEmoneyResponse{}
+		err = rows.Scan(&order.Emoney_amont, &updatedAt)
+		helper.PanicIfError(err)
+		order.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
+		orders = append(orders, order)
+		hasData = true
+	}
+
+	if hasData == false {
+		return orders, errors.New("order not found")
+	}
+
+	return orders, nil
+}
+
+func (repository *OrderRepositoryImpl) FindOrderHistoryBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error) {
+	log.Printf("User with uuid: %s enter Order Repository: FindOrderHistoryBySellerId", uuid)
+
+	query := "SELECT total,updated_at FROM orders WHERE seller_id=$1 AND status_payment=true"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	orders := []user.UserEmoneyResponse{}
+	var updatedAt time.Time
+	var hasData bool = false
+
+	for rows.Next() {
+		order := user.UserEmoneyResponse{}
+		err = rows.Scan(&order.Emoney_amont, &updatedAt)
+		helper.PanicIfError(err)
+		order.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
+		orders = append(orders, order)
+		hasData = true
+	}
+
+	if hasData == false {
+		return orders, errors.New("order is not found")
+	}
+
+	return orders, nil
 }

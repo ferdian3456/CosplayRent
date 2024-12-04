@@ -17,4 +17,5 @@ type UserService interface {
 	GetIdentityCard(ctx context.Context, uuid string) (identityCardImage string)
 	UpdateIdentityCard(ctx context.Context, uuid string, IdentityCardImage string)
 	GetEMoneyAmount(ctx context.Context, uuid string) user.UserEmoneyResponse
+	GetEMoneyTransactionHistory(ctx context.Context, uuid string) []user.UserEMoneyTransactionHistory
 }

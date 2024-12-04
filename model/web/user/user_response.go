@@ -16,3 +16,9 @@ type UserEmoneyResponse struct {
 	Emoney_amont      float64 `json:"emoney_amount"`
 	Emoney_updated_at string  `json:"emoney_updated_at"`
 }
+
+type UserEMoneyTransactionHistory struct {
+	Transaction_amount float64 `json:"transaction_amount"`
+	Transaction_type   string  `json:"transaction_type"`
+	Transaction_date   string  `json:"transaction_date"`
+}

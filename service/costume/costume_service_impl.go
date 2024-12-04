@@ -133,12 +133,7 @@ func (service *CostumeServiceImpl) FindAll(ctx context.Context) []costume.Costum
 			value := imageEnv + *costume[i].Picture
 			costume[i].Picture = &value
 		}
-		if userResult.Profile_picture != nil {
-			value := imageEnv + *userResult.Profile_picture
-			costume[i].Profile_picture = &value
-		}
 	}
-
 	return costume
 }
 

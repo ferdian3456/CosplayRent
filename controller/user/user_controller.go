@@ -18,4 +18,5 @@ type UserController interface {
 	UpdateIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	GetEMoneyAmount(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	//TopUp(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	GetEMoneyTransactionHistory(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

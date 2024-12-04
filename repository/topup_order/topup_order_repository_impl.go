@@ -51,3 +51,32 @@ func (t TopUpOrderRepositoryImpl) UpdateTopUpOrder(ctx context.Context, tx *sql.
 
 	helper.PanicIfError(err)
 }
+
+func (repository *TopUpOrderRepositoryImpl) FindTopUpOrderHistoryByUserId(ctx context.Context, tx *sql.Tx, userid string) ([]user.UserEmoneyResponse, error) {
+	log.Println("User with uuid: %s enter User Repository: CreateTopUpOrder", userid)
+
+	query := "SELECT topup_amount,updated_at FROM topup_orders WHERE user_id=$1 AND status_payment=true"
+	rows, err := tx.QueryContext(ctx, query, userid)
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	topUpOrders := []user.UserEmoneyResponse{}
+	var updatedAt time.Time
+	var hasData bool = false
+
+	for rows.Next() {
+		topUpOrder := user.UserEmoneyResponse{}
+		err = rows.Scan(&topUpOrder.Emoney_amont, &updatedAt)
+		topUpOrder.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
+		helper.PanicIfError(err)
+		topUpOrders = append(topUpOrders, topUpOrder)
+		hasData = true
+	}
+
+	if hasData == false {
+		return topUpOrders, errors.New("topup_order is not found")
+	}
+
+	return topUpOrders, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/order"
+	"cosplayrent/model/web/user"
 	"database/sql"
 )
 
@@ -14,4 +15,6 @@ type OrderRepository interface {
 	FindBuyerIdByOrderId(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
 	FindSellerIdByOrderId(ctx context.Context, tx *sql.Tx, uuid string) (string, error)
 	FindOrderDetailByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (order.OrderResponse, error)
+	FindOrderHistoryByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error)
+	FindOrderHistoryBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error)
 }
