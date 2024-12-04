@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,7 +21,7 @@ type UserControllerImpl struct {
 	UserService users.UserService
 }
 
-func NewUserController(userService users.UserService) UserController {
+func NewUserController(userService users.UserService) UserControllerImpl {
 	return &UserControllerImpl{
 		UserService: userService,
 	}
@@ -140,8 +141,10 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 	userName := request.FormValue("name")
 	userEmail := request.FormValue("email")
 	userAddress := request.FormValue("address")
-	userOriginCityName := request.FormValue("origin_city_name")
 	userOriginProvinceName := request.FormValue("origin_province_name")
+	userOriginProvinceId := request.FormValue("origin_province_id")
+	userOriginCityName := request.FormValue("origin_city_name")
+	userOriginCityId := request.FormValue("origin_city_id")
 
 	var profilePicturePath *string
 
@@ -169,6 +172,11 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 		profilePicturePath = &userImageTrimPath
 	}
 
+	originCityIdFinal, err := strconv.Atoi(userOriginCityId)
+	helper.PanicIfError(err)
+	originProvinceIdFinal, err := strconv.Atoi(userOriginProvinceId)
+	helper.PanicIfError(err)
+
 	userRequest := user.UserUpdateRequest{
 		Id:                   userUUID,
 		Name:                 &userName,
@@ -176,7 +184,9 @@ func (controller UserControllerImpl) Update(writer http.ResponseWriter, request 
 		Address:              &userAddress,
 		Profile_picture:      profilePicturePath,
 		Origin_province_name: &userOriginProvinceName,
+		Origin_province_id:   &originProvinceIdFinal,
 		Origin_city_name:     &userOriginCityName,
+		Origin_city_id:       &originCityIdFinal,
 	}
 
 	controller.UserService.Update(request.Context(), userRequest, userUUID)
@@ -235,7 +245,7 @@ func (controller UserControllerImpl) VerifyAndRetrieve(writer http.ResponseWrite
 	helper.WriteToResponseBody(writer, webResponsel)
 }
 
-func (controller *UserControllerImpl) AddIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (controller UserControllerImpl) AddIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, ok := request.Context().Value("user_uuid").(string)
 	if !ok {
 		webResponse := web.WebResponse{

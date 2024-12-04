@@ -71,7 +71,7 @@ func (service *TopUpOrderServiceImpl) CheckTopUpOrderByOrderId(ctx context.Conte
 	}
 
 	defer helper.CommitOrRollback(tx)
-	
+
 	topuporderResult, err := service.TopUpOrderRepository.CheckTopUpOrderByOrderId(ctx, tx, orderID)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))

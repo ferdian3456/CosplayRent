@@ -96,12 +96,12 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 	log.Printf("User with uuid: %s enter User Repository: Update", uuid)
 
 	if user.Profile_picture == nil {
-		query := "UPDATE users SET name=$2,email=$3,address=$4,origincity_name=$5,originprovince_name=$6,updated_at=$7  WHERE id=$1"
-		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Origin_city_name, user.Origin_province_name, user.Update_at)
+		query := "UPDATE users SET name=$2,email=$3,address=$4,originprovince_name=$5,originprovince_id=$6,origincity_name=$7,origincity_id=$8,updated_at=$9  WHERE id=$1"
+		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Origin_province_name, user.Origin_province_id, user.Origin_city_name, user.Origin_city_id, user.Update_at)
 		helper.PanicIfError(err)
 	} else {
-		query := "UPDATE users SET name=$2,email=$3,address=$4,profile_picture=$5,origincity_name=$6,originprovince_name=$7,updated_at=$8  WHERE id=$1"
-		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Address, user.Profile_picture, user.Origin_city_name, user.Origin_province_name, user.Update_at)
+		query := "UPDATE users SET name=$2,email=$3, profile_picture=$4,address=$5,originprovince_name=$6,originprovince_id=$7,origincity_name=$8,origincity_id=$9,updated_at=$10  WHERE id=$1"
+		_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Profile_picture, user.Address, user.Origin_province_name, user.Origin_province_id, user.Origin_city_name, user.Origin_city_id, user.Update_at)
 		helper.PanicIfError(err)
 	}
 }

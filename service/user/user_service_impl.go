@@ -221,8 +221,10 @@ func (service *UserServiceImpl) Update(ctx context.Context, userRequest user.Use
 		Email:                userRequest.Email,
 		Address:              userRequest.Address,
 		Profile_picture:      userRequest.Profile_picture,
-		Origin_city_name:     userRequest.Origin_city_name,
 		Origin_province_name: userRequest.Origin_province_name,
+		Origin_province_id:   userRequest.Origin_province_id,
+		Origin_city_name:     userRequest.Origin_city_name,
+		Origin_city_id:       userRequest.Origin_city_id,
 		Update_at:            &now,
 	}
 
