@@ -42,7 +42,7 @@ func (repository *UserRepositoryImpl) Login(ctx context.Context, tx *sql.Tx, nam
 
 func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx, uuid string) (user.UserResponse, error) {
 	log.Printf("User with uuid: %s enter User Repository: FindByUUID", uuid)
-	query := "SELECT id,name,email,address,profile_picture,originprovince_name,origincity_name,created_at,updated_at FROM users where id=$1"
+	query := "SELECT id,name,email,address,profile_picture,originprovince_name,originprovince_id,origincity_name,origincity_id,created_at,updated_at FROM users where id=$1"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 
@@ -52,7 +52,7 @@ func (repository *UserRepositoryImpl) FindByUUID(ctx context.Context, tx *sql.Tx
 	var createdAt time.Time
 	var updatedAt time.Time
 	if rows.Next() {
-		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Origin_province_name, &users.Origin_city_name, &createdAt, &updatedAt)
+		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Origin_province_name, &users.Origin_province_id, &users.Origin_city_name, &users.Origin_city_id, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
 		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		users.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
