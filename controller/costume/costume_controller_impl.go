@@ -81,13 +81,16 @@ func (controller CostumeControllerImpl) Create(writer http.ResponseWriter, reque
 	fixPrice, err := strconv.ParseFloat(costumePrice, 64)
 	helper.PanicIfError(err)
 
+	fixBerat, err := strconv.Atoi(costumeBerat)
+	helper.PanicIfError(err)
+
 	costumeRequest := costume.CostumeCreateRequest{
 		User_id:     userUUID,
 		Name:        costumeName,
 		Description: costumeDescription,
 		Bahan:       costumeBahan,
 		Ukuran:      costumeUkuran,
-		Berat:       costumeBerat,
+		Berat:       fixBerat,
 		Kategori:    costumeKategori,
 		Price:       fixPrice,
 		Picture:     costumePicturePath,
@@ -160,13 +163,16 @@ func (controller CostumeControllerImpl) Update(writer http.ResponseWriter, reque
 	fixPrice, err := strconv.ParseFloat(costumePrice, 64)
 	helper.PanicIfError(err)
 
+	fixBerat, err := strconv.Atoi(costumeBerat)
+	helper.PanicIfError(err)
+
 	costumeRequest := costume.CostumeUpdateRequest{
 		Id:          costumeId,
 		Name:        &costumeName,
 		Description: &costumeDescription,
 		Bahan:       &costumeBahan,
 		Ukuran:      &costumeUkuran,
-		Berat:       &costumeBerat,
+		Berat:       &fixBerat,
 		Kategori:    &costumeKategori,
 		Price:       &fixPrice,
 		Picture:     costumePicturePath,

@@ -8,7 +8,7 @@ type CostumeUpdateRequest struct {
 	Description *string  `json:"description"`
 	Bahan       *string  `json:"bahan"`
 	Ukuran      *string  `json:"ukuran"`
-	Berat       *string  `json:"berat"`
+	Berat       *int     `json:"berat"`
 	Kategori    *string  `json:"kategori"`
 	Price       *float64 `json:"price"`
 	Picture     *string  `json:"picture"`

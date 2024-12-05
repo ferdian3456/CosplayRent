@@ -97,6 +97,7 @@ func (service *MidtransServiceImpl) CreateTransaction(ctx context.Context, reque
 	}
 
 	midtransResponse := midtransWeb.MidtransResponse{
+		Orderid:     request.Id,
 		Token:       response.Token,
 		RedirectUrl: response.RedirectURL,
 	}

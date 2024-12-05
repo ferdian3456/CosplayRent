@@ -6,6 +6,7 @@ import (
 	"cosplayrent/helper"
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/user"
+	"cosplayrent/repository/costume"
 	"cosplayrent/repository/order"
 	"cosplayrent/repository/topup_order"
 	users "cosplayrent/repository/user"
@@ -25,15 +26,17 @@ import (
 
 type UserServiceImpl struct {
 	UserRepository       users.UserRepository
+	CostumeRepository    costume.CostumeRepository
 	OrderRepository      order.OrderRepository
 	TopUpOrderRepository topup_order.TopUpOrderRepository
 	DB                   *sql.DB
 	Validate             *validator.Validate
 }
 
-func NewUserService(userRepository users.UserRepository, orderRepository order.OrderRepository, topUpOrderRepository topup_order.TopUpOrderRepository, DB *sql.DB, validate *validator.Validate) UserService {
+func NewUserService(userRepository users.UserRepository, costumeRepository costume.CostumeRepository, orderRepository order.OrderRepository, topUpOrderRepository topup_order.TopUpOrderRepository, DB *sql.DB, validate *validator.Validate) UserService {
 	return &UserServiceImpl{
 		UserRepository:       userRepository,
+		CostumeRepository:    costumeRepository,
 		OrderRepository:      orderRepository,
 		TopUpOrderRepository: topUpOrderRepository,
 		DB:                   DB,
@@ -453,4 +456,95 @@ func (service *UserServiceImpl) GetEMoneyTransactionHistory(ctx context.Context,
 	}
 
 	return EMoneyTransactionHistory
+}
+
+func (service *UserServiceImpl) CheckUserStatus(ctx context.Context, uuid string, costumeid int) user.CheckUserStatusResponse {
+	log.Printf("User with uuid: %s enter User Service: CheckUserStatus", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = service.CostumeRepository.CheckOwnership(ctx, tx, uuid, costumeid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	statusResult, err := service.UserRepository.CheckUserStatus(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	statusResult.Status = "true"
+
+	return statusResult
+}
+
+func (service *UserServiceImpl) GetSellerAddressDetailByCostumeId(ctx context.Context, userUUID string, costumeID int) user.SellerAddressResponse {
+	log.Printf("User with uuid: %s enter User Service: GetSellerAddressDetailByCostumeId", userUUID)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, userUUID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	sellerResult, err := service.CostumeRepository.GetSellerIdFindByCostumeID(ctx, tx, userUUID, costumeID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	sellerAddressResult, err := service.UserRepository.FindByUUID(ctx, tx, sellerResult)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	sellerAddressResponse := user.SellerAddressResponse{
+		Seller_name:                 sellerAddressResult.Name,
+		Seller_origin_province_name: sellerAddressResult.Origin_province_name,
+		Seller_origin_province_id:   sellerAddressResult.Origin_city_id,
+		Seller_origin_city_name:     sellerAddressResult.Origin_city_name,
+		Seller_origin_city_id:       sellerAddressResult.Origin_city_id,
+	}
+
+	return sellerAddressResponse
+}
+
+func (service *UserServiceImpl) CheckSellerStatus(ctx context.Context, uuid string) user.CheckUserStatusResponse {
+	log.Printf("User with uuid: %s enter User Service: CheckSellerStatus", uuid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	statusResult, err := service.UserRepository.CheckUserStatus(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	statusResult.Status = "true"
+
+	return statusResult
 }

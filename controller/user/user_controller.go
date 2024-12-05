@@ -19,4 +19,7 @@ type UserController interface {
 	GetEMoneyAmount(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	//TopUp(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	GetEMoneyTransactionHistory(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	CheckUserStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	GetSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	CheckSellerStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

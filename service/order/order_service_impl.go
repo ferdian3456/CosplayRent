@@ -105,6 +105,8 @@ func (service *OrderServiceImpl) DirectlyOrderToMidtrans(ctx context.Context, uu
 		Created_at:  &now,
 	}
 
+	log.Println(SendOrderToDatabase.Id)
+
 	service.OrderRepository.DirectlyOrderToMidtrans(ctx, tx, uuid, SendOrderToDatabase)
 
 	SendOrderToMidtrans := order.DirectlyOrderToMidtrans{

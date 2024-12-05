@@ -24,3 +24,17 @@ type UserEMoneyTransactionHistory struct {
 	Transaction_type   string  `json:"transaction_type"`
 	Transaction_date   string  `json:"transaction_date"`
 }
+
+type CheckUserStatusResponse struct {
+	User_id string `json:"user_id"`
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+}
+
+type SellerAddressResponse struct {
+	Seller_name                 string  `json:"seller_name"`
+	Seller_origin_province_name *string `json:"seller_origin_province_name"`
+	Seller_origin_province_id   *int    `json:"seller_origin_province_id"`
+	Seller_origin_city_name     *string `json:"seller_origin_city_name"`
+	Seller_origin_city_id       *int    `json:"seller_origin_city_id"`
+}

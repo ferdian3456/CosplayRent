@@ -61,9 +61,10 @@ func (controller RajaOngkirControllerImpl) FindCity(writer http.ResponseWriter, 
 func (controller RajaOngkirControllerImpl) CheckShippment(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	shipmentRequest := rajaongkir.RajaOngkirSendShipmentRequest{}
 	helper.ReadFromRequestBody(request, &shipmentRequest)
-	rajaOngkirCostResponse, err := controller.RajaOngkirService.CheckShippment(request.Context(), shipmentRequest)
 
+	rajaOngkirCostResponse, err := controller.RajaOngkirService.CheckShippment(request.Context(), shipmentRequest)
 	var data interface{}
+
 	if err != nil {
 		data = err
 	} else {

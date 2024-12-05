@@ -24,13 +24,13 @@ const (
 )
 
 type RajaOngkirServiceImpl struct {
-	validate       *validator.Validate
+	Validate       *validator.Validate
 	memcacheClient *memcache.Client
 }
 
 func NewRajaOngkirService(validate *validator.Validate, client *memcache.Client) *RajaOngkirServiceImpl {
 	return &RajaOngkirServiceImpl{
-		validate:       validate,
+		Validate:       validate,
 		memcacheClient: client,
 	}
 }
@@ -155,6 +155,9 @@ func (service *RajaOngkirServiceImpl) FindCity(ctx context.Context, provinceID s
 }
 
 func (service *RajaOngkirServiceImpl) CheckShippment(ctx context.Context, shipmentRequest rajaongkir.RajaOngkirSendShipmentRequest) (rajaongkir.RajaOngkirShipmentResponse, error) {
+	err := service.Validate.Struct(shipmentRequest)
+	helper.PanicIfError(err)
+
 	sendRequest := url.Values{}
 	finalWeight := strconv.Itoa(shipmentRequest.Weight)
 	sendRequest.Set("origin", shipmentRequest.Origin)
@@ -180,6 +183,8 @@ func (service *RajaOngkirServiceImpl) CheckShippment(ctx context.Context, shipme
 		return rajaongkir.RajaOngkirShipmentResponse{}, errors.New("failed to reach RajaOngkir API")
 	}
 	defer resp.Body.Close()
+
+	//log.Println("masuk sini 1")
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

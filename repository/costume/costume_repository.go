@@ -17,4 +17,6 @@ type CostumeRepository interface {
 	FindByUserUUID(ctx context.Context, tx *sql.Tx, userUUID string) ([]costume.CostumeResponse, error)
 	FindSellerCostumeByCostumeID(ctx context.Context, tx *sql.Tx, userUUID string, costumeID int) (costume.CostumeResponse, error)
 	FindSellerCostume(ctx context.Context, tx *sql.Tx, userUUID string) ([]costume.CostumeResponse, error)
+	CheckOwnership(ctx context.Context, tx *sql.Tx, userUUID string, costumeid int) error
+	GetSellerIdFindByCostumeID(ctx context.Context, tx *sql.Tx, userUUID string, costumeid int) (string, error)
 }

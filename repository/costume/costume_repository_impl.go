@@ -200,3 +200,44 @@ func (repository *CostumeRepositoryImpl) FindSellerCostume(ctx context.Context, 
 
 	return costumes, nil
 }
+
+func (repository *CostumeRepositoryImpl) CheckOwnership(ctx context.Context, tx *sql.Tx, userUUID string, costumeid int) error {
+	log.Printf("User with uuid: %s enter Costume Repository: CheckOwnership", userUUID)
+
+	query := "SELECT name FROM costumes WHERE id=$1 AND user_id=$2"
+	rows, err := tx.QueryContext(ctx, query, costumeid, userUUID)
+
+	helper.PanicIfError(err)
+	hasData := false
+
+	defer rows.Close()
+
+	for rows.Next() {
+		hasData = true
+	}
+
+	if hasData == true {
+		return errors.New("you are the owner of this costume")
+	} else {
+		return nil
+	}
+}
+
+func (repository *CostumeRepositoryImpl) GetSellerIdFindByCostumeID(ctx context.Context, tx *sql.Tx, userUUID string, costumeid int) (string, error) {
+	log.Printf("User with uuid: %s enter Costume Repository: FindByCostumeId", userUUID)
+	query := "SELECT user_id FROM costumes WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, costumeid)
+
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	var sellerId string
+	if row.Next() {
+		err = row.Scan(&sellerId)
+		helper.PanicIfError(err)
+		return sellerId, nil
+	} else {
+		return sellerId, errors.New("seller of this costume is not found")
+	}
+}

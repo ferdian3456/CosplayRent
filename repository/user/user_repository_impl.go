@@ -185,7 +185,6 @@ func (repository *UserRepositoryImpl) GetEMoneyAmount(ctx context.Context, tx *s
 func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, timeNow *time.Time) {
 	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
 
-	log.Println("timenow: ", timeNow)
 	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
 	_, err := tx.ExecContext(ctx, query, emoney, timeNow, uuid)
 	helper.PanicIfError(err)
@@ -194,7 +193,7 @@ func (repository *UserRepositoryImpl) TopUp(ctx context.Context, tx *sql.Tx, emo
 func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string, timeNow *time.Time) {
 	log.Printf("Buy with uuid: %s and Seller with uuid: %s enter User Repository: AfterBuy", buyeruuid, selleruuid)
 
-	log.Println("TimeNow:", timeNow)
+	//log.Println("TimeNow:", timeNow)
 	// substract buyer money
 	query := "UPDATE users SET emoney_amount = emoney_amount - $1,emoney_updated_at=$2 WHERE id = $3"
 	_, err := tx.ExecContext(ctx, query, orderamount, timeNow, buyeruuid)
@@ -207,4 +206,29 @@ func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, 
 	_, err = tx.ExecContext(ctx, query, orderamount, timeNow, selleruuid)
 
 	helper.PanicIfError(err)
+}
+
+func (repository *UserRepositoryImpl) CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error) {
+	log.Printf("User with uuid: %s enter User Repository: CheckUserStatus", userid)
+
+	query := "SELECT id,name,identitycard_picture,origincity_name FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, userid)
+	helper.PanicIfError(err)
+
+	defer row.Close()
+
+	checkuserStatus := user.CheckUserStatusResponse{}
+	var IdentityCardImage *string
+	var originCityName *string
+	if row.Next() {
+		err := row.Scan(&checkuserStatus.User_id, &checkuserStatus.Name, &IdentityCardImage, &originCityName)
+		helper.PanicIfError(err)
+		if IdentityCardImage != nil && originCityName != nil {
+			return checkuserStatus, nil
+		} else {
+			return checkuserStatus, errors.New("need to fulfill identity card and address detail (province and city)")
+		}
+	} else {
+		return checkuserStatus, errors.New("user not found")
+	}
 }

@@ -461,3 +461,87 @@ func (controller UserControllerImpl) GetEMoneyTransactionHistory(writer http.Res
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller UserControllerImpl) CheckUserStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: CheckUserStatus", userUUID)
+
+	costumeID := params.ByName("costumeID")
+	finalCostumeID, err := strconv.Atoi(costumeID)
+	helper.PanicIfError(err)
+
+	statusResult := controller.UserService.CheckUserStatus(request.Context(), userUUID, finalCostumeID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   statusResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserControllerImpl) GetSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: GetSellerAddressDetailByCostumeId", userUUID)
+
+	costumeID := params.ByName("costumeID")
+	finalCostumeId, err := strconv.Atoi(costumeID)
+	helper.PanicIfError(err)
+
+	sellerAddressResult := controller.UserService.GetSellerAddressDetailByCostumeId(request.Context(), userUUID, finalCostumeId)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   sellerAddressResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+
+}
+
+func (controller UserControllerImpl) CheckSellerStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter User Controller: CheckSellerStatus", userUUID)
+
+	sellerStatusResult := controller.UserService.CheckSellerStatus(request.Context(), userUUID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   sellerStatusResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

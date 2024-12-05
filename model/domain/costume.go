@@ -9,7 +9,7 @@ type Costume struct {
 	Description string
 	Bahan       string
 	Ukuran      string
-	Berat       string
+	Berat       int
 	Kategori    string
 	Price       float64
 	Picture     *string

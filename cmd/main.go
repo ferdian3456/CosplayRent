@@ -56,7 +56,7 @@ func main() {
 	memcacheClient := app.NewClient()
 	validate := validator.New()
 	userRepository := user_repository.NewUserRepository()
-	userService := user_service.NewUserService(userRepository, order_repository.NewOrderRepository(), topup_order_repository.NewTopUpOrderRepository(), DB, validate)
+	userService := user_service.NewUserService(userRepository, costume_repository.NewCostumeRepository(), order_repository.NewOrderRepository(), topup_order_repository.NewTopUpOrderRepository(), DB, validate)
 	userController := user_controller.NewUserController(userService)
 
 	costumerRepository := costume_repository.NewCostumeRepository()
@@ -102,6 +102,9 @@ func main() {
 	router.GET("/api/user", authMiddleware.ServeHTTP(userController.FindAll))
 	router.PUT("/api/userdetail", authMiddleware.ServeHTTP(userController.Update))
 	router.DELETE("/api/useraccount", authMiddleware.ServeHTTP(userController.Delete))
+	router.GET("/api/checkuserstatus/:costumeID", authMiddleware.ServeHTTP(userController.CheckUserStatus))
+	router.GET("/api/checksellerstatus", authMiddleware.ServeHTTP(userController.CheckSellerStatus))
+	router.GET("/api/selleraddress/checkout/:costumeID", authMiddleware.ServeHTTP(userController.GetSellerAddressDetailByCostumeId))
 
 	//router.GET("/api/search/:costumeName", authMiddleware.ServeHTTP(costumeController.FindByName))
 	router.POST("/api/costume", authMiddleware.ServeHTTP(costumeController.Create))
@@ -130,9 +133,9 @@ func main() {
 	router.POST("/api/wishlist/:costumeID", authMiddleware.ServeHTTP(wishlistController.AddWishlist))
 	router.DELETE("/api/wishlist/:costumeID", authMiddleware.ServeHTTP(wishlistController.DeleteWishlist))
 
-	router.GET("/api/provinces", rajaongkirController.FindProvince)
-	router.GET("/api/city/:provinceID", rajaongkirController.FindCity)
-	router.POST("/api/checkshippment", rajaongkirController.CheckShippment)
+	router.GET("/api/provinces", authMiddleware.ServeHTTP(rajaongkirController.FindProvince))
+	router.GET("/api/city/:provinceID", authMiddleware.ServeHTTP(rajaongkirController.FindCity))
+	router.POST("/api/checkshippment", authMiddleware.ServeHTTP(rajaongkirController.CheckShippment))
 
 	router.POST("/api/midtrans/transaction/:orderID", authMiddleware.ServeHTTP(midtransController.CreateTransaction))
 	router.POST("/api/midtrans/callback", midtransController.MidtransCallBack)

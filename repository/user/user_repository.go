@@ -22,4 +22,5 @@ type UserRepository interface {
 	TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, time *time.Time)
 	AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string, timeNow *time.Time)
 	//CreateTopUpOrder(ctx context.Context, tx *sql.Tx, orderid string, uuid string, emoney user.TopUpEmoney, time *time.Time)
+	CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error)
 }
