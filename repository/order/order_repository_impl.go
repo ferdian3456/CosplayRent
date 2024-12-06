@@ -20,8 +20,8 @@ func NewOrderRepository() OrderRepository {
 
 func (repository *OrderRepositoryImpl) Create(ctx context.Context, tx *sql.Tx, order domain.Order) {
 	log.Println(order.Seller_id)
-	query := "INSERT INTO orders (id,user_id,seller_id,costume_id,total,created_at) VALUES ($1,$2,$3,$4,$5,$6)"
-	_, err := tx.ExecContext(ctx, query, order.Id, order.User_id, order.Seller_id, order.Costume_id, order.Total, order.Created_at)
+	query := "INSERT INTO orders (id,user_id,seller_id,costume_id,total,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)"
+	_, err := tx.ExecContext(ctx, query, order.Id, order.User_id, order.Seller_id, order.Costume_id, order.Total, order.Created_at, order.Created_at)
 	helper.PanicIfError(err)
 }
 
@@ -37,6 +37,52 @@ func (repository *OrderRepositoryImpl) FindByUserId(ctx context.Context, tx *sql
 	for rows.Next() {
 		order := order.OrderResponse{}
 		err = rows.Scan(&order.User_id, &order.Costume_id, &order.Created_at)
+		helper.PanicIfError(err)
+		orders = append(orders, order)
+		hasData = true
+	}
+	if hasData == false {
+		return orders, errors.New("order not found")
+	}
+
+	return orders, nil
+}
+
+func (repository *OrderRepositoryImpl) FindOrderBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllSellerOrderResponse, error) {
+	query := "SELECT id,costume_id,total,status,updated_at FROM orders where seller_id=$1"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+	hasData := false
+
+	defer rows.Close()
+
+	orders := []order.AllSellerOrderResponse{}
+	for rows.Next() {
+		order := order.AllSellerOrderResponse{}
+		err = rows.Scan(&order.Id, &order.Costume_id, &order.Total, &order.Status, &order.Updated_at)
+		helper.PanicIfError(err)
+		orders = append(orders, order)
+		hasData = true
+	}
+	if hasData == false {
+		return orders, errors.New("order not found")
+	}
+
+	return orders, nil
+}
+
+func (repository *OrderRepositoryImpl) FindOrderByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllUserOrderResponse, error) {
+	query := "SELECT id,costume_id,total,status,updated_at FROM orders where user_id=$1"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	helper.PanicIfError(err)
+	hasData := false
+
+	defer rows.Close()
+
+	orders := []order.AllUserOrderResponse{}
+	for rows.Next() {
+		order := order.AllUserOrderResponse{}
+		err = rows.Scan(&order.Id, &order.Costume_id, &order.Total, &order.Status, &order.Updated_at)
 		helper.PanicIfError(err)
 		orders = append(orders, order)
 		hasData = true
@@ -95,7 +141,7 @@ func (repository *OrderRepositoryImpl) FindSellerIdByOrderId(ctx context.Context
 }
 
 func (repository *OrderRepositoryImpl) FindOrderDetailByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (order.OrderResponse, error) {
-	query := "SELECT id, user_id, seller_id, costume_id, total, status_payment, status_shipping, is_cancelled, created_at, updated_at FROM orders WHERE id=$1"
+	query := "SELECT id, user_id, seller_id,description,costume_id, total, status_payment, status_shipping, is_cancelled, created_at, updated_at FROM orders WHERE id=$1"
 	row, err := tx.QueryContext(ctx, query, orderid)
 	helper.PanicIfError(err)
 
@@ -106,7 +152,7 @@ func (repository *OrderRepositoryImpl) FindOrderDetailByOrderId(ctx context.Cont
 	var updatedAt time.Time
 
 	if row.Next() {
-		err = row.Scan(&order.Id, &order.User_id, &order.Seller_id, &order.Costume_id, &order.Total, &order.Status_payment, &order.Status_shipping, &order.Is_canceled, &createdAt, &updatedAt)
+		err = row.Scan(&order.Id, &order.User_id, &order.Seller_id, &order.Description, &order.Costume_id, &order.Total, &order.Status_payment, &order.Status_shipping, &order.Is_canceled, &createdAt, &updatedAt)
 		helper.PanicIfError(err)
 		order.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		order.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
@@ -173,4 +219,18 @@ func (repository *OrderRepositoryImpl) FindOrderHistoryBySellerId(ctx context.Co
 	}
 
 	return orders, nil
+}
+
+func (repository *OrderRepositoryImpl) UpdateSellerOrder(ctx context.Context, tx *sql.Tx, updateRequest order.OrderUpdateRequest, sellerid string, orderid string) {
+	log.Printf("User with uuid: %s enter Order Repository: UpdateSellerOrder", sellerid)
+
+	if updateRequest.Description == "" {
+		query := "UPDATE orders SET status=$1,updated_at=$2 WHERE id=$3"
+		_, err := tx.ExecContext(ctx, query, updateRequest.StatusOrder, updateRequest.Updated_at, orderid)
+		helper.PanicIfError(err)
+	} else {
+		query := "UPDATE orders SET status=$1,description=$2,updated_at=$3 WHERE id=$4"
+		_, err := tx.ExecContext(ctx, query, updateRequest.StatusOrder, updateRequest.Description, updateRequest.Updated_at, orderid)
+		helper.PanicIfError(err)
+	}
 }

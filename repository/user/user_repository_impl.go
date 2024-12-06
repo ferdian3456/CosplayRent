@@ -211,7 +211,7 @@ func (repository *UserRepositoryImpl) AfterBuy(ctx context.Context, tx *sql.Tx, 
 func (repository *UserRepositoryImpl) CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error) {
 	log.Printf("User with uuid: %s enter User Repository: CheckUserStatus", userid)
 
-	query := "SELECT id,name,identitycard_picture,origincity_name FROM users WHERE id=$1"
+	query := "SELECT id,name,identitycard_picture,address,origincity_name FROM users WHERE id=$1"
 	row, err := tx.QueryContext(ctx, query, userid)
 	helper.PanicIfError(err)
 
@@ -220,13 +220,14 @@ func (repository *UserRepositoryImpl) CheckUserStatus(ctx context.Context, tx *s
 	checkuserStatus := user.CheckUserStatusResponse{}
 	var IdentityCardImage *string
 	var originCityName *string
+	var address *string
 	if row.Next() {
-		err := row.Scan(&checkuserStatus.User_id, &checkuserStatus.Name, &IdentityCardImage, &originCityName)
+		err := row.Scan(&checkuserStatus.User_id, &checkuserStatus.Name, &IdentityCardImage, &address, &originCityName)
 		helper.PanicIfError(err)
-		if IdentityCardImage != nil && originCityName != nil {
+		if IdentityCardImage != nil && originCityName != nil && address != nil {
 			return checkuserStatus, nil
 		} else {
-			return checkuserStatus, errors.New("need to fulfill identity card and address detail (province and city)")
+			return checkuserStatus, errors.New("need to fulfill identity card and address detail (address,province, and city)")
 		}
 	} else {
 		return checkuserStatus, errors.New("user not found")

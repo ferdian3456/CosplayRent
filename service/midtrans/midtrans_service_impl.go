@@ -12,6 +12,7 @@ import (
 	"cosplayrent/repository/user"
 	"database/sql"
 	"github.com/go-playground/validator"
+	googleuuid "github.com/google/uuid"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
 	"log"
@@ -210,7 +211,11 @@ func (service *MidtransServiceImpl) CreateOrderTopUp(ctx context.Context, orderi
 		panic(err)
 	}
 
+	finalOrderId, err := googleuuid.Parse(orderid)
+	helper.PanicIfError(err)
+
 	midtransResponse := midtransWeb.MidtransResponse{
+		Orderid:     finalOrderId,
 		Token:       response.Token,
 		RedirectUrl: response.RedirectURL,
 	}

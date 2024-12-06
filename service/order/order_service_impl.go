@@ -7,31 +7,36 @@ import (
 	"cosplayrent/model/domain"
 	"cosplayrent/model/web/midtrans"
 	"cosplayrent/model/web/order"
+	"cosplayrent/repository/costume"
 	orders "cosplayrent/repository/order"
 	"cosplayrent/repository/user"
 	midtranss "cosplayrent/service/midtrans"
 	"database/sql"
 	"github.com/go-playground/validator"
 	googleUUID "github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"time"
 )
 
 type OrderServiceImpl struct {
-	OrderRepository orders.OrderRepository
-	UserRepository  user.UserRepository
-	MidtransService midtranss.MidtransService
-	DB              *sql.DB
-	Validate        *validator.Validate
+	OrderRepository   orders.OrderRepository
+	UserRepository    user.UserRepository
+	CostumeRepository costume.CostumeRepository
+	MidtransService   midtranss.MidtransService
+	DB                *sql.DB
+	Validate          *validator.Validate
 }
 
-func NewOrderService(orderRepository orders.OrderRepository, userRepository user.UserRepository, midtransService midtranss.MidtransService, DB *sql.DB, validate *validator.Validate) OrderService {
+func NewOrderService(orderRepository orders.OrderRepository, userRepository user.UserRepository, costumeRepository costume.CostumeRepository, midtransService midtranss.MidtransService, DB *sql.DB, validate *validator.Validate) OrderService {
 	return &OrderServiceImpl{
-		OrderRepository: orderRepository,
-		UserRepository:  userRepository,
-		MidtransService: midtransService,
-		DB:              DB,
-		Validate:        validate,
+		OrderRepository:   orderRepository,
+		UserRepository:    userRepository,
+		CostumeRepository: costumeRepository,
+		MidtransService:   midtransService,
+		DB:                DB,
+		Validate:          validate,
 	}
 }
 
@@ -184,4 +189,247 @@ func (service *OrderServiceImpl) FindOrderDetailByOrderId(ctx context.Context, o
 	}
 
 	return orderResult
+}
+
+func (service *OrderServiceImpl) GetAllSellerOrder(ctx context.Context, sellerid string) []order.AllSellerOrderResponse {
+	log.Printf("User with uuid: %s enter Order Service: GetAllSellerOrder", sellerid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, sellerid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	sellerOrderResult, err := service.OrderRepository.FindOrderBySellerId(ctx, tx, sellerid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	for i := range sellerOrderResult {
+		costumeResult, err := service.CostumeRepository.FindById(ctx, tx, sellerOrderResult[i].Costume_id)
+		if err != nil {
+			panic(exception.NewNotFoundError(err.Error()))
+		}
+
+		sellerOrderResult[i].Costume_name = costumeResult.Name
+		sellerOrderResult[i].Costume_id = costumeResult.Id
+		sellerOrderResult[i].Costume_price = costumeResult.Price
+		sellerOrderResult[i].Costume_size = costumeResult.Ukuran
+		if costumeResult.Picture != nil {
+			value := imageEnv + *costumeResult.Picture
+			sellerOrderResult[i].Costume_picture = &value
+		}
+	}
+
+	return sellerOrderResult
+}
+
+func (service *OrderServiceImpl) GetAllUserOrder(ctx context.Context, userid string) []order.AllUserOrderResponse {
+	log.Printf("User with uuid: %s enter Order Service: GetAllUserOrder", userid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, userid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	userOrderResult, err := service.OrderRepository.FindOrderByUserId(ctx, tx, userid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	for i := range userOrderResult {
+		costumeResult, err := service.CostumeRepository.FindById(ctx, tx, userOrderResult[i].Costume_id)
+		if err != nil {
+			panic(exception.NewNotFoundError(err.Error()))
+		}
+
+		userOrderResult[i].Costume_name = costumeResult.Name
+		userOrderResult[i].Costume_id = costumeResult.Id
+		userOrderResult[i].Costume_price = costumeResult.Price
+		userOrderResult[i].Costume_size = costumeResult.Ukuran
+		if costumeResult.Picture != nil {
+			value := imageEnv + *costumeResult.Picture
+			userOrderResult[i].Costume_picture = &value
+		}
+	}
+
+	return userOrderResult
+}
+
+func (service *OrderServiceImpl) UpdateSellerOrder(ctx context.Context, updateRequest order.OrderUpdateRequest, sellerid string, orderid string) {
+	log.Printf("User with uuid: %s enter Order Service: UpdateSellerOrder", sellerid)
+
+	err := service.Validate.Struct(updateRequest)
+	helper.PanicIfError(err)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, sellerid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+	
+	now := time.Now()
+	updateRequest.Updated_at = &now
+
+	service.OrderRepository.UpdateSellerOrder(ctx, tx, updateRequest, sellerid, orderid)
+}
+
+func (service *OrderServiceImpl) GetDetailOrderByOrderId(ctx context.Context, sellerid string, orderid string) order.OrderDetailByOrderIdResponse {
+	log.Printf("User with uuid: %s enter Order Service: GetDetailOrderByOrderId", sellerid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, sellerid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	orderResult, err := service.OrderRepository.FindOrderDetailByOrderId(ctx, tx, orderid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	userResult, err := service.UserRepository.FindByUUID(ctx, tx, orderResult.User_id.String())
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	costumeResult, err := service.CostumeRepository.FindById(ctx, tx, orderResult.Costume_id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	userIdentityCardPicture, err := service.UserRepository.GetIdentityCard(ctx, tx, userResult.Id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	if costumeResult.Picture != nil {
+		value := imageEnv + *costumeResult.Picture
+		costumeResult.Picture = &value
+	}
+
+	if userIdentityCardPicture != "" {
+		value := imageEnv + userIdentityCardPicture
+		userIdentityCardPicture = value
+	}
+
+	orderResponse := order.OrderDetailByOrderIdResponse{
+		Costume_name:             costumeResult.Name,
+		Costume_price:            costumeResult.Price,
+		Costume_size:             costumeResult.Ukuran,
+		Costume_picture:          costumeResult.Picture,
+		Costumer_name:            userResult.Name,
+		Costumer_address:         userResult.Address,
+		Costumer_origin_province: userResult.Origin_province_name,
+		Costumer_origin_city:     userResult.Origin_city_name,
+		Costumer_identity_card:   userIdentityCardPicture,
+	}
+
+	return orderResponse
+}
+
+func (service *OrderServiceImpl) GetUserDetailOrder(ctx context.Context, userid string, orderid string) order.GetUserOrderDetailResponse {
+	log.Printf("User with uuid: %s enter Order Service: GetUserOrder", userid)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, userid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	log.Println("his")
+
+	orderResult, err := service.OrderRepository.FindOrderDetailByOrderId(ctx, tx, orderid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	log.Println("hi")
+
+	userResult, err := service.UserRepository.FindByUUID(ctx, tx, orderResult.Seller_id.String())
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	log.Println("hi2")
+
+	costumeResult, err := service.CostumeRepository.FindById(ctx, tx, orderResult.Costume_id)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	imageEnv := os.Getenv("IMAGE_ENV")
+
+	if costumeResult.Picture != nil {
+		value := imageEnv + *costumeResult.Picture
+		costumeResult.Picture = &value
+	}
+
+	if orderResult.Description != nil {
+		value := *orderResult.Description
+		orderResult.Description = &value
+	}
+
+	orderResponse := order.GetUserOrderDetailResponse{
+		Costume_name:           costumeResult.Name,
+		Costume_price:          costumeResult.Price,
+		Costume_size:           costumeResult.Ukuran,
+		Costume_picture:        costumeResult.Picture,
+		Seller_name:            userResult.Name,
+		Seller_address:         userResult.Address,
+		Seller_origin_province: userResult.Origin_province_name,
+		Seller_origin_city:     userResult.Origin_city_name,
+		Seller_response:        orderResult.Description,
+	}
+
+	return orderResponse
 }

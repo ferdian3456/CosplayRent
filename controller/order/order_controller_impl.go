@@ -103,3 +103,134 @@ func (controller OrderControllerImpl) CheckStatusPayment(writer http.ResponseWri
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller OrderControllerImpl) GetAllSellerOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Order Controller: GetAllSellerOrder", userUUID)
+
+	sellerOrderResult := controller.OrderService.GetAllSellerOrder(request.Context(), userUUID)
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   sellerOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderControllerImpl) GetAllUserOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Order Controller: GetAllUserOrder", userUUID)
+
+	userOrderResult := controller.OrderService.GetAllUserOrder(request.Context(), userUUID)
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderControllerImpl) UpdateSellerOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	orderId := params.ByName("orderID")
+
+	updateRequest := order.OrderUpdateRequest{}
+	helper.ReadFromRequestBody(request, &updateRequest)
+
+	log.Printf("User with uuid: %s enter Order Controller: UpdateSellerOrder", userUUID)
+
+	controller.OrderService.UpdateSellerOrder(request.Context(), updateRequest, userUUID, orderId)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderControllerImpl) GetDetailOrderByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	orderId := params.ByName("orderID")
+
+	log.Printf("User with uuid: %s enter Order Controller: GetDetailOrderByOrderId", userUUID)
+
+	detailOrderResult := controller.OrderService.GetDetailOrderByOrderId(request.Context(), userUUID, orderId)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   detailOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderControllerImpl) GetUserDetailOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	orderId := params.ByName("orderID")
+
+	log.Printf("User with uuid: %s enter Order Controller: GetUserOrder", userUUID)
+
+	userOrderResult := controller.OrderService.GetUserDetailOrder(request.Context(), userUUID, orderId)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

@@ -68,7 +68,7 @@ func main() {
 	reviewController := review_controller.NewReviewController(reviewService)
 
 	orderRepository := order_repository.NewOrderRepository()
-	orderService := order_service.NewOrderService(orderRepository, user_repository.NewUserRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
+	orderService := order_service.NewOrderService(orderRepository, user_repository.NewUserRepository(), costume_repository.NewCostumeRepository(), midtrans_service.NewMidtransService(midtrans_repository.NewMidtransRepository(), topup_order.NewTopUpOrderRepository(), user_repository.NewUserRepository(), order_repository.NewOrderRepository(), DB, validate), DB, validate)
 	orderController := order_controller.NewOrderController(orderService)
 	//log.Println(orderController)
 
@@ -125,6 +125,11 @@ func main() {
 	router.POST("/api/order", authMiddleware.ServeHTTP(orderController.Create))
 	router.POST("/api/order/midtrans", authMiddleware.ServeHTTP(orderController.DirectlyOrderToMidtrans))
 	router.GET("/api/checkorder/:orderID", orderController.CheckStatusPayment)
+	router.GET("/api/order/seller", authMiddleware.ServeHTTP(orderController.GetAllSellerOrder))
+	router.PUT("/api/order/:orderID", authMiddleware.ServeHTTP(orderController.UpdateSellerOrder))
+	router.GET("/api/orderdetail/:orderID", authMiddleware.ServeHTTP(orderController.GetDetailOrderByOrderId))
+	router.GET("/api/userorder/:orderID", authMiddleware.ServeHTTP(orderController.GetUserDetailOrder))
+	router.GET("/api/alluserorder", authMiddleware.ServeHTTP(orderController.GetAllUserOrder))
 
 	router.PUT("/api/topup", authMiddleware.ServeHTTP(topuporderController.CreateTopUpOrder))
 	router.GET("/api/checktopuporder/:orderID", topuporderController.CheckTopUpOrderByOrderId)

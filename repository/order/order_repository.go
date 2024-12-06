@@ -17,4 +17,7 @@ type OrderRepository interface {
 	FindOrderDetailByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (order.OrderResponse, error)
 	FindOrderHistoryByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error)
 	FindOrderHistoryBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEmoneyResponse, error)
+	FindOrderBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllSellerOrderResponse, error)
+	UpdateSellerOrder(ctx context.Context, tx *sql.Tx, updateRequest order.OrderUpdateRequest, sellerid string, orderid string)
+	FindOrderByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllUserOrderResponse, error)
 }
