@@ -545,3 +545,17 @@ func (controller UserControllerImpl) CheckSellerStatus(writer http.ResponseWrite
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller UserControllerImpl) CheckAppVersion(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	AppVersion := web.AppResponse{
+		AppVersion: "0.7",
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   AppVersion,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

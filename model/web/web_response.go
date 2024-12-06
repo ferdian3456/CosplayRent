@@ -9,3 +9,7 @@ type WebResponse struct {
 type TokenResponse struct {
 	Token string `json:"token"`
 }
+
+type AppResponse struct {
+	AppVersion string `json:"app_version"`
+}

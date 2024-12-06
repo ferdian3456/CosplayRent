@@ -105,6 +105,7 @@ func main() {
 	router.GET("/api/checkuserstatus/:costumeID", authMiddleware.ServeHTTP(userController.CheckUserStatus))
 	router.GET("/api/checksellerstatus", authMiddleware.ServeHTTP(userController.CheckSellerStatus))
 	router.GET("/api/selleraddress/checkout/:costumeID", authMiddleware.ServeHTTP(userController.GetSellerAddressDetailByCostumeId))
+	router.GET("/api/checkappversion", userController.CheckAppVersion)
 
 	//router.GET("/api/search/:costumeName", authMiddleware.ServeHTTP(costumeController.FindByName))
 	router.POST("/api/costume", authMiddleware.ServeHTTP(costumeController.Create))

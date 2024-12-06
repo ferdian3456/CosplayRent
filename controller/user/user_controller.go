@@ -22,4 +22,5 @@ type UserController interface {
 	CheckUserStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	GetSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	CheckSellerStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	CheckAppVersion(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }
