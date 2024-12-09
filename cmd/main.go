@@ -29,8 +29,10 @@ import (
 	topup_order_service "cosplayrent/service/topup_order"
 	user_service "cosplayrent/service/user"
 	wishlist_service "cosplayrent/service/wishlist"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-playground/validator"
 	"github.com/julienschmidt/httprouter"
@@ -149,12 +151,19 @@ func main() {
 	router.ServeFiles("/static/*filepath", http.Dir("../static"))
 	router.PanicHandler = exception.ErrorHandler
 
+	var err error = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	GO_SERVER_PORT := os.Getenv("GO_SERVER")
+
+	log.Println("Server is running on:", GO_SERVER_PORT)
+
 	server := http.Server{
-		Addr:    "localhost:8081",
+		Addr:    GO_SERVER_PORT,
 		Handler: CORS(router),
 	}
 
-	err := server.ListenAndServe()
-	log.Println(err)
+	err = server.ListenAndServe()
 	helper.PanicIfError(err)
+
 }

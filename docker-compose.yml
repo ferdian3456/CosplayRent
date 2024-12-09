@@ -3,7 +3,7 @@ services:
     image: postgres:latest
     container_name: postgresql_db
     ports:
-      - "5432:5432"
+      - ${POSTGRES_PORT}
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -21,7 +21,7 @@ services:
       - --memory-limit=64
       - --threads=4
     ports:
-      - "11211:11211"
+      - ${MEMCACHED_PORT}
 
 volumes:
   db-volume:

@@ -1,9 +1,18 @@
 package app
 
-import "github.com/bradfitz/gomemcache/memcache"
+import (
+	"cosplayrent/helper"
+	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/joho/godotenv"
+	"os"
+)
 
 func NewClient() *memcache.Client {
-	client := memcache.New(":11211")
+	var err error = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	MEMCACHED_PORT := os.Getenv("MEMCACHED_PORT")
+	client := memcache.New(MEMCACHED_PORT)
 
 	return client
 }
