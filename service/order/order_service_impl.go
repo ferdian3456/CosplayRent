@@ -296,7 +296,7 @@ func (service *OrderServiceImpl) UpdateSellerOrder(ctx context.Context, updateRe
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
-	
+
 	now := time.Now()
 	updateRequest.Updated_at = &now
 
@@ -383,21 +383,15 @@ func (service *OrderServiceImpl) GetUserDetailOrder(ctx context.Context, userid 
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	log.Println("his")
-
 	orderResult, err := service.OrderRepository.FindOrderDetailByOrderId(ctx, tx, orderid)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	log.Println("hi")
-
 	userResult, err := service.UserRepository.FindByUUID(ctx, tx, orderResult.Seller_id.String())
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
-
-	log.Println("hi2")
 
 	costumeResult, err := service.CostumeRepository.FindById(ctx, tx, orderResult.Costume_id)
 	if err != nil {
@@ -432,4 +426,40 @@ func (service *OrderServiceImpl) GetUserDetailOrder(ctx context.Context, userid 
 	}
 
 	return orderResponse
+}
+
+func (service *OrderServiceImpl) CheckBalanceWithOrderAmount(ctx context.Context, checkbalance order.CheckBalanceWithOrderAmount, uuid string) order.CheckBalanceWithOrderAmountReponse {
+	log.Printf("User with uuid: %s enter Order Service: CheckBalanceWithOrderAmount", uuid)
+
+	err := service.Validate.Struct(checkbalance)
+	helper.PanicIfError(err)
+
+	log.Println(checkbalance.Order_amount)
+
+	tx, err := service.DB.Begin()
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	_, err = service.UserRepository.FindByUUID(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	emoneyResult, err := service.UserRepository.GetEMoneyAmount(ctx, tx, uuid)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	if emoneyResult.Emoney_amont <= checkbalance.Order_amount {
+		panic(exception.NewNotFoundError("your money is not sufficient"))
+	}
+
+	CheckBalanceResult := order.CheckBalanceWithOrderAmountReponse{
+		Status_to_order: "true",
+	}
+
+	return CheckBalanceResult
 }

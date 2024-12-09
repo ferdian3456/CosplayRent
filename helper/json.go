@@ -1,8 +1,8 @@
 package helper
 
 import (
-  "encoding/json"
-  "net/http"
+	"encoding/json"
+	"net/http"
 )
 
 func ReadFromRequestBody(request *http.Request, result interface{}) {

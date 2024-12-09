@@ -16,4 +16,5 @@ type OrderController interface {
 	GetDetailOrderByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	GetUserDetailOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	GetAllUserOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	CheckBalanceWithOrderAmount(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 }

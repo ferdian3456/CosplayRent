@@ -6,6 +6,7 @@ import (
 	"cosplayrent/model/web/user"
 	users "cosplayrent/service/user"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"log"
@@ -542,8 +543,13 @@ func (controller UserControllerImpl) CheckSellerStatus(writer http.ResponseWrite
 }
 
 func (controller UserControllerImpl) CheckAppVersion(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	var err error = godotenv.Load("../.env")
+	helper.PanicIfError(err)
+
+	APP_VERSION := os.Getenv("APP_VERSION")
+
 	AppVersion := web.AppResponse{
-		AppVersion: "0.7",
+		AppVersion: APP_VERSION,
 	}
 
 	webResponse := web.WebResponse{

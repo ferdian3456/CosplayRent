@@ -28,3 +28,7 @@ type DirectlyOrderToMidtrans struct {
 	Created_at       *time.Time
 	Updated_at       *time.Time
 }
+
+type CheckBalanceWithOrderAmount struct {
+	Order_amount float64 `validate:"required" json:"order_amount"`
+}

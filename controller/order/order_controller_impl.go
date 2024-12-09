@@ -234,3 +234,36 @@ func (controller OrderControllerImpl) GetUserDetailOrder(writer http.ResponseWri
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller OrderControllerImpl) CheckBalanceWithOrderAmount(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	//bodyBytes, _ := ioutil.ReadAll(request.Body)
+	//log.Println("Raw request body:", string(bodyBytes))
+
+	userUUID, ok := request.Context().Value("user_uuid").(string)
+	if !ok {
+		webResponse := web.WebResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Unauthorized",
+			Data:   "Invalid Token",
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	log.Printf("User with uuid: %s enter Order Controller: CheckBalanceWithOrderAmount", userUUID)
+
+	checkBalanceWithOrderAmountRequest := order.CheckBalanceWithOrderAmount{}
+	helper.ReadFromRequestBody(request, &checkBalanceWithOrderAmountRequest)
+
+	log.Println(checkBalanceWithOrderAmountRequest.Order_amount)
+
+	userOrderResult := controller.OrderService.CheckBalanceWithOrderAmount(request.Context(), checkBalanceWithOrderAmountRequest, userUUID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

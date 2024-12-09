@@ -133,6 +133,7 @@ func main() {
 	router.GET("/api/orderdetail/:orderID", authMiddleware.ServeHTTP(orderController.GetDetailOrderByOrderId))
 	router.GET("/api/userorder/:orderID", authMiddleware.ServeHTTP(orderController.GetUserDetailOrder))
 	router.GET("/api/alluserorder", authMiddleware.ServeHTTP(orderController.GetAllUserOrder))
+	router.POST("/api/checkbalancewithorderamount", authMiddleware.ServeHTTP(orderController.CheckBalanceWithOrderAmount))
 
 	router.PUT("/api/topup", authMiddleware.ServeHTTP(topuporderController.CreateTopUpOrder))
 	router.GET("/api/checktopuporder/:orderID", topuporderController.CheckTopUpOrderByOrderId)

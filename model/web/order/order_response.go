@@ -66,3 +66,7 @@ type GetUserOrderDetailResponse struct {
 	Seller_origin_city     *string `json:"seller_origin_city"`
 	Seller_response        *string `json:"seller_response"`
 }
+
+type CheckBalanceWithOrderAmountReponse struct {
+	Status_to_order string `json:"status_to_order"`
+}
