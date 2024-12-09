@@ -262,11 +262,6 @@ func (controller UserControllerImpl) AddIdentityCard(writer http.ResponseWriter,
 	err := request.ParseMultipartForm(10 << 20)
 	helper.PanicIfError(err)
 
-	log.Printf("User with uuid: %s enter User Controller: Update", userUUID)
-
-	err = request.ParseMultipartForm(10 << 20)
-	helper.PanicIfError(err)
-
 	var IdentityCardPicturePath *string
 
 	if file, handler, err := request.FormFile("identity_card"); err == nil {

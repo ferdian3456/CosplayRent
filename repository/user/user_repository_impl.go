@@ -133,9 +133,11 @@ func (repository *UserRepositoryImpl) FindByEmail(ctx context.Context, tx *sql.T
 func (repository *UserRepositoryImpl) AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string) {
 	log.Printf("User with uuid: %s enter User Repository: AddOrUpdateIdentityCard", uuid)
 
-	query := "UPDATE users SET identitycard_picture = $1 WHERE id = $2"
-	_, err := tx.ExecContext(ctx, query, IdentityCardImage, uuid)
-	helper.PanicIfError(err)
+	if IdentityCardImage != "" {
+		query := "UPDATE users SET identitycard_picture = $1 WHERE id = $2"
+		_, err := tx.ExecContext(ctx, query, IdentityCardImage, uuid)
+		helper.PanicIfError(err)
+	}
 }
 
 func (repository *UserRepositoryImpl) GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error) {

@@ -86,8 +86,9 @@ func (service *RajaOngkirServiceImpl) FindProvince(ctx context.Context) (rajaong
 		})
 		if err != nil {
 			log.Println("Failed to set cache", err)
+		} else {
+			log.Println("Success to create cache for RajaOngkirProvince's response")
 		}
-		log.Println("Success to create cache for RajaOngkirProvince's response")
 	}
 
 	return rajaongkirProvinceResponse, nil
@@ -148,6 +149,8 @@ func (service *RajaOngkirServiceImpl) FindCity(ctx context.Context, provinceID s
 		})
 		if err != nil {
 			log.Println("Failed to set cache for province:", provinceID, err)
+		} else {
+			log.Println("Success to create cache for RajaOngkirCities's response")
 		}
 	}
 

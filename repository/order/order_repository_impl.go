@@ -49,7 +49,7 @@ func (repository *OrderRepositoryImpl) FindByUserId(ctx context.Context, tx *sql
 }
 
 func (repository *OrderRepositoryImpl) FindOrderBySellerId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllSellerOrderResponse, error) {
-	query := "SELECT id,costume_id,total,status,updated_at FROM orders where seller_id=$1"
+	query := "SELECT id,costume_id,total,status,updated_at FROM orders where seller_id=$1 AND status_payment=true"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 	hasData := false
@@ -72,7 +72,7 @@ func (repository *OrderRepositoryImpl) FindOrderBySellerId(ctx context.Context, 
 }
 
 func (repository *OrderRepositoryImpl) FindOrderByUserId(ctx context.Context, tx *sql.Tx, uuid string) ([]order.AllUserOrderResponse, error) {
-	query := "SELECT id,costume_id,total,status,updated_at FROM orders where user_id=$1"
+	query := "SELECT id,costume_id,total,status,updated_at FROM orders where user_id=$1 AND status_payment=true"
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	helper.PanicIfError(err)
 	hasData := false
