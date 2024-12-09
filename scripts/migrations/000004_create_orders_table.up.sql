@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS orders(
     seller_id UUID NOT NULL,
     costume_id int NOT NULL,
     total decimal(10,2) NOT NULL,
-    status varchar(20) default 'Pending',
+    status varchar(35) default 'Pending',
     description text,
     status_payment bool default false,
     status_shipping varchar(20) NOT NULL default false,
