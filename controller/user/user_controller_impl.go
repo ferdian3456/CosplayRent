@@ -22,7 +22,7 @@ type UserControllerImpl struct {
 	UserService users.UserService
 }
 
-func NewUserController(userService users.UserService) *UserControllerImpl {
+func NewUserController(userService users.UserService) UserController {
 	return &UserControllerImpl{
 		UserService: userService,
 	}
