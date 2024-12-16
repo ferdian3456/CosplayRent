@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func NewClient() *memcache.Client {
+func NewMemcacheClient() *memcache.Client {
 	var err error = godotenv.Load("../.env")
 	helper.PanicIfError(err)
 
