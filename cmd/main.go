@@ -59,15 +59,17 @@ func CORS(next http.Handler) http.Handler {
 
 func main() {
 	DB := app.NewDB()
-	memcacheClient := app.NewClient()
+	memcacheClient := app.NewMemcacheClient()
+	zerolog := app.NewZeroLog()
 	validate := validator.New()
+
 	userRepository := user_repository.NewUserRepository()
 	userService := user_service.NewUserService(userRepository, costume_repository.NewCostumeRepository(), order_repository.NewOrderRepository(), topup_order_repository.NewTopUpOrderRepository(), DB, validate)
 	userController := user_controller.NewUserController(userService)
 
 	costumerRepository := costume_repository.NewCostumeRepository()
 	costumeService := costume_service.NewCostumeService(costumerRepository, user_repository.NewUserRepository(), DB, validate)
-	costumeController := costume_controller.NewCostumeController(costumeService)
+	costumeController := costume_controller.NewCostumeController(costumeService, zerolog)
 
 	reviewRepository := review_repository.NewReviewRepository()
 	reviewService := review_service.NewReviewService(reviewRepository, costume_repository.NewCostumeRepository(), user_repository.NewUserRepository(), DB, validate)
@@ -168,10 +170,14 @@ func main() {
 		Handler: CORS(router),
 	}
 
+	//err = errors.New("Failed to connect to db")
+	//if err != nil {
+	//	panic(err)
+	//}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	// Start server in a goroutine
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error starting server: %v", err)

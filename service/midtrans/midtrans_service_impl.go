@@ -58,7 +58,7 @@ func (service *MidtransServiceImpl) CreateTransaction(ctx context.Context, reque
 	//fmt.Println("request.Costume_price =", request.Costume_price)
 	//fmt.Println("request.Merchant_name =", request.Merchant_name)
 	//fmt.Println("request.TotalAmount =", request.TotalAmount)
-
+	
 	var snapClient = snap.Client{}
 	snapClient.New(server_key, midtrans.Sandbox)
 

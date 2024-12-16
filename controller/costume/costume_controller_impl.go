@@ -6,6 +6,7 @@ import (
 	"cosplayrent/model/web/costume"
 	costumes "cosplayrent/service/costume"
 	"fmt"
+	"github.com/rs/zerolog"
 	"io"
 	"log"
 	"net/http"
@@ -20,11 +21,13 @@ import (
 
 type CostumeControllerImpl struct {
 	CostumeService costumes.CostumeService
+	Log            zerolog.Logger
 }
 
-func NewCostumeController(costumeService costumes.CostumeService) CostumeController {
+func NewCostumeController(costumeService costumes.CostumeService, zerolog zerolog.Logger) CostumeController {
 	return &CostumeControllerImpl{
 		CostumeService: costumeService,
+		Log:            zerolog,
 	}
 }
 
@@ -220,6 +223,7 @@ func (controller CostumeControllerImpl) FindByName(writer http.ResponseWriter, r
 
 func (controller CostumeControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	//time.Sleep(15 * time.Second)
+	//controller.Log.Panic().Msg("Test Find All")
 	costumeResponse := controller.CostumeService.FindAll(request.Context())
 
 	webResponse := web.WebResponse{
