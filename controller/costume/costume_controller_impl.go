@@ -219,6 +219,7 @@ func (controller CostumeControllerImpl) FindByName(writer http.ResponseWriter, r
 }
 
 func (controller CostumeControllerImpl) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	//time.Sleep(15 * time.Second)
 	costumeResponse := controller.CostumeService.FindAll(request.Context())
 
 	webResponse := web.WebResponse{

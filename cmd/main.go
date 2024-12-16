@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"cosplayrent/app"
 	costume_controller "cosplayrent/controller/costume"
 	midtrans_controller "cosplayrent/controller/midtrans"
@@ -33,6 +34,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-playground/validator"
 	"github.com/julienschmidt/httprouter"
@@ -164,7 +168,25 @@ func main() {
 		Handler: CORS(router),
 	}
 
-	err = server.ListenAndServe()
-	helper.PanicIfError(err)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
+	// Start server in a goroutine
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error starting server: %v", err)
+		}
+	}()
+
+	<-stop
+	log.Println("\nGot one of stop signals")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("\nTimeout, forced kill!")
+	}
+
+	log.Println("Server has shut down gracefully")
 }
