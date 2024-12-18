@@ -1,0 +1,30 @@
+{
+  "database": {
+    "type": "postgres",
+    "port": "",
+    "user": "",
+    "password": "",
+    "url": ""
+  },
+  "cache": {
+    "type": "memcached",
+    "port": "",
+    "server_port": ""
+  },
+  "payment_gateway": {
+    "midtrans": {
+      "server_key": ""
+    }
+  },
+  "external_services": {
+    "rajaongkir": {
+      "server_key": ""
+    }
+  },
+  "application": {
+    "go_server": "",
+    "image_env": "",
+    "version": "",
+    "secret_key": ""
+  }
+}
