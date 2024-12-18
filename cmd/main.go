@@ -57,7 +57,7 @@ func main() {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			zerolog.Log().Err(err).Msg("Error Starting Server")
+			zerolog.Fatal().Err(err).Msg("Error Starting Server")
 		}
 	}()
 
@@ -68,7 +68,7 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		zerolog.Log().Err(err).Msg("Timeout, forced kill!")
+		zerolog.Fatal().Err(err).Msg("Timeout, forced kill!")
 	}
 
 	zerolog.Info().Msg("Server has shut down gracefully")

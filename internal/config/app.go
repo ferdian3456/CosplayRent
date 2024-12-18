@@ -56,7 +56,7 @@ func Server(config *ServerConfig) {
 	rajaongkirController := controller.NewRajaOngkirController(RajaOngkirUsecase, config.Log)
 
 	router := httprouter.New()
-	authMiddleware := middleware.NewAuthMiddleware(router)
+	authMiddleware := middleware.NewAuthMiddleware(router, config.Log, config.Config)
 
 	routeConfig := route.RouteConfig{
 		Router:               router,

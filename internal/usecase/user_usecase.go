@@ -46,6 +46,7 @@ func (Usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 	tx, err := Usecase.DB.Begin()
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
+		Usecase.Log.Fatal().Err(err).Msg("Failed to start transaction")
 	}
 
 	defer helper.CommitOrRollback(tx)

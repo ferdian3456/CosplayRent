@@ -2,14 +2,13 @@ package middleware
 
 import (
 	"context"
-	helper2 "cosplayrent/internal/helper"
+	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/web"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
-	"log"
+	"github.com/knadh/koanf/v2"
+	"github.com/rs/zerolog"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -19,10 +18,16 @@ const (
 
 type AuthMiddleware struct {
 	Handler http.Handler
+	Log     *zerolog.Logger
+	Koanf   *koanf.Koanf
 }
 
-func NewAuthMiddleware(handler http.Handler) *AuthMiddleware {
-	return &AuthMiddleware{Handler: handler}
+func NewAuthMiddleware(handler http.Handler, zerolog *zerolog.Logger, koanf *koanf.Koanf) *AuthMiddleware {
+	return &AuthMiddleware{
+		Handler: handler,
+		Log:     zerolog,
+		Koanf:   koanf,
+	}
 }
 
 func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.Handle {
@@ -37,7 +42,9 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 				Status: "Unauthorized",
 				Data:   "No token provided",
 			}
-			helper2.WriteToResponseBody(writer, webResponse)
+
+			middleware.Log.Warn().Msg("Unauthorized, no token provided")
+			helper.WriteToResponseBody(writer, webResponse)
 			return
 		}
 
@@ -51,14 +58,13 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 				Status: "Unauthorized",
 				Data:   "Token format is not match",
 			}
-			helper2.WriteToResponseBody(writer, webResponse)
+
+			middleware.Log.Warn().Msg("Unauthorized, token format is not match")
+			helper.WriteToResponseBody(writer, webResponse)
 			return
 		}
 
-		var err error = godotenv.Load("../.env")
-		helper2.PanicIfError(err)
-
-		secretKey := os.Getenv("SECRET_KEY")
+		secretKey := middleware.Koanf.String("SECRET_KEY")
 		secretKeyByte := []byte(secretKey)
 
 		token, err := jwt.Parse(splitToken[1], func(token *jwt.Token) (interface{}, error) {
@@ -77,7 +83,9 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 				Status: "Unauthorized",
 				Data:   "Invalid token",
 			}
-			helper2.WriteToResponseBody(writer, webResponse)
+
+			middleware.Log.Warn().Msg("Unauthorized, invalid token")
+			helper.WriteToResponseBody(writer, webResponse)
 			return
 		}
 
@@ -96,12 +104,14 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 					Status: "Unauthorized",
 					Data:   "Invalid Token",
 				}
-				helper2.WriteToResponseBody(writer, webResponse)
+
+				middleware.Log.Warn().Msg("Unauthorized, invalid token")
+				helper.WriteToResponseBody(writer, webResponse)
 				return
 			}
 		}
 
-		log.Printf("User with uuid: %s enter Middleware", id)
+		middleware.Log.Debug().Msg("User:" + id)
 		ctx := context.WithValue(request.Context(), userUUIDkey, id)
 		next(writer, request.WithContext(ctx), p)
 	}
