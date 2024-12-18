@@ -2,7 +2,7 @@ To ignore goland setting
 /.idea
 
 To ignore env file (privacy)
-.env
+config.json
 
 To ignore static image
 /static/costume/*
