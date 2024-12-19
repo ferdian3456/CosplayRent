@@ -4,6 +4,7 @@ import (
 	"context"
 	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/web"
+	"cosplayrent/internal/usecase"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/knadh/koanf/v2"
@@ -17,16 +18,18 @@ const (
 )
 
 type AuthMiddleware struct {
-	Handler http.Handler
-	Log     *zerolog.Logger
-	Koanf   *koanf.Koanf
+	Handler     http.Handler
+	Log         *zerolog.Logger
+	Config      *koanf.Koanf
+	UserUsecase *usecase.UserUsecase
 }
 
-func NewAuthMiddleware(handler http.Handler, zerolog *zerolog.Logger, koanf *koanf.Koanf) *AuthMiddleware {
+func NewAuthMiddleware(handler http.Handler, zerolog *zerolog.Logger, koanf *koanf.Koanf, userUsecase *usecase.UserUsecase) *AuthMiddleware {
 	return &AuthMiddleware{
-		Handler: handler,
-		Log:     zerolog,
-		Koanf:   koanf,
+		Handler:     handler,
+		Log:         zerolog,
+		Config:      koanf,
+		UserUsecase: userUsecase,
 	}
 }
 
@@ -64,7 +67,7 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 			return
 		}
 
-		secretKey := middleware.Koanf.String("SECRET_KEY")
+		secretKey := middleware.Config.String("SECRET_KEY")
 		secretKeyByte := []byte(secretKey)
 
 		token, err := jwt.Parse(splitToken[1], func(token *jwt.Token) (interface{}, error) {
@@ -109,6 +112,22 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 				helper.WriteToResponseBody(writer, webResponse)
 				return
 			}
+		}
+
+		err = middleware.UserUsecase.CheckUserExistance(request.Context(), id)
+		if err != nil {
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusUnauthorized)
+
+			webResponse := web.WebResponse{
+				Code:   http.StatusUnauthorized,
+				Status: "Unauthorized",
+				Data:   "User not found, please register",
+			}
+
+			middleware.Log.Warn().Msg("Unauthorized, user not found")
+			helper.WriteToResponseBody(writer, webResponse)
+			return
 		}
 
 		middleware.Log.Debug().Msg("User:" + id)

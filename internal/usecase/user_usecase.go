@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/knadh/koanf/v2"
 	"log"
 	"os"
 	"sort"
@@ -28,34 +29,43 @@ type UserUsecase struct {
 	DB             *sql.DB
 	Validate       *validator.Validate
 	Log            *zerolog.Logger
+	Config         *koanf.Koanf
 }
 
-func NewUserUsecase(userRepository *repository.UserRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger) *UserUsecase {
+func NewUserUsecase(userRepository *repository.UserRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
 	return &UserUsecase{
 		UserRepository: userRepository,
 		DB:             DB,
 		Validate:       validate,
 		Log:            zerolog,
+		Config:         koanf,
 	}
 }
 
-func (Usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateRequest) string {
+func (Usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateRequest) (string, error) {
 	err := Usecase.Validate.Struct(request)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("invalid request body")
+		Usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		return "", respErr
+	}
 
 	tx, err := Usecase.DB.Begin()
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-		Usecase.Log.Fatal().Err(err).Msg("Failed to start transaction")
+		respErr := errors.New("failed to start transaction")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
 
 	now := time.Now()
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("error generating password hash")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
+	}
 
-	userDomain := domain.User{
+	user := domain.User{
 		Id:         googleuuid.New(),
 		Name:       request.Name,
 		Email:      request.Email,
@@ -63,57 +73,15 @@ func (Usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 		Created_at: &now,
 	}
 
-	Usecase.UserRepository.Create(ctx, tx, userDomain)
-
-	err = godotenv.Load("../.env")
-	helper.PanicIfError(err)
-
-	secretKey := os.Getenv("SECRET_KEY")
-	secretKeyByte := []byte(secretKey)
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":      userDomain.Id,
-		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
-	})
-
-	tokenString, err := token.SignedString(secretKeyByte)
+	err = Usecase.UserRepository.CheckCredentialUnique(ctx, tx, user)
 	if err != nil {
-		panic(err)
-	}
-
-	return tokenString
-}
-
-func (Usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginRequest) (string, error) {
-	err := Usecase.Validate.Struct(request)
-	helper.PanicIfError(err)
-
-	tx, err := Usecase.DB.Begin()
-	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-	}
-
-	defer helper.CommitOrRollback(tx)
-
-	userDomain := domain.User{
-		Email:    request.Email,
-		Password: request.Password,
-	}
-
-	user := domain.User{}
-	user, err = Usecase.UserRepository.Login(ctx, tx, userDomain.Email)
-	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userDomain.Password))
-	if err != nil {
+		Usecase.Log.Warn().Msg(err.Error())
 		return "", err
 	}
 
-	err = godotenv.Load("../.env")
-	helper.PanicIfError(err)
+	Usecase.UserRepository.Create(ctx, tx, user)
 
-	secretKey := os.Getenv("SECRET_KEY")
+	secretKey := Usecase.Config.String("SECRET_KEY")
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -123,18 +91,70 @@ func (Usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginReq
 
 	tokenString, err := token.SignedString(secretKeyByte)
 	if err != nil {
-		panic(err)
+		respErr := errors.New("failed to sign a token")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
 	}
 
 	return tokenString, nil
 }
 
-func (Usecase *UserUsecase) FindByUUID(ctx context.Context, uuid string) user.UserResponse {
-	log.Printf("User with uuid: %s enter User Usecase: FindByUUID", uuid)
+func (Usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginRequest) (string, error) {
+	err := Usecase.Validate.Struct(request)
+	if err != nil {
+		respErr := errors.New("invalid request body")
+		Usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		return "", respErr
+	}
 
 	tx, err := Usecase.DB.Begin()
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		respErr := errors.New("failed to start transaction")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	userRequest := domain.User{
+		Email:    request.Email,
+		Password: request.Password,
+	}
+
+	user := domain.User{}
+	user, err = Usecase.UserRepository.Login(ctx, tx, userRequest.Email)
+	if err != nil {
+		Usecase.Log.Warn().Msg(err.Error())
+		return "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userRequest.Password))
+	if err != nil {
+		respErr := errors.New("wrong password")
+		Usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		return "", respErr
+	}
+
+	secretKey := Usecase.Config.String("SECRET_KEY")
+	secretKeyByte := []byte(secretKey)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":      user.Id,
+		"expired": time.Date(2030, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
+	})
+
+	tokenString, err := token.SignedString(secretKeyByte)
+	if err != nil {
+		respErr := errors.New("failed to sign a token")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+
+	return tokenString, nil
+}
+
+func (Usecase *UserUsecase) FindByUUID(ctx context.Context, uuid string) (user.UserResponse, error) {
+	tx, err := Usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -142,47 +162,55 @@ func (Usecase *UserUsecase) FindByUUID(ctx context.Context, uuid string) user.Us
 	user := user.UserResponse{}
 	user, err = Usecase.UserRepository.FindByUUID(ctx, tx, uuid)
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		Usecase.Log.Warn().Msg(err.Error())
+		return user, err
 	}
 
-	err = godotenv.Load("../.env")
-	helper.PanicIfError(err)
-
-	imageEnv := os.Getenv("IMAGE_ENV")
+	imageEnv := Usecase.Config.String("IMAGE_ENV")
 
 	if user.Profile_picture != nil {
 		value := imageEnv + *user.Profile_picture
 		user.Profile_picture = &value
 	}
 
-	return user
+	return user, nil
 }
 
-func (Usecase *UserUsecase) FindAll(ctx context.Context, uuid string) []user.UserResponse {
-	log.Printf("User with uuid: %s enter User Controller: FindAll", uuid)
-
-	var err error
+func (Usecase *UserUsecase) CheckUserExistance(ctx context.Context, uuid string) error {
 	tx, err := Usecase.DB.Begin()
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		respErr := errors.New("failed to start transaction")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
 
-	_, err = Usecase.UserRepository.FindByUUID(ctx, tx, uuid)
+	err = Usecase.UserRepository.CheckUserExistance(ctx, tx, uuid)
+	if err != nil {
+		Usecase.Log.Warn().Msg(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (Usecase *UserUsecase) FindAll(ctx context.Context, uuid string) ([]user.UserResponse, error) {
+	tx, err := Usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		Usecase.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := []user.UserResponse{}
+	
+	user, err = Usecase.UserRepository.FindAll(ctx, tx, uuid)
 	if err != nil {
 		panic(exception.NewNotFoundError(err.Error()))
 	}
 
-	user, err := Usecase.UserRepository.FindAll(ctx, tx, uuid)
-	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
-	}
-
-	err = godotenv.Load("../.env")
-	helper.PanicIfError(err)
-
-	imageEnv := os.Getenv("IMAGE_ENV")
+	imageEnv := Usecase.Config.String("IMAGE_ENV")
 
 	for i := range user {
 		if user[i].Profile_picture != nil {
@@ -191,7 +219,7 @@ func (Usecase *UserUsecase) FindAll(ctx context.Context, uuid string) []user.Use
 		}
 	}
 
-	return user
+	return user, nil
 }
 
 func (Usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserUpdateRequest, uuid string) {

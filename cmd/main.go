@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"cosplayrent/internal/config"
+	"cosplayrent/internal/exception"
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,6 +43,7 @@ func main() {
 	})
 
 	router.ServeFiles("/static/*filepath", http.Dir("../static"))
+	router.PanicHandler = exception.ErrorHandler
 
 	GO_SERVER_PORT := koanf.String("GO_SERVER")
 

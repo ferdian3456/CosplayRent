@@ -25,31 +25,59 @@ func NewUserRepository(zerolog *zerolog.Logger) *UserRepository {
 func (repository *UserRepository) Create(ctx context.Context, tx *sql.Tx, user domain.User) {
 	query := "INSERT INTO users (id,name,email,password,emoney_updated_at,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)"
 	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at, user.Created_at, user.Created_at)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+}
+
+func (repository *UserRepository) CheckCredentialUnique(ctx context.Context, tx *sql.Tx, user domain.User) error {
+	query := "SELECT name, email from users WHERE name=$1 OR email=$2 LIMIT 1"
+	row, err := tx.QueryContext(ctx, query, user.Name, user.Email)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+
+	defer row.Close()
+
+	if row.Next() {
+		return nil
+	} else {
+		return errors.New("name or email are already exists")
+	}
 }
 
 func (repository *UserRepository) Login(ctx context.Context, tx *sql.Tx, name string) (domain.User, error) {
 	query := "SELECT id,email,password FROM users where email=$1"
 	rows, err := tx.QueryContext(ctx, query, name)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
 
 	defer rows.Close()
 
 	users := domain.User{}
 	if rows.Next() {
 		err := rows.Scan(&users.Id, &users.Email, &users.Password)
-		helper.PanicIfError(err)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(respErr).Msg(err.Error())
+		}
 		return users, nil
 	} else {
-		return users, errors.New("wrong email or wrong password")
+		return users, errors.New("wrong email")
 	}
 }
 
 func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uuid string) (user.UserResponse, error) {
-	log.Printf("User with uuid: %s enter User Repository: FindByUUID", uuid)
 	query := "SELECT id,name,email,address,profile_picture,originprovince_name,originprovince_id,origincity_name,origincity_id,created_at,updated_at FROM users where id=$1"
 	rows, err := tx.QueryContext(ctx, query, uuid)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
 
 	defer rows.Close()
 
@@ -58,7 +86,10 @@ func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uu
 	var updatedAt time.Time
 	if rows.Next() {
 		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Origin_province_name, &users.Origin_province_id, &users.Origin_city_name, &users.Origin_city_id, &createdAt, &updatedAt)
-		helper.PanicIfError(err)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(respErr).Msg(err.Error())
+		}
 		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		users.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
 		return users, nil
@@ -67,12 +98,31 @@ func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uu
 	}
 }
 
-func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserResponse, error) {
-	log.Printf("User with uuid: %s enter User Repository: FindAll", uuid)
+func (repository *UserRepository) CheckUserExistance(ctx context.Context, tx *sql.Tx, uuid string) error {
+	query := "SELECT id FROM users where id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
 
-	query := "SELECT id,name,email,address,profile_picture,origincity_name,originprovince_name,created_at,updated_at FROM users"
+	defer row.Close()
+
+	if row.Next() {
+		return nil
+	} else {
+		return errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserResponse, error) {
+	query := "SELECT id,name,email,address,profile_picture,originprovince_name,originprovince_id,origincity_name,origincity_id,created_at,updated_at FROM users"
 	rows, err := tx.QueryContext(ctx, query)
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(respErr).Msg(err.Error())
+	}
+
 	hasData := false
 
 	defer rows.Close()
@@ -82,11 +132,13 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 	var updatedAt time.Time
 	for rows.Next() {
 		user := user.UserResponse{}
-		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &user.Origin_city_name, &user.Origin_province_name, &createdAt, &updatedAt)
-		helper.PanicIfError(err)
+		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &user.Origin_province_name, &user.Origin_province_id, &user.Origin_city_name, &user.Origin_city_id, &createdAt, &updatedAt)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(respErr).Msg(err.Error())
+		}
 		user.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		user.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
-		//user.Profile_picture = fmt.Sprintf()
 		users = append(users, user)
 		hasData = true
 	}

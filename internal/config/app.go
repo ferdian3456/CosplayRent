@@ -25,8 +25,8 @@ type ServerConfig struct {
 
 func Server(config *ServerConfig) {
 	userRepository := repository.NewUserRepository(config.Log)
-	UserUsecase := usecase.NewUserUsecase(userRepository, config.DB, config.Validate, config.Log)
-	userController := controller.NewUserController(UserUsecase, config.Log)
+	userUsecase := usecase.NewUserUsecase(userRepository, config.DB, config.Validate, config.Log, config.Config)
+	userController := controller.NewUserController(userUsecase, config.Log)
 
 	costumerRepository := repository.NewCostumeRepository(config.Log)
 	CostumeUsecase := usecase.NewCostumeUsecase(costumerRepository, config.DB, config.Validate, config.Log)
@@ -56,7 +56,7 @@ func Server(config *ServerConfig) {
 	rajaongkirController := controller.NewRajaOngkirController(RajaOngkirUsecase, config.Log)
 
 	router := httprouter.New()
-	authMiddleware := middleware.NewAuthMiddleware(router, config.Log, config.Config)
+	authMiddleware := middleware.NewAuthMiddleware(router, config.Log, config.Config, userUsecase)
 
 	routeConfig := route.RouteConfig{
 		Router:               router,

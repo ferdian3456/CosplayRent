@@ -36,10 +36,20 @@ func (controller UserController) Register(writer http.ResponseWriter, request *h
 	userCreateRequest := user.UserCreateRequest{}
 	helper.ReadFromRequestBody(request, &userCreateRequest)
 
-	token := controller.UserUsecase.Create(request.Context(), userCreateRequest)
+	token, err := controller.UserUsecase.Create(request.Context(), userCreateRequest)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   err,
+		}
+		helper.WriteToResponseBody(writer, webResponse)
+	}
+
 	tokenResponse := web.TokenResponse{
 		Token: token,
 	}
+
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",
@@ -57,8 +67,8 @@ func (controller UserController) Login(writer http.ResponseWriter, request *http
 	if err != nil {
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
-			Status: "Unauthorized",
-			Data:   "Wrong email or password",
+			Status: "Bad Request",
+			Data:   err,
 		}
 
 		helper.WriteToResponseBody(writer, webResponse)
@@ -78,20 +88,20 @@ func (controller UserController) Login(writer http.ResponseWriter, request *http
 }
 
 func (controller UserController) FindByUUID(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	userUUID, ok := request.Context().Value("user_uuid").(string)
-	if !ok {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	userResponse, err := controller.UserUsecase.FindByUUID(request.Context(), userUUID)
+
+	if err != nil {
 		webResponse := web.WebResponse{
-			Code:   http.StatusInternalServerError,
-			Status: "Unauthorized",
-			Data:   "Invalid Token",
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err,
 		}
+
 		helper.WriteToResponseBody(writer, webResponse)
 		return
 	}
-
-	log.Printf("User with uuid: %s enter User Controller: FindByUUID", userUUID)
-
-	userResponse := controller.UserUsecase.FindByUUID(request.Context(), userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
@@ -103,20 +113,19 @@ func (controller UserController) FindByUUID(writer http.ResponseWriter, request 
 }
 
 func (controller UserController) FindAll(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
-	userUUID, ok := request.Context().Value("user_uuid").(string)
-	if !ok {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	userResponse, err := controller.UserUsecase.FindAll(request.Context(), userUUID)
+	if err != nil {
 		webResponse := web.WebResponse{
-			Code:   http.StatusInternalServerError,
-			Status: "Unauthorized",
-			Data:   "Invalid Token",
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err,
 		}
+
 		helper.WriteToResponseBody(writer, webResponse)
 		return
 	}
-
-	log.Printf("User with uuid: %s enter User Controller: FindAll", userUUID)
-
-	userResponse := controller.UserUsecase.FindAll(request.Context(), userUUID)
 
 	webResponse := web.WebResponse{
 		Code:   200,
