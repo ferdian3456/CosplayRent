@@ -6,9 +6,7 @@ import (
 	"cosplayrent/internal/model/web/user"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/rs/zerolog"
-	"strings"
 	"time"
 )
 
@@ -150,59 +148,20 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 }
 
 func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user domain.User) {
-	setClauses := []string{}
-	args := []interface{}{user.Id}
-
-	if user.Name != "" {
-		setClauses = append(setClauses, "name = $2")
-		args = append(args, user.Name)
-	}
-
-	if user.Email != "" {
-		setClauses = append(setClauses, "email = $3")
-		args = append(args, user.Email)
-	}
-
-	if user.Profile_picture != "" {
-		setClauses = append(setClauses, "profile_picture = $4")
-		args = append(args, user.Profile_picture)
-	}
-
-	if user.Address != "" {
-		setClauses = append(setClauses, "address = $5")
-		args = append(args, user.Address)
-	}
-
-	if user.Origin_province_name != "" {
-		setClauses = append(setClauses, "originprovince_name = $6")
-		args = append(args, user.Origin_province_name)
-	}
-
-	if user.Origin_province_id != 0 {
-		setClauses = append(setClauses, "originprovince_id = $7")
-		args = append(args, user.Origin_province_id)
-	}
-
-	if user.Origin_city_name != "" {
-		setClauses = append(setClauses, "origincity_name = $8")
-		args = append(args, user.Origin_city_name)
-	}
-
-	if user.Origin_city_id != 0 {
-		setClauses = append(setClauses, "origincity_id = $9")
-		args = append(args, user.Origin_city_id)
-	}
-
-	setClauses = append(setClauses, "updated_at = $10")
-	args = append(args, user.Updated_at)
-
-	query := fmt.Sprintf(`
-        UPDATE users 
-        SET %s
-        WHERE id = $1;
-    `, strings.Join(setClauses, ", "))
-
-	_, err := tx.ExecContext(ctx, query, args...)
+	query := `
+            UPDATE users SET 
+				name = COALESCE($2, name),
+				email = COALESCE($3, email),
+				profile_picture = COALESCE($4, profile_picture),
+				address = COALESCE($5, address),
+				originprovince_name = COALESCE($6, originprovince_name),
+				originprovince_id = COALESCE($7, originprovince_id),
+				origincity_name = COALESCE($8, origincity_name),
+				origincity_id = COALESCE($9, origincity_id),
+				updated_at = $10
+			WHERE id = $1;
+        `
+	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Profile_picture, user.Address, user.Origin_province_name, user.Origin_province_id, user.Origin_city_name, user.Origin_city_id, user.Updated_at)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
 		repository.Log.Panic().Err(respErr).Msg(err.Error())
