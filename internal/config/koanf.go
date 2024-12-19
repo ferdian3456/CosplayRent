@@ -9,7 +9,7 @@ import (
 
 func NewKoanf() *koanf.Koanf {
 	k := koanf.New(".")
-	err := k.Load(file.Provider("config.json"), json.Parser())
+	err := k.Load(file.Provider("../config.json"), json.Parser())
 	if err != nil {
 		log.Fatal().Msg("Failed to load config.json")
 	}

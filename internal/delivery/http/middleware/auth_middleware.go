@@ -67,7 +67,7 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 			return
 		}
 
-		secretKey := middleware.Config.String("SECRET_KEY")
+		secretKey := middleware.Config.String("application.secret_key")
 		secretKeyByte := []byte(secretKey)
 
 		token, err := jwt.Parse(splitToken[1], func(token *jwt.Token) (interface{}, error) {
