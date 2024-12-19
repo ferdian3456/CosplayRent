@@ -35,6 +35,7 @@ func main() {
 	validator := config.NewValidator()
 
 	config.Server(&config.ServerConfig{
+		Router:   router,
 		DB:       DB,
 		Memcache: memcacheClient,
 		Log:      &zerolog,
@@ -45,14 +46,14 @@ func main() {
 	router.ServeFiles("/static/*filepath", http.Dir("../static"))
 	router.PanicHandler = exception.ErrorHandler
 
-	GO_SERVER_PORT := koanf.String("GO_SERVER")
-
-	zerolog.Info().Msg(("Server is running on:" + GO_SERVER_PORT))
+	GO_SERVER_PORT := koanf.String("application.go_server")
 
 	server := http.Server{
 		Addr:    GO_SERVER_PORT,
 		Handler: CORS(router),
 	}
+
+	zerolog.Info().Msg(("Server is running on:" + GO_SERVER_PORT))
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
