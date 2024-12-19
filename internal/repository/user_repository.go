@@ -6,6 +6,7 @@ import (
 	"cosplayrent/internal/model/web/user"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/rs/zerolog"
 	"time"
 )
@@ -147,25 +148,70 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 	return users, nil
 }
 
-func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user domain.User) {
-	query := `
-            UPDATE users SET 
-				name = COALESCE($2, name),
-				email = COALESCE($3, email),
-				profile_picture = COALESCE($4, profile_picture),
-				address = COALESCE($5, address),
-				originprovince_name = COALESCE($6, originprovince_name),
-				originprovince_id = COALESCE($7, originprovince_id),
-				origincity_name = COALESCE($8, origincity_name),
-				origincity_id = COALESCE($9, origincity_id),
-				updated_at = $10
-			WHERE id = $1;
-        `
-	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Profile_picture, user.Address, user.Origin_province_name, user.Origin_province_id, user.Origin_city_name, user.Origin_city_id, user.Updated_at)
+func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user domain.User) error {
+	query := "UPDATE users SET "
+	args := []interface{}{}
+	argCounter := 1
+
+	if user.Name != "" {
+		query += fmt.Sprintf("name = $%d, ", argCounter)
+		args = append(args, user.Name)
+		argCounter++
+	}
+	if user.Email != "" {
+		query += fmt.Sprintf("email = $%d, ", argCounter)
+		args = append(args, user.Email)
+		argCounter++
+	}
+	if user.Profile_picture != "" {
+		query += fmt.Sprintf("profile_picture = $%d, ", argCounter)
+		args = append(args, user.Profile_picture)
+		argCounter++
+	}
+	if user.Address != "" {
+		query += fmt.Sprintf("address = $%d, ", argCounter)
+		args = append(args, user.Address)
+		argCounter++
+	}
+	if user.Origin_province_name != "" {
+		query += fmt.Sprintf("originprovince_name = $%d, ", argCounter)
+		args = append(args, user.Origin_province_name)
+		argCounter++
+	}
+	if user.Origin_province_id != 0 {
+		query += fmt.Sprintf("originprovince_id = $%d, ", argCounter)
+		args = append(args, user.Origin_province_id)
+		argCounter++
+	}
+	if user.Origin_city_name != "" {
+		query += fmt.Sprintf("origincity_name = $%d, ", argCounter)
+		args = append(args, user.Origin_city_name)
+		argCounter++
+	}
+	if user.Origin_city_id != 0 {
+		query += fmt.Sprintf("origincity_id = $%d, ", argCounter)
+		args = append(args, user.Origin_city_id)
+		argCounter++
+	}
+
+	// Add updated_at field
+	query += fmt.Sprintf("updated_at = $%d ", argCounter)
+	args = append(args, user.Updated_at)
+	argCounter++
+
+	// Add WHERE clause
+	query += fmt.Sprintf("WHERE id = $%d", argCounter)
+	args = append(args, user.Id)
+
+	// Execute the query
+	_, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
 		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		return respErr
 	}
+
+	return nil
 }
 
 //
