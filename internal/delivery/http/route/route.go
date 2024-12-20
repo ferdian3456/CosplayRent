@@ -7,19 +7,21 @@ import (
 )
 
 type RouteConfig struct {
-	Router         *httprouter.Router
-	UserController *controller.UserController
-	AuthMiddleware *middleware.AuthMiddleware
+	Router               *httprouter.Router
+	UserController       *controller.UserController
+	OrderController      *controller.OrderController
+	TopUpOrderController *controller.TopUpOrderController
+	MidtransController   *controller.MidtransController
+	AuthMiddleware       *middleware.AuthMiddleware
 }
 
 func (c *RouteConfig) SetupRoute() {
 	c.Router.POST("/api/register", c.UserController.Register)
-	//c.Router.GET("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.GetIdentityCard))
+	c.Router.GET("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.GetIdentityCard))
 	//c.Router.POST("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.AddIdentityCard))
-	//c.Router.PUT("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.UpdateIdentityCard))
-	//c.Router.GET("/api/emoney", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyAmount))
-	//c.Router.GET("/api/emoneyhistory", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyTransactionHistory))
-	//c.Router.PUT("/api/emoney", c.AuthMiddleware.ServeHTTP(c.UserController.TopUp))
+	c.Router.PUT("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.AddOrUpdateIdentityCard))
+	c.Router.GET("/api/emoney", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyAmount))
+	c.Router.GET("/api/emoneyhistory", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyTransactionHistory))
 	c.Router.POST("/api/login", c.UserController.Login)
 	c.Router.GET("/api/userdetail", c.AuthMiddleware.ServeHTTP(c.UserController.FindByUUID))
 	c.Router.GET("/api/user", c.AuthMiddleware.ServeHTTP(c.UserController.FindAll))
@@ -57,7 +59,7 @@ func (c *RouteConfig) SetupRoute() {
 	//c.Router.GET("/api/alluserorder", c.AuthMiddleware.ServeHTTP(c.OrderController.GetAllUserOrder))
 	//c.Router.POST("/api/checkbalancewithorderamount", c.AuthMiddleware.ServeHTTP(c.OrderController.CheckBalanceWithOrderAmount))
 	//
-	//c.Router.PUT("/api/topup", c.AuthMiddleware.ServeHTTP(c.TopUpOrderController.CreateTopUpOrder))
+	c.Router.PUT("/api/topup", c.AuthMiddleware.ServeHTTP(c.TopUpOrderController.CreateTopUpOrder))
 	//c.Router.GET("/api/checktopuporder/:orderID", c.TopUpOrderController.CheckTopUpOrderByOrderId)
 	//
 	//c.Router.GET("/api/wishlist", c.AuthMiddleware.ServeHTTP(c.WishlistController.FindAllWishListByUserId))
@@ -67,7 +69,6 @@ func (c *RouteConfig) SetupRoute() {
 	//c.Router.GET("/api/provinces", c.AuthMiddleware.ServeHTTP(c.RajaOngkirController.FindProvince))
 	//c.Router.GET("/api/city/:provinceID", c.AuthMiddleware.ServeHTTP(c.RajaOngkirController.FindCity))
 	//c.Router.POST("/api/checkshippment", c.AuthMiddleware.ServeHTTP(c.RajaOngkirController.CheckShippment))
-	//
-	//c.Router.POST("/api/midtrans/transaction/:orderID", c.AuthMiddleware.ServeHTTP(c.MidtransController.CreateTransaction))
-	//c.Router.POST("/api/midtrans/callback", c.MidtransController.MidtransCallBack)
+
+	c.Router.POST("/api/midtrans/callback", c.MidtransController.MidtransCallBack)
 }

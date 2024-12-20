@@ -2,13 +2,15 @@ package repository
 
 import (
 	"context"
+	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/domain"
 	"cosplayrent/internal/model/web/user"
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type UserRepository struct {
@@ -26,7 +28,7 @@ func (repository *UserRepository) Create(ctx context.Context, tx *sql.Tx, user d
 	_, err := tx.ExecContext(ctx, query, user.Id, user.Name, user.Email, user.Password, user.Created_at, user.Created_at, user.Created_at)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 }
 
@@ -35,7 +37,7 @@ func (repository *UserRepository) CheckCredentialUnique(ctx context.Context, tx 
 	row, err := tx.QueryContext(ctx, query, user.Name, user.Email)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer row.Close()
@@ -52,7 +54,7 @@ func (repository *UserRepository) Login(ctx context.Context, tx *sql.Tx, name st
 	rows, err := tx.QueryContext(ctx, query, name)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer rows.Close()
@@ -62,7 +64,7 @@ func (repository *UserRepository) Login(ctx context.Context, tx *sql.Tx, name st
 		err := rows.Scan(&users.Id, &users.Email, &users.Password)
 		if err != nil {
 			respErr := errors.New("failed to scan query result")
-			repository.Log.Panic().Err(respErr).Msg(err.Error())
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
 		}
 		return users, nil
 	} else {
@@ -75,7 +77,7 @@ func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uu
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer rows.Close()
@@ -87,7 +89,7 @@ func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uu
 		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Origin_province_name, &users.Origin_province_id, &users.Origin_city_name, &users.Origin_city_id, &createdAt, &updatedAt)
 		if err != nil {
 			respErr := errors.New("failed to scan query result")
-			repository.Log.Panic().Err(respErr).Msg(err.Error())
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
 		}
 		users.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		users.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
@@ -102,7 +104,7 @@ func (repository *UserRepository) CheckUserExistance(ctx context.Context, tx *sq
 	row, err := tx.QueryContext(ctx, query, uuid)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer row.Close()
@@ -119,7 +121,7 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 	rows, err := tx.QueryContext(ctx, query)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	hasData := false
@@ -134,7 +136,7 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Address, &user.Profile_picture, &user.Origin_province_name, &user.Origin_province_id, &user.Origin_city_name, &user.Origin_city_id, &createdAt, &updatedAt)
 		if err != nil {
 			respErr := errors.New("failed to scan query result")
-			repository.Log.Panic().Err(respErr).Msg(err.Error())
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
 		}
 		user.Created_at = createdAt.Format("2006-01-02 15:04:05")
 		user.Updated_at = updatedAt.Format("2006-01-02 15:04:05")
@@ -148,7 +150,7 @@ func (repository *UserRepository) FindAll(ctx context.Context, tx *sql.Tx, uuid 
 	return users, nil
 }
 
-func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user domain.User) error {
+func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user domain.User) {
 	query := "UPDATE users SET "
 	args := []interface{}{}
 	argCounter := 1
@@ -194,131 +196,182 @@ func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user d
 		argCounter++
 	}
 
-	// Add updated_at field
 	query += fmt.Sprintf("updated_at = $%d ", argCounter)
 	args = append(args, user.Updated_at)
 	argCounter++
 
-	// Add WHERE clause
 	query += fmt.Sprintf("WHERE id = $%d", argCounter)
 	args = append(args, user.Id)
 
-	// Execute the query
 	_, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
-		repository.Log.Panic().Err(respErr).Msg(err.Error())
-		return respErr
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
-
-	return nil
 }
 
-//
-//func (repository *UserRepository) Delete(ctx context.Context, tx *sql.Tx, uuid string) {
-//	log.Printf("User with uuid: %s enter User Repository: Delete", uuid)
-//	query := "DELETE FROM users WHERE id=$1"
-//	_, err := tx.ExecContext(ctx, query, uuid)
-//	helper.PanicIfError(err)
-//}
-//
-//func (repository *UserRepository) FindByEmail(ctx context.Context, tx *sql.Tx, email string) (user.UserResponse, error) {
-//	query := "SELECT id,name,email,address,profile_picture,created_at FROM users where email=$1"
-//	rows, err := tx.QueryContext(ctx, query, email)
-//	helper.PanicIfError(err)
-//
-//	defer rows.Close()
-//
-//	users := user.UserResponse{}
-//	if rows.Next() {
-//		err := rows.Scan(&users.Id, &users.Name, &users.Email, &users.Address, &users.Profile_picture, &users.Created_at)
-//		helper.PanicIfError(err)
-//		return users, nil
-//	} else {
-//		return users, errors.New("user not found")
-//	}
-//}
-//
-//func (repository *UserRepository) AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, uuid string, IdentityCardImage string) {
-//	log.Printf("User with uuid: %s enter User Repository: AddOrUpdateIdentityCard", uuid)
-//
-//	if IdentityCardImage != "" {
-//		query := "UPDATE users SET identitycard_picture = $1 WHERE id = $2"
-//		_, err := tx.ExecContext(ctx, query, IdentityCardImage, uuid)
-//		helper.PanicIfError(err)
-//	}
-//}
-//
-//func (repository *UserRepository) GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error) {
-//	log.Printf("User with uuid: %s enter User Repository: GetIdentityCard", uuid)
-//
-//	query := "SELECT identitycard_picture FROM users WHERE id=$1"
-//	row, err := tx.QueryContext(ctx, query, uuid)
-//	helper.PanicIfError(err)
-//
-//	defer row.Close()
-//
-//	var IdentityCardImage *string
-//	if row.Next() {
-//		err := row.Scan(&IdentityCardImage)
-//		helper.PanicIfError(err)
-//		if IdentityCardImage != nil {
-//			return *IdentityCardImage, nil
-//		} else {
-//			return "", errors.New("identity card is empty")
-//		}
-//	} else {
-//		return "", errors.New("identity card not found")
-//	}
-//}
-//
-//func (repository *UserRepository) GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) (user.UserEmoneyResponse, error) {
-//	log.Printf("User with uuid: %s enter User Repository: GetEMoneyAmount", uuid)
-//
-//	query := "SELECT emoney_amount,emoney_updated_at FROM users WHERE id=$1"
-//	row, err := tx.QueryContext(ctx, query, uuid)
-//	helper.PanicIfError(err)
-//
-//	defer row.Close()
-//
-//	userEmoney := user.UserEmoneyResponse{}
-//	var updatedAt time.Time
-//	if row.Next() {
-//		err = row.Scan(&userEmoney.Emoney_amont, &updatedAt)
-//		helper.PanicIfError(err)
-//		userEmoney.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
-//		return userEmoney, nil
-//	} else {
-//		return user.UserEmoneyResponse{}, errors.New("emoney amount is not found")
-//	}
-//}
-//
-//func (repository *UserRepository) TopUp(ctx context.Context, tx *sql.Tx, emoney float64, uuid string, timeNow *time.Time) {
-//	log.Printf("User with uuid: %s enter User Repository: Topup", uuid)
-//
-//	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
-//	_, err := tx.ExecContext(ctx, query, emoney, timeNow, uuid)
-//	helper.PanicIfError(err)
-//}
-//
-//func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, orderamount float64, buyeruuid string, selleruuid string, timeNow *time.Time) {
-//	log.Printf("Buy with uuid: %s and Seller with uuid: %s enter User Repository: AfterBuy", buyeruuid, selleruuid)
-//
-//	//log.Println("TimeNow:", timeNow)
-//	// substract buyer money
-//	query := "UPDATE users SET emoney_amount = emoney_amount - $1,emoney_updated_at=$2 WHERE id = $3"
-//	_, err := tx.ExecContext(ctx, query, orderamount, timeNow, buyeruuid)
-//
-//	helper.PanicIfError(err)
-//
-//	// add seller money
-//
-//	query = "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
-//	_, err = tx.ExecContext(ctx, query, orderamount, timeNow, selleruuid)
-//
-//	helper.PanicIfError(err)
-//}
-//
+func (repository *UserRepository) AddOrUpdateIdentityCard(ctx context.Context, tx *sql.Tx, user domain.User) {
+	if user.Identity_card_picture != "" {
+		query := "UPDATE users SET identitycard_picture = $1 WHERE id = $2"
+		_, err := tx.ExecContext(ctx, query, user.Identity_card_picture, user.Id)
+		if err != nil {
+			respErr := errors.New("failed to query into database")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	}
+}
+
+func (repository *UserRepository) GetIdentityCard(ctx context.Context, tx *sql.Tx, uuid string) (string, error) {
+	query := "SELECT identitycard_picture FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	var IdentityCardImage *string
+	if row.Next() {
+		err := row.Scan(&IdentityCardImage)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		if IdentityCardImage != nil {
+			return *IdentityCardImage, nil
+		} else {
+			return "", errors.New("identity card is empty")
+		}
+	} else {
+		return "", errors.New("identity card not found")
+	}
+}
+
+func (repository *UserRepository) GetEMoneyAmount(ctx context.Context, tx *sql.Tx, uuid string) user.UserEmoneyResponse {
+	query := "SELECT emoney_amount,emoney_updated_at FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	user := user.UserEmoneyResponse{}
+	var updatedAt time.Time
+	if row.Next() {
+		err = row.Scan(&user.Emoney_amont, &updatedAt)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		user.Emoney_updated_at = updatedAt.Format("2006-01-02 15:04:05")
+		return user
+	} else {
+		user.Emoney_amont = 0
+		return user
+	}
+}
+
+func (repository *UserRepository) FindAllMoneyChanges(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEMoneyTransactionHistory, error) {
+	query := `
+    SELECT total AS amount, updated_at, 'Order (Buyer)' AS source
+    FROM orders
+    WHERE user_id = $1 AND status_payment = true
+
+    UNION ALL
+
+    SELECT total AS amount, updated_at, 'Order (Seller)' AS source
+    FROM orders
+    WHERE seller_id = $1 AND status_payment = true
+
+    UNION ALL
+
+    SELECT topup_amount AS amount, updated_at, 'Top Up' AS source
+    FROM topup_orders
+    WHERE user_id = $1 AND status_payment = true;
+	`
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	hasData := false
+
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	users := []user.UserEMoneyTransactionHistory{}
+	var updatedAt time.Time
+	var transactionType string
+
+	for rows.Next() {
+		user := user.UserEMoneyTransactionHistory{}
+		err = rows.Scan(&user.Transaction_amount, &updatedAt, &transactionType)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		user.Transaction_date = updatedAt.Format("2006-01-02 15:04:05")
+		user.Transaction_type = transactionType
+		hasData = true
+		users = append(users, user)
+	}
+	if hasData == false {
+		return users, errors.New("transaction history not found")
+	}
+
+	return users, nil
+}
+
+func (repository *UserRepository) FindNameAndEmailById(ctx context.Context, tx *sql.Tx, uuid string) (domain.User, error) {
+	query := "SELECT name,email FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	user := domain.User{}
+	if row.Next() {
+		err := row.Scan(&user.Name, &user.Email)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return user, nil
+	} else {
+		return user, errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) TopUp(ctx context.Context, tx *sql.Tx, midtrans domain.Midtrans) {
+	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
+	_, err := tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.TopUpUser_id)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+}
+
+func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, midtrans domain.Midtrans) {
+	query := "UPDATE users SET emoney_amount = emoney_amount - $1,emoney_updated_at=$2 WHERE id = $3"
+	_, err := tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.OrderBuyer_id)
+
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	query = "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
+	_, err = tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.OrderSeller_id)
+
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+}
+
 //func (repository *UserRepository) CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error) {
 //	log.Printf("User with uuid: %s enter User Repository: CheckUserStatus", userid)
 //

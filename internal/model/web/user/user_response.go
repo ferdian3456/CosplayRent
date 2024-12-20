@@ -14,6 +14,10 @@ type UserResponse struct {
 	Updated_at           string  `json:"updated_at"`
 }
 
+type IdentityCardResponse struct {
+	IdentityCard_picture string `json:"identitycard_picture"`
+}
+
 type UserEmoneyResponse struct {
 	Emoney_amont      float64 `json:"emoney_amount"`
 	Emoney_updated_at string  `json:"emoney_updated_at"`

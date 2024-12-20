@@ -8,8 +8,9 @@ import (
 	"cosplayrent/internal/repository"
 	"database/sql"
 	"errors"
-	"github.com/knadh/koanf/v2"
 	"time"
+
+	"github.com/knadh/koanf/v2"
 
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt/v5"
@@ -47,7 +48,7 @@ func (usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -56,7 +57,7 @@ func (usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		respErr := errors.New("error generating password hash")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	uuid := googleuuid.New()
@@ -88,7 +89,7 @@ func (usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 	tokenString, err := token.SignedString(secretKeyByte)
 	if err != nil {
 		respErr := errors.New("failed to sign a token")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	return tokenString, nil
@@ -105,7 +106,7 @@ func (usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginReq
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -140,7 +141,7 @@ func (usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginReq
 	tokenString, err := token.SignedString(secretKeyByte)
 	if err != nil {
 		respErr := errors.New("failed to sign a token")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	return tokenString, nil
@@ -150,7 +151,7 @@ func (usecase *UserUsecase) FindByUUID(ctx context.Context, uuid string) (user.U
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -176,7 +177,7 @@ func (usecase *UserUsecase) CheckUserExistance(ctx context.Context, uuid string)
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -194,7 +195,7 @@ func (usecase *UserUsecase) FindAll(ctx context.Context, uuid string) ([]user.Us
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -230,7 +231,7 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 	tx, err := usecase.DB.Begin()
 	if err != nil {
 		respErr := errors.New("failed to start transaction")
-		usecase.Log.Panic().Err(respErr).Msg(err.Error())
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	defer helper.CommitOrRollback(tx)
@@ -255,231 +256,149 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 	return nil
 }
 
+//	func (usecase *UserUsecase) Delete(ctx context.Context, uuid string) {
+//		log.Printf("User with uuid: %s enter User Usecase: Delete", uuid)
 //
-//func (usecase *UserUsecase) Delete(ctx context.Context, uuid string) {
-//	log.Printf("User with uuid: %s enter User Usecase: Delete", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	userResult, err := usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	usecaseUserRepository.Delete(ctx, tx, uuid)
-//
-//	finalProfilePicturePath := ".." + *userResult.Profile_picture
-//
-//	err = os.Remove(finalProfilePicturePath)
-//	helper.PanicIfError(err)
-//}
-//
-//func (usecase *UserUsecase) VerifyAndRetrieve(ctx context.Context, tokenString string) (user.UserResponse, error) {
-//	secretKey := os.Getenv("SECRET_KEY")
-//	secretKeyByte := []byte(secretKey)
-//
-//	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-//		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-//			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+//		tx, err := usecaseDB.Begin()
+//		if err != nil {
+//			panic(exception.NewNotFoundError(err.Error()))
 //		}
-//		return secretKeyByte, nil
-//	})
 //
-//	if err != nil || !token.Valid {
-//		return user.UserResponse{}, errors.New("token is not valid")
+//		defer helper.CommitOrRollback(tx)
+//
+//		userResult, err := usecaseUserRepository.FindByUUID(ctx, tx, uuid)
+//		if err != nil {
+//			panic(exception.NewNotFoundError(err.Error()))
+//		}
+//
+//		usecaseUserRepository.Delete(ctx, tx, uuid)
+//
+//		finalProfilePicturePath := ".." + *userResult.Profile_picture
+//
+//		err = os.Remove(finalProfilePicturePath)
+//		helper.PanicIfError(err)
 //	}
 //
-//	var id string
-//	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-//		if val, exists := claims["id"]; exists {
-//			if strVal, ok := val.(string); ok {
-//				id = strVal
-//			} else {
-//				return user.UserResponse{}, fmt.Errorf("id claim is not a string")
+//	func (usecase *UserUsecase) VerifyAndRetrieve(ctx context.Context, tokenString string) (user.UserResponse, error) {
+//		secretKey := os.Getenv("SECRET_KEY")
+//		secretKeyByte := []byte(secretKey)
+//
+//		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+//			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+//				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 //			}
-//		} else {
-//			return user.UserResponse{}, fmt.Errorf("id claim does not exist")
+//			return secretKeyByte, nil
+//		})
+//
+//		if err != nil || !token.Valid {
+//			return user.UserResponse{}, errors.New("token is not valid")
 //		}
+//
+//		var id string
+//		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+//			if val, exists := claims["id"]; exists {
+//				if strVal, ok := val.(string); ok {
+//					id = strVal
+//				} else {
+//					return user.UserResponse{}, fmt.Errorf("id claim is not a string")
+//				}
+//			} else {
+//				return user.UserResponse{}, fmt.Errorf("id claim does not exist")
+//			}
+//		}
+//
+//		tx, err := usecaseDB.Begin()
+//		if err != nil {
+//			panic(exception.NewNotFoundError(err.Error()))
+//		}
+//
+//		defer helper.CommitOrRollback(tx)
+//		userDomain, err := usecaseUserRepository.FindByUUID(ctx, tx, id)
+//		helper.PanicIfError(err)
+//
+//		return userDomain, nil
 //	}
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//	userDomain, err := usecaseUserRepository.FindByUUID(ctx, tx, id)
-//	helper.PanicIfError(err)
-//
-//	return userDomain, nil
-//}
-//
-//func (usecase *UserUsecase) AddIdentityCard(ctx context.Context, uuid string, IdentityCardImage string) {
-//	log.Printf("User with uuid: %s enter User Usecase: AddIdentityCard", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	usecaseUserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
-//}
-//
-//func (usecase *UserUsecase) GetIdentityCard(ctx context.Context, uuid string) (identityCardImage string) {
-//	log.Printf("User with uuid: %s enter User Usecase: GetIdentityCard", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	identityCardResult, err := usecaseUserRepository.GetIdentityCard(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	err = godotenv.Load("../.env")
-//	helper.PanicIfError(err)
-//
-//	imageEnv := os.Getenv("IMAGE_ENV")
-//
-//	identityCardResult = imageEnv + identityCardResult
-//
-//	return identityCardResult
-//}
-//
-//func (usecase *UserUsecase) UpdateIdentityCard(ctx context.Context, uuid string, IdentityCardImage string) {
-//	log.Printf("User with uuid: %s enter User Usecase: UpdateIdentityCard", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	usecaseUserRepository.AddOrUpdateIdentityCard(ctx, tx, uuid, IdentityCardImage)
-//}
-//
-//func (usecase *UserUsecase) GetEMoneyAmount(ctx context.Context, uuid string) (userEmoneyResult user.UserEmoneyResponse) {
-//	log.Printf("User with uuid: %s enter User Usecase: GetEMoneyAmount", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	userEmoneyResult, err = usecaseUserRepository.GetEMoneyAmount(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	return userEmoneyResult
-//}
-//
-//func (usecase *UserUsecase) GetEMoneyTransactionHistory(ctx context.Context, uuid string) []user.UserEMoneyTransactionHistory {
-//	log.Printf("User with uuid: %s enter User Usecase: GetEMoneyTransactionHistory", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	orderHistoryResult, err1 := usecaseOrderRepository.FindOrderHistoryByUserId(ctx, tx, uuid)
-//
-//	orderHistorySellerResult, err := usecaseOrderRepository.FindOrderHistoryBySellerId(ctx, tx, uuid)
-//
-//	topupOrderHistoryResult, err2 := usecaseTopUpOrderRepository.FindTopUpOrderHistoryByUserId(ctx, tx, uuid)
-//
-//	err3 := errors.New("order and topup order is not found")
-//
-//	if err != nil && err1 != nil && err2 != nil {
-//		panic(exception.NewNotFoundError(err3.Error()))
-//	}
-//
-//	EMoneyOrderHistory := []user.UserEMoneyTransactionHistory{}
-//	EMoneyOrderSellerHistory := []user.UserEMoneyTransactionHistory{}
-//	EMoneyTopUpOrderHistory := []user.UserEMoneyTransactionHistory{}
-//
-//	for _, order := range orderHistoryResult {
-//		EMoneyOrderHistory = append(EMoneyOrderHistory, user.UserEMoneyTransactionHistory{
-//			Transaction_amount: order.Emoney_amont,
-//			Transaction_type:   "Order (Buyer)",
-//			Transaction_date:   order.Emoney_updated_at,
-//		})
-//	}
-//
-//	for _, order := range orderHistorySellerResult {
-//		EMoneyOrderSellerHistory = append(EMoneyOrderSellerHistory, user.UserEMoneyTransactionHistory{
-//			Transaction_amount: order.Emoney_amont,
-//			Transaction_type:   "Order (Seller)",
-//			Transaction_date:   order.Emoney_updated_at,
-//		})
-//	}
-//
-//	for _, topup := range topupOrderHistoryResult {
-//		EMoneyTopUpOrderHistory = append(EMoneyTopUpOrderHistory, user.UserEMoneyTransactionHistory{
-//			Transaction_amount: topup.Emoney_amont,
-//			Transaction_type:   "Top Up",
-//			Transaction_date:   topup.Emoney_updated_at,
-//		})
-//	}
-//
-//	EMoneyTransactionHistory := append(EMoneyOrderHistory, EMoneyOrderSellerHistory...)
-//	EMoneyTransactionHistory = append(EMoneyTransactionHistory, EMoneyTopUpOrderHistory...)
-//
-//	layout := "2006-01-02 15:04:05"
-//	sort.Slice(EMoneyTransactionHistory, func(i, j int) bool {
-//		date1, _ := time.Parse(layout, EMoneyTransactionHistory[i].Transaction_date)
-//		date2, _ := time.Parse(layout, EMoneyTransactionHistory[j].Transaction_date)
-//		return date1.Before(date2)
-//	})
-//
-//	for i := range EMoneyTransactionHistory {
-//		log.Println(EMoneyTransactionHistory[i])
-//	}
-//
-//	return EMoneyTransactionHistory
-//}
-//
+
+func (usecase *UserUsecase) AddOrUpdateIdentityCard(ctx context.Context, uuid string, userRequest user.IdentityCardRequest) error {
+	err := usecase.Validate.Struct(userRequest)
+	if err != nil {
+		respErr := errors.New("identity card cannot be empty")
+		usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		return respErr
+	}
+
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := domain.User{
+		Id:                    uuid,
+		Identity_card_picture: *userRequest.IdentityCard_picture,
+	}
+
+	usecase.UserRepository.AddOrUpdateIdentityCard(ctx, tx, user)
+
+	return nil
+}
+
+func (usecase *UserUsecase) GetIdentityCard(ctx context.Context, uuid string) (user.IdentityCardResponse, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := user.IdentityCardResponse{}
+	identityCardResult, err := usecase.UserRepository.GetIdentityCard(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user, err
+	}
+
+	imageEnv := usecase.Config.String("application.image_env")
+
+	user.IdentityCard_picture = imageEnv + identityCardResult
+	return user, nil
+}
+
+func (usecase *UserUsecase) GetEMoneyAmount(ctx context.Context, uuid string) user.UserEmoneyResponse {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := usecase.UserRepository.GetEMoneyAmount(ctx, tx, uuid)
+
+	return user
+}
+
+func (usecase *UserUsecase) GetEMoneyTransactionHistory(ctx context.Context, uuid string) ([]user.UserEMoneyTransactionHistory, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user, err := usecase.UserRepository.FindAllMoneyChanges(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user, err
+	}
+
+	return user, nil
+}
+
 //func (usecase *UserUsecase) CheckUserStatus(ctx context.Context, uuid string, costumeid int) user.CheckUserStatusResponse {
 //	log.Printf("User with uuid: %s enter User Usecase: CheckUserStatus", uuid)
 //

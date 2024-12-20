@@ -12,5 +12,5 @@ type UserPatchRequest struct {
 }
 
 type TopUpEmoney struct {
-	Emoney_amont float64 `json:"emoney_amount"`
+	Emoney_amount float64 `validate:"required" json:"emoney_amount"`
 }

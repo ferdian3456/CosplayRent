@@ -29,12 +29,26 @@ func Server(config *ServerConfig) {
 	userUsecase := usecase.NewUserUsecase(userRepository, config.DB, config.Validate, config.Log, config.Config)
 	userController := controller.NewUserController(userUsecase, config.Log)
 
+	midtransUsecase := usecase.NewMidtransUsecase(userRepository, repository.NewOrderRepository(config.Log), repository.NewTopUpOrderRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
+	midtransController := controller.NewMidtransController(midtransUsecase, config.Log)
+
+	topUpOrderRepository := repository.NewTopUpOrderRepository(config.Log)
+	topUpOrderUsecase := usecase.NewTopUpOrderUsecase(userRepository, topUpOrderRepository, midtransUsecase, config.DB, config.Validate, config.Log, config.Config)
+	topUpOrderController := controller.NewTopUpOrderController(topUpOrderUsecase, config.Log)
+
+	orderRepository := repository.NewOrderRepository(config.Log)
+	orderUsecase := usecase.NewOrderUsecase(orderRepository, config.DB, config.Validate, config.Log, config.Config)
+	orderController := controller.NewOrderController(orderUsecase, config.Log)
+
 	authMiddleware := middleware.NewAuthMiddleware(config.Router, config.Log, config.Config, userUsecase)
 
 	routeConfig := route.RouteConfig{
-		Router:         config.Router,
-		UserController: userController,
-		AuthMiddleware: authMiddleware,
+		Router:               config.Router,
+		UserController:       userController,
+		OrderController:      orderController,
+		TopUpOrderController: topUpOrderController,
+		MidtransController:   midtransController,
+		AuthMiddleware:       authMiddleware,
 	}
 
 	routeConfig.SetupRoute()

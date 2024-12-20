@@ -10,5 +10,5 @@ type UserCreateRequest struct {
 }
 
 type IdentityCardRequest struct {
-	IdentityCard_picture string `json:"identitycard_picture"`
+	IdentityCard_picture *string `validate:"required,min=5,max=255" json:"identitycard_picture"`
 }
