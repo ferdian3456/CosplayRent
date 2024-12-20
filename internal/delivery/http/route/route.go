@@ -9,6 +9,7 @@ import (
 type RouteConfig struct {
 	Router               *httprouter.Router
 	UserController       *controller.UserController
+	CostumeController    *controller.CostumeController
 	OrderController      *controller.OrderController
 	TopUpOrderController *controller.TopUpOrderController
 	MidtransController   *controller.MidtransController
@@ -18,7 +19,6 @@ type RouteConfig struct {
 func (c *RouteConfig) SetupRoute() {
 	c.Router.POST("/api/register", c.UserController.Register)
 	c.Router.GET("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.GetIdentityCard))
-	//c.Router.POST("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.AddIdentityCard))
 	c.Router.PUT("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.AddOrUpdateIdentityCard))
 	c.Router.GET("/api/emoney", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyAmount))
 	c.Router.GET("/api/emoneyhistory", c.AuthMiddleware.ServeHTTP(c.UserController.GetEMoneyTransactionHistory))
@@ -27,21 +27,18 @@ func (c *RouteConfig) SetupRoute() {
 	c.Router.GET("/api/user", c.AuthMiddleware.ServeHTTP(c.UserController.FindAll))
 	c.Router.PATCH("/api/userdetail", c.AuthMiddleware.ServeHTTP(c.UserController.Update))
 	//c.Router.DELETE("/api/useraccount", c.AuthMiddleware.ServeHTTP(c.UserController.Delete))
-	//c.Router.GET("/api/checkuserstatus/:costumeID", c.AuthMiddleware.ServeHTTP(c.UserController.CheckUserStatus))
-	//c.Router.GET("/api/checksellerstatus", c.AuthMiddleware.ServeHTTP(c.UserController.CheckSellerStatus))
-	//c.Router.GET("/api/selleraddress/checkout/:costumeID", c.AuthMiddleware.ServeHTTP(c.UserController.GetSellerAddressDetailByCostumeId))
+	c.Router.GET("/api/checkuserstatus/:costumeID", c.AuthMiddleware.ServeHTTP(c.UserController.CheckUserStatus))
+	c.Router.GET("/api/selleraddress/checkout/:costumeID", c.AuthMiddleware.ServeHTTP(c.UserController.FindSellerAddressDetailByCostumeId))
 	//c.Router.GET("/api/checkappversion", c.UserController.CheckAppVersion)
 
-	//c.Router.GET("/api/search/:costumeName", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindByName))
-
-	//c.Router.POST("/api/costume", c.AuthMiddleware.ServeHTTP(c.CostumeController.Create))
+	c.Router.POST("/api/costume", c.AuthMiddleware.ServeHTTP(c.CostumeController.Create))
 	//c.Router.GET("/api/costume", c.CostumeController.FindAll)
 	//c.Router.GET("/api/seller", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostume))
 	//c.Router.GET("/api/costume/:costumeID", c.CostumeController.FindById)
 	//c.Router.GET("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostumeByCostumeID)) // find by costume id
-	//c.Router.PUT("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Update))
+	c.Router.PATCH("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Update))
 	//c.Router.DELETE("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Delete))
-	//
+
 	//c.Router.GET("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindUserReview))
 	//c.Router.POST("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.Create))
 	//c.Router.GET("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindUserReviewByReviewID))

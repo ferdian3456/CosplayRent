@@ -20,14 +20,15 @@ import (
 )
 
 type UserUsecase struct {
-	UserRepository *repository.UserRepository
-	DB             *sql.DB
-	Validate       *validator.Validate
-	Log            *zerolog.Logger
-	Config         *koanf.Koanf
+	UserRepository    *repository.UserRepository
+	CostumeRepository *repository.CostumeRepository
+	DB                *sql.DB
+	Validate          *validator.Validate
+	Log               *zerolog.Logger
+	Config            *koanf.Koanf
 }
 
-func NewUserUsecase(userRepository *repository.UserRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
+func NewUserUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
 	return &UserUsecase{
 		UserRepository: userRepository,
 		DB:             DB,
@@ -238,22 +239,40 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 
 	now := time.Now()
 
-	user := domain.User{
-		Id:                   uuid,
-		Name:                 *userRequest.Name,
-		Email:                *userRequest.Email,
-		Address:              *userRequest.Address,
-		Profile_picture:      *userRequest.Profile_picture,
-		Origin_province_name: *userRequest.Origin_province_name,
-		Origin_province_id:   *userRequest.Origin_province_id,
-		Origin_city_name:     *userRequest.Origin_city_name,
-		Origin_city_id:       *userRequest.Origin_city_id,
-		Updated_at:           &now,
+	if userRequest.Profile_picture != nil {
+		user := domain.User{
+			Id:                   uuid,
+			Name:                 *userRequest.Name,
+			Email:                *userRequest.Email,
+			Address:              *userRequest.Address,
+			Profile_picture:      *userRequest.Profile_picture,
+			Origin_province_name: *userRequest.Origin_province_name,
+			Origin_province_id:   *userRequest.Origin_province_id,
+			Origin_city_name:     *userRequest.Origin_city_name,
+			Origin_city_id:       *userRequest.Origin_city_id,
+			Updated_at:           &now,
+		}
+
+		usecase.UserRepository.Update(ctx, tx, user)
+
+		return nil
+	} else {
+		user := domain.User{
+			Id:                   uuid,
+			Name:                 *userRequest.Name,
+			Email:                *userRequest.Email,
+			Address:              *userRequest.Address,
+			Origin_province_name: *userRequest.Origin_province_name,
+			Origin_province_id:   *userRequest.Origin_province_id,
+			Origin_city_name:     *userRequest.Origin_city_name,
+			Origin_city_id:       *userRequest.Origin_city_id,
+			Updated_at:           &now,
+		}
+
+		usecase.UserRepository.Update(ctx, tx, user)
+
+		return nil
 	}
-
-	usecase.UserRepository.Update(ctx, tx, user)
-
-	return nil
 }
 
 //	func (usecase *UserUsecase) Delete(ctx context.Context, uuid string) {
@@ -277,46 +296,6 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 //
 //		err = os.Remove(finalProfilePicturePath)
 //		helper.PanicIfError(err)
-//	}
-//
-//	func (usecase *UserUsecase) VerifyAndRetrieve(ctx context.Context, tokenString string) (user.UserResponse, error) {
-//		secretKey := os.Getenv("SECRET_KEY")
-//		secretKeyByte := []byte(secretKey)
-//
-//		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-//			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-//				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-//			}
-//			return secretKeyByte, nil
-//		})
-//
-//		if err != nil || !token.Valid {
-//			return user.UserResponse{}, errors.New("token is not valid")
-//		}
-//
-//		var id string
-//		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-//			if val, exists := claims["id"]; exists {
-//				if strVal, ok := val.(string); ok {
-//					id = strVal
-//				} else {
-//					return user.UserResponse{}, fmt.Errorf("id claim is not a string")
-//				}
-//			} else {
-//				return user.UserResponse{}, fmt.Errorf("id claim does not exist")
-//			}
-//		}
-//
-//		tx, err := usecaseDB.Begin()
-//		if err != nil {
-//			panic(exception.NewNotFoundError(err.Error()))
-//		}
-//
-//		defer helper.CommitOrRollback(tx)
-//		userDomain, err := usecaseUserRepository.FindByUUID(ctx, tx, id)
-//		helper.PanicIfError(err)
-//
-//		return userDomain, nil
 //	}
 
 func (usecase *UserUsecase) AddOrUpdateIdentityCard(ctx context.Context, uuid string, userRequest user.IdentityCardRequest) error {
@@ -399,72 +378,66 @@ func (usecase *UserUsecase) GetEMoneyTransactionHistory(ctx context.Context, uui
 	return user, nil
 }
 
-//func (usecase *UserUsecase) CheckUserStatus(ctx context.Context, uuid string, costumeid int) user.CheckUserStatusResponse {
-//	log.Printf("User with uuid: %s enter User Usecase: CheckUserStatus", uuid)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	err = usecaseCostumeRepository.CheckOwnership(ctx, tx, uuid, costumeid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	statusResult, err := usecaseUserRepository.CheckUserStatus(ctx, tx, uuid)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	statusResult.Status = "true"
-//
-//	return statusResult
-//}
-//
-//func (usecase *UserUsecase) GetSellerAddressDetailByCostumeId(ctx context.Context, userUUID string, costumeID int) user.SellerAddressResponse {
-//	log.Printf("User with uuid: %s enter User Usecase: GetSellerAddressDetailByCostumeId", userUUID)
-//
-//	tx, err := usecaseDB.Begin()
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	defer helper.CommitOrRollback(tx)
-//
-//	_, err = usecaseUserRepository.FindByUUID(ctx, tx, userUUID)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	sellerResult, err := usecaseCostumeRepository.GetSellerIdFindByCostumeID(ctx, tx, userUUID, costumeID)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	sellerAddressResult, err := usecaseUserRepository.FindByUUID(ctx, tx, sellerResult)
-//	if err != nil {
-//		panic(exception.NewNotFoundError(err.Error()))
-//	}
-//
-//	sellerAddressResponse := user.SellerAddressResponse{
-//		Seller_name:                 sellerAddressResult.Name,
-//		Seller_origin_province_name: sellerAddressResult.Origin_province_name,
-//		Seller_origin_province_id:   sellerAddressResult.Origin_city_id,
-//		Seller_origin_city_name:     sellerAddressResult.Origin_city_name,
-//		Seller_origin_city_id:       sellerAddressResult.Origin_city_id,
-//	}
-//
-//	return sellerAddressResponse
-//}
-//
+func (usecase *UserUsecase) CheckUserStatus(ctx context.Context, uuid string, costumeid int) (user.CheckUserStatusResponse, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := user.CheckUserStatusResponse{}
+
+	err = usecase.CostumeRepository.CheckOwnership(ctx, tx, uuid, costumeid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user, err
+	}
+
+	user, err = usecase.UserRepository.CheckUserStatus(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user, err
+	}
+
+	user.Status = "true"
+
+	return user, nil
+}
+
+func (usecase *UserUsecase) FindSellerAddressDetailByCostumeId(ctx context.Context, userUUID string, costumeID int) (user.SellerAddressResponse, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	sellerResult, err := usecase.CostumeRepository.FindSellerIdFindByCostumeID(ctx, tx, costumeID)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user.SellerAddressResponse{}, err
+	}
+
+	sellerAddressResult, err := usecase.UserRepository.FindAddressByUserId(ctx, tx, sellerResult)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user.SellerAddressResponse{}, err
+	}
+
+	sellerAddressResponse := user.SellerAddressResponse{
+		Seller_name:                 sellerAddressResult.Name,
+		Seller_origin_province_name: &sellerAddressResult.Origin_province_name,
+		Seller_origin_province_id:   &sellerAddressResult.Origin_city_id,
+		Seller_origin_city_name:     &sellerAddressResult.Origin_city_name,
+		Seller_origin_city_id:       &sellerAddressResult.Origin_city_id,
+	}
+
+	return sellerAddressResponse, nil
+}
+
 //func (usecase *UserUsecase) CheckSellerStatus(ctx context.Context, uuid string) user.CheckUserStatusResponse {
 //	log.Printf("User with uuid: %s enter User Usecase: CheckSellerStatus", uuid)
 //

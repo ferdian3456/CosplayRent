@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/domain"
 	"cosplayrent/internal/model/web/user"
 	"database/sql"
@@ -295,7 +294,10 @@ func (repository *UserRepository) FindAllMoneyChanges(ctx context.Context, tx *s
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	hasData := false
 
-	helper.PanicIfError(err)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
 
 	defer rows.Close()
 
@@ -372,28 +374,56 @@ func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, midt
 	}
 }
 
-//func (repository *UserRepository) CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error) {
-//	log.Printf("User with uuid: %s enter User Repository: CheckUserStatus", userid)
-//
-//	query := "SELECT id,name,identitycard_picture,address,origincity_name FROM users WHERE id=$1"
-//	row, err := tx.QueryContext(ctx, query, userid)
-//	helper.PanicIfError(err)
-//
-//	defer row.Close()
-//
-//	checkuserStatus := user.CheckUserStatusResponse{}
-//	var IdentityCardImage *string
-//	var originCityName *string
-//	var address *string
-//	if row.Next() {
-//		err := row.Scan(&checkuserStatus.User_id, &checkuserStatus.Name, &IdentityCardImage, &address, &originCityName)
-//		helper.PanicIfError(err)
-//		if IdentityCardImage != nil && originCityName != nil && address != nil {
-//			return checkuserStatus, nil
-//		} else {
-//			return checkuserStatus, errors.New("need to fulfill identity card and address detail (address,province, and city)")
-//		}
-//	} else {
-//		return checkuserStatus, errors.New("user not found")
-//	}
-//}
+func (repository *UserRepository) CheckUserStatus(ctx context.Context, tx *sql.Tx, userid string) (user.CheckUserStatusResponse, error) {
+	query := "SELECT id,name,identitycard_picture,address,origincity_name FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, userid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	checkuserStatus := user.CheckUserStatusResponse{}
+	var IdentityCardImage *string
+	var originCityName *string
+	var address *string
+	if row.Next() {
+		err := row.Scan(&checkuserStatus.User_id, &checkuserStatus.Name, &IdentityCardImage, &address, &originCityName)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		if IdentityCardImage != nil && originCityName != nil && address != nil {
+			return checkuserStatus, nil
+		} else {
+			return checkuserStatus, errors.New("need to fulfill identity card and address detail (address,province, and city)")
+		}
+	} else {
+		return checkuserStatus, errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) FindAddressByUserId(ctx context.Context, tx *sql.Tx, userid string) (domain.User, error) {
+	query := "SELECT name,originprovince_name,originprovince_id,origincity_name,origincity_id FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, userid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	user := domain.User{}
+
+	if row.Next() {
+		err := row.Scan(&user.Name, &user.Origin_province_name, &user.Origin_province_id, &user.Origin_city_name, &user.Origin_city_id)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return user, nil
+	} else {
+		return user, errors.New("user not found")
+	}
+}

@@ -10,7 +10,7 @@ import (
 type TimestampFormatter struct{}
 
 func NewZeroLog() zerolog.Logger {
-	logger := zerolog.New(os.Stdout).With().Caller().Logger().Hook(&TimestampFormatter{})
+	logger := zerolog.New(os.Stdout).With().Caller().Logger().Hook(&TimestampFormatter{}).Level(zerolog.DebugLevel)
 
 	return logger
 }

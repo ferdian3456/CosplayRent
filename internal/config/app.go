@@ -26,8 +26,12 @@ type ServerConfig struct {
 
 func Server(config *ServerConfig) {
 	userRepository := repository.NewUserRepository(config.Log)
-	userUsecase := usecase.NewUserUsecase(userRepository, config.DB, config.Validate, config.Log, config.Config)
+	userUsecase := usecase.NewUserUsecase(userRepository, repository.NewCostumeRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
 	userController := controller.NewUserController(userUsecase, config.Log)
+
+	costumeRepository := repository.NewCostumeRepository(config.Log)
+	costumeUsecase := usecase.NewCostumeUsecase(costumeRepository, config.DB, config.Validate, config.Log, config.Config)
+	costumeController := controller.NewCostumeController(costumeUsecase, config.Log)
 
 	midtransUsecase := usecase.NewMidtransUsecase(userRepository, repository.NewOrderRepository(config.Log), repository.NewTopUpOrderRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
 	midtransController := controller.NewMidtransController(midtransUsecase, config.Log)
@@ -45,6 +49,7 @@ func Server(config *ServerConfig) {
 	routeConfig := route.RouteConfig{
 		Router:               config.Router,
 		UserController:       userController,
+		CostumeController:    costumeController,
 		OrderController:      orderController,
 		TopUpOrderController: topUpOrderController,
 		MidtransController:   midtransController,

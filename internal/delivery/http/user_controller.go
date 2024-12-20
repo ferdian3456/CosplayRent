@@ -139,27 +139,48 @@ func (controller UserController) FindAll(writer http.ResponseWriter, request *ht
 func (controller UserController) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
-	err := request.ParseMultipartForm(10 << 20)
-	if err != nil {
-		respErr := errors.New("request exceed 10 mb")
-		controller.Log.Panic().Err(err).Msg(respErr.Error())
-	}
+	request.Body = http.MaxBytesReader(writer, request.Body, 5*1024*1024) // 5 MB
 
-	userName := request.FormValue("name")
-	userEmail := request.FormValue("email")
-	userAddress := request.FormValue("address")
-	userOriginProvinceName := request.FormValue("origin_province_name")
-	userOriginProvinceId := request.FormValue("origin_province_id")
-	userOriginCityName := request.FormValue("origin_city_name")
-	userOriginCityId := request.FormValue("origin_city_id")
+	file, fileHeader, err := request.FormFile("profile_picture")
 
 	var profilePicturePath *string
 
-	file, handler, err := request.FormFile("profile_picture")
-	if err == nil {
+	if err != nil {
+		if err.Error() == "http: no such file" {
+
+		} else if err.Error() == "http: request body too large" {
+			respErr := errors.New("request exceeded 5 mb")
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		} else {
+			respErr := errors.New("unexpected error handling file upload")
+			controller.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	} else if file != nil {
 		defer file.Close()
 
-		_, err := os.Stat("../static/profile/")
+		fileType := fileHeader.Header.Get("Content-Type")
+		if fileType != "image/jpeg" && fileType != "image/png" {
+			respErr := errors.New("file is not image")
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		}
+
+		_, err = os.Stat("../static/profile/")
 		if os.IsNotExist(err) {
 			err = os.MkdirAll("../static/profile/", os.ModePerm)
 			if err != nil {
@@ -168,7 +189,7 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 			}
 		}
 
-		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename))
 		profileImagePath := filepath.Join("../static/profile/", fileName)
 
 		destFile, err := os.Create(profileImagePath)
@@ -176,7 +197,6 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 			respErr := errors.New("failed to create file in the directory path")
 			controller.Log.Panic().Err(err).Msg(respErr.Error())
 		}
-
 		defer destFile.Close()
 
 		_, err = io.Copy(destFile, file)
@@ -186,12 +206,16 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 		}
 
 		userImageTrimPath := strings.TrimPrefix(profileImagePath, "..")
-
 		profilePicturePath = &userImageTrimPath
-	} else {
-		var emptyPicture string = ""
-		profilePicturePath = &emptyPicture
 	}
+
+	userName := request.FormValue("name")
+	userEmail := request.FormValue("email")
+	userAddress := request.FormValue("address")
+	userOriginProvinceName := request.FormValue("origin_province_name")
+	userOriginProvinceId := request.FormValue("origin_province_id")
+	userOriginCityName := request.FormValue("origin_city_name")
+	userOriginCityId := request.FormValue("origin_city_id")
 
 	var originCityIdFinal int
 	if userOriginCityId != "" {
@@ -246,51 +270,85 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 func (controller UserController) AddOrUpdateIdentityCard(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
-	err := request.ParseMultipartForm(10 << 20)
+	request.Body = http.MaxBytesReader(writer, request.Body, 5*1024*1024) // 5 Mb
+
+	file, fileHeader, err := request.FormFile("identity_card")
+
 	if err != nil {
-		respErr := errors.New("request exceed 10 mb")
-		controller.Log.Panic().Err(err).Msg(respErr.Error())
+		if err.Error() == "http: no such file" {
+			respErr := errors.New("identity_card is empty")
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		}
+		respErr := errors.New("request exceeded 5 mb")
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   respErr.Error(),
+		}
+
+		controller.Log.Warn().Err(err).Msg(respErr.Error())
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
 	}
+
+	fileType := fileHeader.Header.Get("Content-Type")
+	if fileType != "image/jpeg" && fileType != "image/png" {
+		respErr := errors.New("file is not image")
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   respErr.Error(),
+		}
+
+		controller.Log.Warn().Err(err).Msg(respErr.Error())
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	defer file.Close()
 
 	var IdentityCardPicturePath *string
 
-	file, handler, err := request.FormFile("identity_card")
-	if err == nil {
-		defer file.Close()
-
-		_, err := os.Stat("../static/identity_card/")
-		if os.IsNotExist(err) {
-			err = os.MkdirAll("../static/identity_card/", os.ModePerm)
-			if err != nil {
-				respErr := errors.New("failed to create directory")
-				controller.Log.Panic().Err(err).Msg(respErr.Error())
-			}
-		}
-
-		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
-		IdentityCardImagePath := filepath.Join("../static/identity_card/", fileName)
-
-		destFile, err := os.Create(IdentityCardImagePath)
+	_, err = os.Stat("../static/identity_card/")
+	if os.IsNotExist(err) {
+		err = os.MkdirAll("../static/identity_card/", os.ModePerm)
 		if err != nil {
-			respErr := errors.New("failed to create file in the directory path")
+			respErr := errors.New("failed to create directory")
 			controller.Log.Panic().Err(err).Msg(respErr.Error())
 		}
-
-		defer destFile.Close()
-
-		_, err = io.Copy(destFile, file)
-		if err != nil {
-			respErr := errors.New("failed to copy a created file from request's file")
-			controller.Log.Panic().Err(err).Msg(respErr.Error())
-		}
-
-		IdentityCardImageTrimPath := strings.TrimPrefix(IdentityCardImagePath, "..")
-
-		IdentityCardPicturePath = &IdentityCardImageTrimPath
-	} else {
-		var emptyPicture string = ""
-		IdentityCardPicturePath = &emptyPicture
 	}
+
+	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename))
+	IdentityCardImagePath := filepath.Join("../static/identity_card/", fileName)
+
+	destFile, err := os.Create(IdentityCardImagePath)
+	if err != nil {
+		respErr := errors.New("failed to create file in the directory path")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, file)
+	if err != nil {
+		respErr := errors.New("failed to copy a created file from request's file")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	IdentityCardImageTrimPath := strings.TrimPrefix(IdentityCardImagePath, "..")
+
+	IdentityCardPicturePath = &IdentityCardImageTrimPath
 
 	userRequest := user.IdentityCardRequest{
 		IdentityCard_picture: IdentityCardPicturePath,
@@ -378,105 +436,64 @@ func (controller UserController) GetEMoneyTransactionHistory(writer http.Respons
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
-//func (controller UserController) CheckUserStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-//	userUUID, ok := request.Context().Value("user_uuid").(string)
-//	if !ok {
-//		webResponse := web.WebResponse{
-//			Code:   http.StatusInternalServerError,
-//			Status: "Unauthorized",
-//			Data:   "Invalid Token",
-//		}
-//		helper.WriteToResponseBody(writer, webResponse)
-//		return
-//	}
-//
-//	log.Printf("User with uuid: %s enter User Controller: CheckUserStatus", userUUID)
-//
-//	costumeID := params.ByName("costumeID")
-//	finalCostumeID, err := strconv.Atoi(costumeID)
-//	helper.PanicIfError(err)
-//
-//	statusResult := controller.UserUsecase.CheckUserStatus(request.Context(), userUUID, finalCostumeID)
-//
-//	webResponse := web.WebResponse{
-//		Code:   200,
-//		Status: "OK",
-//		Data:   statusResult,
-//	}
-//
-//	helper.WriteToResponseBody(writer, webResponse)
-//}
-//
-//func (controller UserController) GetSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-//	userUUID, ok := request.Context().Value("user_uuid").(string)
-//	if !ok {
-//		webResponse := web.WebResponse{
-//			Code:   http.StatusInternalServerError,
-//			Status: "Unauthorized",
-//			Data:   "Invalid Token",
-//		}
-//		helper.WriteToResponseBody(writer, webResponse)
-//		return
-//	}
-//
-//	log.Printf("User with uuid: %s enter User Controller: GetSellerAddressDetailByCostumeId", userUUID)
-//
-//	costumeID := params.ByName("costumeID")
-//	finalCostumeId, err := strconv.Atoi(costumeID)
-//	helper.PanicIfError(err)
-//
-//	sellerAddressResult := controller.UserUsecase.GetSellerAddressDetailByCostumeId(request.Context(), userUUID, finalCostumeId)
-//
-//	webResponse := web.WebResponse{
-//		Code:   200,
-//		Status: "OK",
-//		Data:   sellerAddressResult,
-//	}
-//
-//	helper.WriteToResponseBody(writer, webResponse)
-//
-//}
-//
-//func (controller UserController) CheckSellerStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-//	userUUID, ok := request.Context().Value("user_uuid").(string)
-//	if !ok {
-//		webResponse := web.WebResponse{
-//			Code:   http.StatusInternalServerError,
-//			Status: "Unauthorized",
-//			Data:   "Invalid Token",
-//		}
-//		helper.WriteToResponseBody(writer, webResponse)
-//		return
-//	}
-//
-//	log.Printf("User with uuid: %s enter User Controller: CheckSellerStatus", userUUID)
-//
-//	sellerStatusResult := controller.UserUsecase.CheckSellerStatus(request.Context(), userUUID)
-//
-//	webResponse := web.WebResponse{
-//		Code:   200,
-//		Status: "OK",
-//		Data:   sellerStatusResult,
-//	}
-//
-//	helper.WriteToResponseBody(writer, webResponse)
-//}
-//
-//func (controller UserController) CheckAppVersion(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-//	var err error = godotenv.Load("../.env")
-//	helper.PanicIfError(err)
-//
-//	APP_VERSION := os.Getenv("APP_VERSION")
-//
-//	AppVersion := web.AppResponse{
-//		AppVersion: APP_VERSION,
-//	}
-//
-//	webResponse := web.WebResponse{
-//		Code:   200,
-//		Status: "OK",
-//		Data:   AppVersion,
-//	}
-//
-//	helper.WriteToResponseBody(writer, webResponse)
-//}
+func (controller UserController) CheckUserStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	costumeID := params.ByName("costumeID")
+	finalCostumeID, err := strconv.Atoi(costumeID)
+	if err != nil {
+		respErr := errors.New("failed to convert costume id to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	statusResult, err := controller.UserUsecase.CheckUserStatus(request.Context(), userUUID, finalCostumeID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   statusResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserController) FindSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	costumeID := params.ByName("costumeID")
+	finalCostumeId, err := strconv.Atoi(costumeID)
+	if err != nil {
+		respErr := errors.New("failed to convert costume id to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	sellerAddressResult, err := controller.UserUsecase.FindSellerAddressDetailByCostumeId(request.Context(), userUUID, finalCostumeId)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   sellerAddressResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

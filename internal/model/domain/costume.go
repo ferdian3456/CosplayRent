@@ -12,8 +12,8 @@ type Costume struct {
 	Berat       int
 	Kategori    string
 	Price       float64
-	Picture     *string
+	Picture     string
 	Available   bool
 	Created_at  *time.Time
-	Update_at   *time.Time
+	Updated_at  *time.Time
 }
