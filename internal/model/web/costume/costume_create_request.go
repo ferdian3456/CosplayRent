@@ -8,5 +8,5 @@ type CostumeCreateRequest struct {
 	Berat       int     `validate:"required,min=1" json:"berat"`
 	Kategori    string  `validate:"required,min=3,max=30" json:"kategori"`
 	Price       float64 `validate:"required" json:"price"`
-	Picture     *string `validate:"required,max=254" json:"costume_picture"`
+	Picture     *string `validate:"required" json:"costume_picture"`
 }

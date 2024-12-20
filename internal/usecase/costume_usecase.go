@@ -8,7 +8,6 @@ import (
 	"cosplayrent/internal/repository"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/go-playground/validator"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog"
@@ -34,7 +33,6 @@ func NewCostumeUsecase(costumeRepository *repository.CostumeRepository, DB *sql.
 }
 
 func (usecase *CostumeUsecase) Create(ctx context.Context, userRequest costume.CostumeCreateRequest, uuid string) error {
-	fmt.Println(userRequest)
 	err := usecase.Validate.Struct(userRequest)
 	if err != nil {
 		respErr := errors.New("invalid request body")

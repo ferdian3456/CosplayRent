@@ -34,32 +34,48 @@ func NewCostumeController(costumeUsecase *usecase.CostumeUsecase, zerolog *zerol
 func (controller CostumeController) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
-	err := request.ParseMultipartForm(10 << 20)
-	if err != nil {
-		if request.MultipartForm == nil || len(request.MultipartForm.Value) == 0 {
-			respErr := errors.New("request contains no data or only empty fields")
-			controller.Log.Panic().Err(err).Msg(respErr.Error())
-		} else {
-			respErr := errors.New("request exceeded 10 MB")
-			controller.Log.Panic().Err(err).Msg(respErr.Error())
-		}
-	}
+	request.Body = http.MaxBytesReader(writer, request.Body, 5*1024*1024) // 5 MB
 
-	costumeName := request.FormValue("name")
-	costumeDescription := request.FormValue("description")
-	costumeBahan := request.FormValue("bahan")
-	costumeUkuran := request.FormValue("ukuran")
-	costumeBerat := request.FormValue("berat")
-	costumeKategori := request.FormValue("kategori")
-	costumePrice := request.FormValue("price")
+	file, fileHeader, err := request.FormFile("costume_picture")
 
 	var costumePicturePath *string
 
-	file, handler, err := request.FormFile("costume_picture")
-	if err == nil {
+	if err != nil {
+		if err.Error() == "http: no such file" {
+
+		} else if err.Error() == "http: request body too large" {
+			respErr := errors.New("request exceeded 5 mb")
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		} else {
+			respErr := errors.New("unexpected error handling file upload")
+			controller.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	} else if file != nil {
 		defer file.Close()
 
-		_, err := os.Stat("../static/costume/")
+		fileType := fileHeader.Header.Get("Content-Type")
+		if fileType != "image/jpeg" && fileType != "image/png" {
+			respErr := errors.New("file is not image")
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		}
+
+		_, err = os.Stat("../static/costume/")
 		if os.IsNotExist(err) {
 			err = os.MkdirAll("../static/costume/", os.ModePerm)
 			if err != nil {
@@ -68,7 +84,7 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 			}
 		}
 
-		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename))
 		costumeImagePath := filepath.Join("../static/costume/", fileName)
 
 		destFile, err := os.Create(costumeImagePath)
@@ -76,7 +92,6 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 			respErr := errors.New("failed to create file in the directory path")
 			controller.Log.Panic().Err(err).Msg(respErr.Error())
 		}
-
 		defer destFile.Close()
 
 		_, err = io.Copy(destFile, file)
@@ -86,12 +101,16 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 		}
 
 		costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
-
 		costumePicturePath = &costumeImageTrimPath
-	} else {
-		var emptyPicture string = ""
-		costumePicturePath = &emptyPicture
 	}
+
+	costumeName := request.FormValue("name")
+	costumeDescription := request.FormValue("description")
+	costumeBahan := request.FormValue("bahan")
+	costumeUkuran := request.FormValue("ukuran")
+	costumeBerat := request.FormValue("berat")
+	costumeKategori := request.FormValue("kategori")
+	costumePrice := request.FormValue("price")
 
 	var fixPrice float64
 	if costumePrice != "" {
