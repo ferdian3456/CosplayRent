@@ -6,7 +6,7 @@ import (
 )
 
 func NewMemcacheClient(config *koanf.Koanf) *memcache.Client {
-	port := config.String("cache.server_port")
+	port := config.String("MEMCACHED_SERVER_PORT")
 	client := memcache.New(":" + port)
 
 	return client

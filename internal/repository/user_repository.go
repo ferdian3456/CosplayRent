@@ -427,3 +427,51 @@ func (repository *UserRepository) FindAddressByUserId(ctx context.Context, tx *s
 		return user, errors.New("user not found")
 	}
 }
+
+func (repository *UserRepository) FindNameAndProfile(ctx context.Context, tx *sql.Tx, useruuid string) (domain.User, error) {
+	query := "SELECT name,profile_picture FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, useruuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	user := domain.User{}
+
+	if row.Next() {
+		err := row.Scan(&user.Name, &user.Profile_picture)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return user, nil
+	} else {
+		return user, errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) FindBasicInfo(ctx context.Context, tx *sql.Tx, useruuid string) (domain.User, error) {
+	query := "SELECT id,name,email FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, useruuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	user := domain.User{}
+
+	if row.Next() {
+		err := row.Scan(&user.Id, &user.Name, &user.Profile_picture)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return user, nil
+	} else {
+		return user, errors.New("user not found")
+	}
+}

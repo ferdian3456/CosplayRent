@@ -9,7 +9,7 @@ import (
 )
 
 func NewDB(config *koanf.Koanf, log *zerolog.Logger) *sql.DB {
-	dbUri := config.String("database.url")
+	dbUri := config.String("POSTGRES_URL")
 
 	db, err := sql.Open("pgx", dbUri)
 	if err != nil {

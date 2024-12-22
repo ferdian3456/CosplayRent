@@ -270,3 +270,139 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller CostumeController) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	costumeResponse, err := controller.CostumeUsecase.FindAll(request.Context())
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   costumeResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller CostumeController) FindSellerCostume(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	costumeReturn, err := controller.CostumeUsecase.FindSellerCostume(request.Context(), userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   costumeReturn,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller CostumeController) FindById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	costumeID := params.ByName("costumeID")
+	id, err := strconv.Atoi(costumeID)
+	if err != nil {
+		respErr := errors.New("error converting string to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	costumeResponse, err := controller.CostumeUsecase.FindById(request.Context(), id)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   costumeResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller CostumeController) FindSellerCostumeByCostumeID(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	costumeID := params.ByName("costumeID")
+	finalCostumeID, err := strconv.Atoi(costumeID)
+	if err != nil {
+		respErr := errors.New("error converting string to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	costumeReturn, err := controller.CostumeUsecase.FindSellerCostumeByCostumeID(request.Context(), userUUID, finalCostumeID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   costumeReturn,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller CostumeController) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	costumeID := params.ByName("costumeID")
+	id, err := strconv.Atoi(costumeID)
+	if err != nil {
+		respErr := errors.New("error converting string to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	err = controller.CostumeUsecase.Delete(request.Context(), id, userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "Unauthorized",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

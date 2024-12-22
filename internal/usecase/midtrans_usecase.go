@@ -41,14 +41,7 @@ func NewMidtransUsecase(userRepository *repository.UserRepository, orderReposito
 	}
 }
 
-func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userRequest order.DirectlyOrderToMidtrans) (midtransWeb.MidtransResponse, error) {
-	err := usecase.Validate.Struct(userRequest)
-	if err != nil {
-		respErr := errors.New("invalid request body")
-		usecase.Log.Warn().Err(respErr).Msg(err.Error())
-		return midtransWeb.MidtransResponse{}, respErr
-	}
-
+func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userRequest order.DirectlyOrderToMidtrans) midtransWeb.MidtransResponse {
 	server_key := usecase.Config.String("payment_gateway.midtrans.server_key")
 
 	//fmt.Println("request.Id =", request.Id)
@@ -98,7 +91,8 @@ func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userReque
 
 	response, err := snapClient.CreateTransaction(req)
 	if err != nil {
-		panic(err)
+		respErr := errors.New("failed to create midtrans transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 
 	midtransResponse := midtransWeb.MidtransResponse{
@@ -107,7 +101,7 @@ func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userReque
 		RedirectUrl: response.RedirectURL,
 	}
 
-	return midtransResponse, nil
+	return midtransResponse
 }
 
 func (usecase *MidtransUsecase) MidtransCallBack(ctx context.Context, midtransWeb midtransWeb.MidtransCallback) {

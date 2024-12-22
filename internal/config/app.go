@@ -30,7 +30,7 @@ func Server(config *ServerConfig) {
 	userController := controller.NewUserController(userUsecase, config.Log)
 
 	costumeRepository := repository.NewCostumeRepository(config.Log)
-	costumeUsecase := usecase.NewCostumeUsecase(costumeRepository, config.DB, config.Validate, config.Log, config.Config)
+	costumeUsecase := usecase.NewCostumeUsecase(userRepository, costumeRepository, config.DB, config.Validate, config.Log, config.Config)
 	costumeController := controller.NewCostumeController(costumeUsecase, config.Log)
 
 	midtransUsecase := usecase.NewMidtransUsecase(userRepository, repository.NewOrderRepository(config.Log), repository.NewTopUpOrderRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
@@ -41,7 +41,7 @@ func Server(config *ServerConfig) {
 	topUpOrderController := controller.NewTopUpOrderController(topUpOrderUsecase, config.Log)
 
 	orderRepository := repository.NewOrderRepository(config.Log)
-	orderUsecase := usecase.NewOrderUsecase(orderRepository, config.DB, config.Validate, config.Log, config.Config)
+	orderUsecase := usecase.NewOrderUsecase(userRepository, costumeRepository, orderRepository, midtransUsecase, config.DB, config.Validate, config.Log, config.Config)
 	orderController := controller.NewOrderController(orderUsecase, config.Log)
 
 	authMiddleware := middleware.NewAuthMiddleware(config.Router, config.Log, config.Config, userUsecase)

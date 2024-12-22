@@ -79,7 +79,7 @@ func (usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 
 	usecase.UserRepository.Create(ctx, tx, user)
 
-	secretKey := usecase.Config.String("application.secret_key")
+	secretKey := usecase.Config.String("SECRET_KEY")
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -131,7 +131,7 @@ func (usecase *UserUsecase) Login(ctx context.Context, request user.UserLoginReq
 		return "", respErr
 	}
 
-	secretKey := usecase.Config.String("application.secret_key")
+	secretKey := usecase.Config.String("SECRET_KEY")
 	secretKeyByte := []byte(secretKey)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -164,7 +164,7 @@ func (usecase *UserUsecase) FindByUUID(ctx context.Context, uuid string) (user.U
 		return user, err
 	}
 
-	imageEnv := usecase.Config.String("application.image_env")
+	imageEnv := usecase.Config.String("IMAGE_ENV")
 
 	if user.Profile_picture != nil {
 		value := imageEnv + *user.Profile_picture
@@ -209,7 +209,7 @@ func (usecase *UserUsecase) FindAll(ctx context.Context, uuid string) ([]user.Us
 		return user, err
 	}
 
-	imageEnv := usecase.Config.String("application.image_env")
+	imageEnv := usecase.Config.String("IMAGE_ENV")
 
 	for i := range user {
 		if user[i].Profile_picture != nil {
@@ -340,7 +340,7 @@ func (usecase *UserUsecase) GetIdentityCard(ctx context.Context, uuid string) (u
 		return user, err
 	}
 
-	imageEnv := usecase.Config.String("application.image_env")
+	imageEnv := usecase.Config.String("IMAGE_ENV")
 
 	user.IdentityCard_picture = imageEnv + identityCardResult
 	return user, nil

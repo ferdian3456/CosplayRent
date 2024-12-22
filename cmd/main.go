@@ -46,7 +46,7 @@ func main() {
 	router.ServeFiles("/static/*filepath", http.Dir("../static"))
 	router.PanicHandler = exception.ErrorHandler
 
-	GO_SERVER_PORT := koanf.String("application.go_server")
+	GO_SERVER_PORT := koanf.String("GO_SERVER")
 
 	server := http.Server{
 		Addr:    GO_SERVER_PORT,

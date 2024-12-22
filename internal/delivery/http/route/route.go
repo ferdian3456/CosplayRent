@@ -32,12 +32,12 @@ func (c *RouteConfig) SetupRoute() {
 	//c.Router.GET("/api/checkappversion", c.UserController.CheckAppVersion)
 
 	c.Router.POST("/api/costume", c.AuthMiddleware.ServeHTTP(c.CostumeController.Create))
-	//c.Router.GET("/api/costume", c.CostumeController.FindAll)
-	//c.Router.GET("/api/seller", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostume))
-	//c.Router.GET("/api/costume/:costumeID", c.CostumeController.FindById)
-	//c.Router.GET("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostumeByCostumeID)) // find by costume id
+	c.Router.GET("/api/costume", c.CostumeController.FindAll)
+	c.Router.GET("/api/seller", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostume))
+	c.Router.GET("/api/costume/:costumeID", c.CostumeController.FindById)
+	c.Router.GET("/api/syou are eller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.FindSellerCostumeByCostumeID)) // find by costume id
 	c.Router.PATCH("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Update))
-	//c.Router.DELETE("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Delete))
+	c.Router.DELETE("/api/seller/:costumeID", c.AuthMiddleware.ServeHTTP(c.CostumeController.Delete))
 
 	//c.Router.GET("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindUserReview))
 	//c.Router.POST("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.Create))
@@ -45,20 +45,19 @@ func (c *RouteConfig) SetupRoute() {
 	//c.Router.PUT("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.Update))
 	//c.Router.DELETE("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.DeleteUserReviewByReviewID))
 	//c.Router.GET("/api/costume/:costumeID/review", c.ReviewController.FindByCostumeId)
-	//
-	//c.Router.POST("/api/order", c.AuthMiddleware.ServeHTTP(c.OrderController.Create))
-	//c.Router.POST("/api/order/midtrans", c.AuthMiddleware.ServeHTTP(c.OrderController.DirectlyOrderToMidtrans))
-	//c.Router.GET("/api/checkorder/:orderID", c.OrderController.CheckStatusPayment)
-	//c.Router.GET("/api/order/seller", c.AuthMiddleware.ServeHTTP(c.OrderController.GetAllSellerOrder))
+
+	c.Router.POST("/api/order/midtrans", c.AuthMiddleware.ServeHTTP(c.OrderController.Create))
+	c.Router.GET("/api/checkorder/:orderID", c.OrderController.CheckStatusPayment)
+	c.Router.GET("/api/order/seller", c.AuthMiddleware.ServeHTTP(c.OrderController.GetAllSellerOrder))
 	//c.Router.PUT("/api/order/:orderID", c.AuthMiddleware.ServeHTTP(c.OrderController.UpdateSellerOrder))
-	//c.Router.GET("/api/orderdetail/:orderID", c.AuthMiddleware.ServeHTTP(c.OrderController.GetDetailOrderByOrderId))
-	//c.Router.GET("/api/userorder/:orderID", c.AuthMiddleware.ServeHTTP(c.OrderController.GetUserDetailOrder))
-	//c.Router.GET("/api/alluserorder", c.AuthMiddleware.ServeHTTP(c.OrderController.GetAllUserOrder))
-	//c.Router.POST("/api/checkbalancewithorderamount", c.AuthMiddleware.ServeHTTP(c.OrderController.CheckBalanceWithOrderAmount))
-	//
+	c.Router.GET("/api/orderdetail/:orderID", c.AuthMiddleware.ServeHTTP(c.OrderController.GetDetailOrderByOrderId))
+	c.Router.GET("/api/userorder/:orderID", c.AuthMiddleware.ServeHTTP(c.OrderController.GetUserDetailOrder))
+	c.Router.GET("/api/alluserorder", c.AuthMiddleware.ServeHTTP(c.OrderController.GetAllUserOrder))
+	c.Router.POST("/api/checkbalancewithorderamount", c.AuthMiddleware.ServeHTTP(c.OrderController.CheckBalanceWithOrderAmount))
+
 	c.Router.PUT("/api/topup", c.AuthMiddleware.ServeHTTP(c.TopUpOrderController.CreateTopUpOrder))
 	//c.Router.GET("/api/checktopuporder/:orderID", c.TopUpOrderController.CheckTopUpOrderByOrderId)
-	//
+
 	//c.Router.GET("/api/wishlist", c.AuthMiddleware.ServeHTTP(c.WishlistController.FindAllWishListByUserId))
 	//c.Router.POST("/api/wishlist/:costumeID", c.AuthMiddleware.ServeHTTP(c.WishlistController.AddWishlist))
 	//c.Router.DELETE("/api/wishlist/:costumeID", c.AuthMiddleware.ServeHTTP(c.WishlistController.DeleteWishlist))
