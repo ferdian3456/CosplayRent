@@ -17,22 +17,24 @@ import (
 )
 
 type CostumeUsecase struct {
-	UserRepository    *repository.UserRepository
-	CostumeRepository *repository.CostumeRepository
-	DB                *sql.DB
-	Validate          *validator.Validate
-	Log               *zerolog.Logger
-	Config            *koanf.Koanf
+	UserRepository     *repository.UserRepository
+	CostumeRepository  *repository.CostumeRepository
+	CategoryRepository *repository.CategoryRepository
+	DB                 *sql.DB
+	Validate           *validator.Validate
+	Log                *zerolog.Logger
+	Config             *koanf.Koanf
 }
 
-func NewCostumeUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *CostumeUsecase {
+func NewCostumeUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, categoryRepository *repository.CategoryRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *CostumeUsecase {
 	return &CostumeUsecase{
-		UserRepository:    userRepository,
-		CostumeRepository: costumeRepository,
-		DB:                DB,
-		Validate:          validate,
-		Log:               zerolog,
-		Config:            koanf,
+		UserRepository:     userRepository,
+		CostumeRepository:  costumeRepository,
+		CategoryRepository: categoryRepository,
+		DB:                 DB,
+		Validate:           validate,
+		Log:                zerolog,
+		Config:             koanf,
 	}
 }
 
@@ -100,9 +102,16 @@ func (usecase *CostumeUsecase) Update(ctx context.Context, userRequest costume.C
 		Ukuran:      userRequest.Ukuran,
 		Berat:       userRequest.Berat,
 		Kategori:    userRequest.Kategori,
+		Available:   userRequest.Available,
 		Price:       userRequest.Price,
 		Picture:     *userRequest.Picture,
 		Updated_at:  &now,
+	}
+
+	err = usecase.CostumeRepository.CheckCostume(ctx, tx, uuid, costumeDomain.Id)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return err
 	}
 
 	usecase.CostumeRepository.Update(ctx, tx, costumeDomain)
@@ -186,6 +195,12 @@ func (usecase *CostumeUsecase) FindById(ctx context.Context, id int) (costume.Co
 		return costume, err
 	}
 
+	categoryName, err := usecase.CategoryRepository.FindCategoryNameById(ctx, tx, costume.Kategori_id)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return costume, err
+	}
+
 	user, err := usecase.UserRepository.FindNameAndProfile(ctx, tx, costume.User_id)
 	if err != nil {
 		usecase.Log.Warn().Msg(err.Error())
@@ -196,8 +211,8 @@ func (usecase *CostumeUsecase) FindById(ctx context.Context, id int) (costume.Co
 
 	imageEnv := usecase.Config.String("IMAGE_ENV")
 
-	if user.Profile_picture != "" {
-		value := imageEnv + user.Profile_picture
+	if user.Profile_picture != nil {
+		value := imageEnv + *user.Profile_picture
 		costume.Profile_picture = &value
 	}
 
@@ -205,6 +220,8 @@ func (usecase *CostumeUsecase) FindById(ctx context.Context, id int) (costume.Co
 		value := imageEnv + *costume.Picture
 		costume.Picture = &value
 	}
+
+	costume.Kategori = categoryName
 
 	return costume, nil
 }
@@ -235,8 +252,8 @@ func (usecase *CostumeUsecase) FindSellerCostumeByCostumeID(ctx context.Context,
 
 	imageEnv := usecase.Config.String("IMAGE_ENV")
 
-	if userResult.Profile_picture != "" {
-		value := imageEnv + userResult.Profile_picture
+	if userResult.Profile_picture != nil {
+		value := imageEnv + *userResult.Profile_picture
 		costume.Profile_picture = &value
 	}
 

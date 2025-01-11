@@ -14,7 +14,7 @@ import (
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "True")
 		if r.Method == http.MethodOptions {
@@ -30,13 +30,13 @@ func main() {
 	router := config.NewRouter()
 	zerolog := config.NewZeroLog()
 	koanf := config.NewKoanf()
-	DB := config.NewDB(koanf, &zerolog)
+	db := config.NewDB(koanf, &zerolog)
 	memcacheClient := config.NewMemcacheClient(koanf)
 	validator := config.NewValidator()
 
 	config.Server(&config.ServerConfig{
 		Router:   router,
-		DB:       DB,
+		DB:       db,
 		Memcache: memcacheClient,
 		Log:      &zerolog,
 		Validate: validator,
@@ -53,7 +53,7 @@ func main() {
 		Handler: CORS(router),
 	}
 
-	zerolog.Info().Msg(("Server is running on:" + GO_SERVER_PORT))
+	zerolog.Info().Msg(("Server is running on " + GO_SERVER_PORT))
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)

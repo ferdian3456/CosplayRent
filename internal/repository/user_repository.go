@@ -164,7 +164,7 @@ func (repository *UserRepository) Update(ctx context.Context, tx *sql.Tx, user d
 		args = append(args, user.Email)
 		argCounter++
 	}
-	if user.Profile_picture != "" {
+	if user.Profile_picture != nil {
 		query += fmt.Sprintf("profile_picture = $%d, ", argCounter)
 		args = append(args, user.Profile_picture)
 		argCounter++
@@ -275,22 +275,23 @@ func (repository *UserRepository) GetEMoneyAmount(ctx context.Context, tx *sql.T
 
 func (repository *UserRepository) FindAllMoneyChanges(ctx context.Context, tx *sql.Tx, uuid string) ([]user.UserEMoneyTransactionHistory, error) {
 	query := `
-    SELECT total AS amount, updated_at, 'Order (Buyer)' AS source
-    FROM orders
-    WHERE user_id = $1 AND status_payment = true
+    SELECT amount AS amount, updated_at, 'Order (Buyer)' AS source
+    FROM payments
+    WHERE customer_id = $1 AND status = 'Paid' AND method = 'Emoney'
 
     UNION ALL
 
-    SELECT total AS amount, updated_at, 'Order (Seller)' AS source
-    FROM orders
-    WHERE seller_id = $1 AND status_payment = true
+    SELECT amount AS amount, updated_at, 'Order (Seller)' AS source
+    FROM payments
+    WHERE seller_id = $1 AND status = 'Paid' AND (method = 'Midtrans' OR method = 'Emoney')
 
     UNION ALL
 
     SELECT topup_amount AS amount, updated_at, 'Top Up' AS source
     FROM topup_orders
-    WHERE user_id = $1 AND status_payment = true;
+    WHERE user_id = $1 AND status_payment = 'Paid';
 	`
+
 	rows, err := tx.QueryContext(ctx, query, uuid)
 	hasData := false
 
@@ -347,6 +348,29 @@ func (repository *UserRepository) FindNameAndEmailById(ctx context.Context, tx *
 	}
 }
 
+func (repository *UserRepository) FindNameById(ctx context.Context, tx *sql.Tx, uuid string) (string, error) {
+	query := "SELECT name FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	var username string
+	if row.Next() {
+		err := row.Scan(&username)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return username, nil
+	} else {
+		return username, errors.New("user not found")
+	}
+}
+
 func (repository *UserRepository) TopUp(ctx context.Context, tx *sql.Tx, midtrans domain.Midtrans) {
 	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
 	_, err := tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.TopUpUser_id)
@@ -356,9 +380,9 @@ func (repository *UserRepository) TopUp(ctx context.Context, tx *sql.Tx, midtran
 	}
 }
 
-func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, midtrans domain.Midtrans) {
+func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, orderAmount float64, updatedAt *time.Time, buyerId string, sellerId string) {
 	query := "UPDATE users SET emoney_amount = emoney_amount - $1,emoney_updated_at=$2 WHERE id = $3"
-	_, err := tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.OrderBuyer_id)
+	_, err := tx.ExecContext(ctx, query, orderAmount, updatedAt, buyerId)
 
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -366,7 +390,17 @@ func (repository *UserRepository) AfterBuy(ctx context.Context, tx *sql.Tx, midt
 	}
 
 	query = "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
-	_, err = tx.ExecContext(ctx, query, midtrans.Order_amount, midtrans.Updated_at, midtrans.OrderSeller_id)
+	_, err = tx.ExecContext(ctx, query, orderAmount, updatedAt, sellerId)
+
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+}
+
+func (repository *UserRepository) AfterBuyForSeller(ctx context.Context, tx *sql.Tx, orderAmount float64, updatedAt *time.Time, sellerId string) {
+	query := "UPDATE users SET emoney_amount = emoney_amount + $1, emoney_updated_at=$2 WHERE id = $3"
+	_, err := tx.ExecContext(ctx, query, orderAmount, updatedAt, sellerId)
 
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -397,7 +431,7 @@ func (repository *UserRepository) CheckUserStatus(ctx context.Context, tx *sql.T
 		if IdentityCardImage != nil && originCityName != nil && address != nil {
 			return checkuserStatus, nil
 		} else {
-			return checkuserStatus, errors.New("need to fulfill identity card and address detail (address,province, and city)")
+			return checkuserStatus, errors.New("empty identity card or address detail")
 		}
 	} else {
 		return checkuserStatus, errors.New("user not found")
@@ -452,6 +486,30 @@ func (repository *UserRepository) FindNameAndProfile(ctx context.Context, tx *sq
 	}
 }
 
+func (repository *UserRepository) FindProfileById(ctx context.Context, tx *sql.Tx, useruuid string) (*string, error) {
+	query := "SELECT profile_picture FROM users WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, useruuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	var profile_picture *string
+
+	if row.Next() {
+		err := row.Scan(&profile_picture)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return profile_picture, nil
+	} else {
+		return profile_picture, errors.New("profile picture not found")
+	}
+}
+
 func (repository *UserRepository) FindBasicInfo(ctx context.Context, tx *sql.Tx, useruuid string) (domain.User, error) {
 	query := "SELECT id,name,email FROM users WHERE id=$1"
 	row, err := tx.QueryContext(ctx, query, useruuid)
@@ -473,5 +531,14 @@ func (repository *UserRepository) FindBasicInfo(ctx context.Context, tx *sql.Tx,
 		return user, nil
 	} else {
 		return user, errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) Delete(ctx context.Context, tx *sql.Tx, uuid string) {
+	query := "DELETE FROM users WHERE id=$1"
+	_, err := tx.ExecContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 }

@@ -1,13 +1,7 @@
 package review
 
-import (
-	"time"
-)
-
 type ReviewUpdateRequest struct {
-	ReviewId       int
-	Review_picture *string `json:"review_picture"`
-	Description    *string `json:"description"`
-	Rating         *string `json:"rating"`
-	Updated_at     *time.Time
+	Review_picture string `validate:"max=254" json:"review_picture,omitempty"`
+	Description    string `validate:"min=5,max=1000" json:"description,omitempty"`
+	Rating         int    `json:"rating,omitempty" `
 }

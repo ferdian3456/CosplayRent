@@ -10,7 +10,7 @@ type User struct {
 	Email                 string
 	Address               string
 	Password              string
-	Profile_picture       string
+	Profile_picture       *string
 	Identity_card_picture string
 	Origin_province_name  string
 	Origin_province_id    int

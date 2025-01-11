@@ -8,6 +8,7 @@ import (
 	"cosplayrent/internal/repository"
 	"database/sql"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/knadh/koanf/v2"
@@ -30,11 +31,12 @@ type UserUsecase struct {
 
 func NewUserUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
 	return &UserUsecase{
-		UserRepository: userRepository,
-		DB:             DB,
-		Validate:       validate,
-		Log:            zerolog,
-		Config:         koanf,
+		UserRepository:    userRepository,
+		CostumeRepository: costumeRepository,
+		DB:                DB,
+		Validate:          validate,
+		Log:               zerolog,
+		Config:            koanf,
 	}
 }
 
@@ -245,7 +247,7 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 			Name:                 *userRequest.Name,
 			Email:                *userRequest.Email,
 			Address:              *userRequest.Address,
-			Profile_picture:      *userRequest.Profile_picture,
+			Profile_picture:      userRequest.Profile_picture,
 			Origin_province_name: *userRequest.Origin_province_name,
 			Origin_province_id:   *userRequest.Origin_province_id,
 			Origin_city_name:     *userRequest.Origin_city_name,
@@ -275,28 +277,32 @@ func (usecase *UserUsecase) Update(ctx context.Context, userRequest user.UserPat
 	}
 }
 
-//	func (usecase *UserUsecase) Delete(ctx context.Context, uuid string) {
-//		log.Printf("User with uuid: %s enter User Usecase: Delete", uuid)
-//
-//		tx, err := usecaseDB.Begin()
-//		if err != nil {
-//			panic(exception.NewNotFoundError(err.Error()))
-//		}
-//
-//		defer helper.CommitOrRollback(tx)
-//
-//		userResult, err := usecaseUserRepository.FindByUUID(ctx, tx, uuid)
-//		if err != nil {
-//			panic(exception.NewNotFoundError(err.Error()))
-//		}
-//
-//		usecaseUserRepository.Delete(ctx, tx, uuid)
-//
-//		finalProfilePicturePath := ".." + *userResult.Profile_picture
-//
-//		err = os.Remove(finalProfilePicturePath)
-//		helper.PanicIfError(err)
-//	}
+func (usecase *UserUsecase) Delete(ctx context.Context, uuid string) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	userProfile, err := usecase.UserRepository.FindProfileById(ctx, tx, uuid)
+	if err != nil {
+		respErr := errors.New("profile picture not found")
+		usecase.Log.Warn().Err(respErr).Msg(err.Error())
+	}
+
+	if userProfile != nil {
+		finalProfilePicturePath := ".." + *userProfile
+		err = os.Remove(finalProfilePicturePath)
+		if err != nil {
+			respErr := errors.New("failed to remove profile picture")
+			usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		}
+	}
+
+	usecase.UserRepository.Delete(ctx, tx, uuid)
+}
 
 func (usecase *UserUsecase) AddOrUpdateIdentityCard(ctx context.Context, uuid string, userRequest user.IdentityCardRequest) error {
 	err := usecase.Validate.Struct(userRequest)
@@ -394,6 +400,28 @@ func (usecase *UserUsecase) CheckUserStatus(ctx context.Context, uuid string, co
 		usecase.Log.Warn().Msg(err.Error())
 		return user, err
 	}
+
+	user, err = usecase.UserRepository.CheckUserStatus(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return user, err
+	}
+
+	user.Status = "true"
+
+	return user, nil
+}
+
+func (usecase *UserUsecase) CheckSellerStatus(ctx context.Context, uuid string) (user.CheckUserStatusResponse, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user := user.CheckUserStatusResponse{}
 
 	user, err = usecase.UserRepository.CheckUserStatus(ctx, tx, uuid)
 	if err != nil {

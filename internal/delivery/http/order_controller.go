@@ -5,9 +5,11 @@ import (
 	"cosplayrent/internal/model/web"
 	"cosplayrent/internal/model/web/order"
 	"cosplayrent/internal/usecase"
+	"errors"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog"
 	"net/http"
+	"strconv"
 )
 
 type OrderController struct {
@@ -25,11 +27,10 @@ func NewOrderController(orderUsecase *usecase.OrderUsecase, zerolog *zerolog.Log
 func (controller OrderController) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
-	directOrderToMidtransRequest := order.DirectlyOrderToMidtrans{}
-	helper.ReadFromRequestBody(request, &directOrderToMidtransRequest)
+	orderRequest := order.OrderRequest{}
+	helper.ReadFromRequestBody(request, &orderRequest)
 
-	directOrderToMidtransRequest.Costumer_id = userUUID
-	midtransResult, err := controller.OrderUsecase.Create(request.Context(), userUUID, directOrderToMidtransRequest)
+	midtransResult, err := controller.OrderUsecase.Create(request.Context(), userUUID, orderRequest)
 	if err != nil {
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
@@ -41,10 +42,48 @@ func (controller OrderController) Create(writer http.ResponseWriter, request *ht
 		return
 	}
 
+	if midtransResult.Token == "" {
+		webResponse := web.WebResponse{
+			Code:   200,
+			Status: "OK",
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",
 		Data:   midtransResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderController) CreateOrderEvents(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	orderRequest := order.OrderEventRequest{}
+	helper.ReadFromRequestBody(request, &orderRequest)
+
+	orderId := params.ByName("orderID")
+
+	err := controller.OrderUsecase.CreateOrderEvent(request.Context(), userUUID, orderRequest, orderId)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)
@@ -127,6 +166,30 @@ func (controller OrderController) GetDetailOrderByOrderId(writer http.ResponseWr
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
+func (controller OrderController) FindListPaymentTransaction(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	detailOrderResult, err := controller.OrderUsecase.FindListPaymentTransaction(request.Context(), userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   detailOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
 func (controller OrderController) GetUserDetailOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
@@ -189,6 +252,35 @@ func (controller OrderController) CheckBalanceWithOrderAmount(writer http.Respon
 	userOrderResult, err := controller.OrderUsecase.CheckBalanceWithOrderAmount(request.Context(), checkBalanceWithOrderAmountRequest, userUUID)
 	if err != nil {
 		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderController) UpdateOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	orderId := params.ByName("orderID")
+
+	updateRequest := order.OrderUpdateRequest{}
+	helper.ReadFromRequestBody(request, &updateRequest)
+
+	err := controller.OrderUsecase.UpdateOrder(request.Context(), updateRequest, userUUID, orderId)
+	if err != nil {
+		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
 			Data:   err.Error(),
@@ -201,7 +293,37 @@ func (controller OrderController) CheckBalanceWithOrderAmount(writer http.Respon
 	webResponse := web.WebResponse{
 		Code:   200,
 		Status: "OK",
-		Data:   userOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller OrderController) FindPaymentInfoByPaymentId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	paymentId := params.ByName("paymentId")
+	fixPaymentid, err := strconv.Atoi(paymentId)
+	if err != nil {
+		respErr := errors.New("error converting string to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	paymentResponse, err := controller.OrderUsecase.FindPaymentInfoByPaymentId(request.Context(), userUUID, fixPaymentid)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   paymentResponse,
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)

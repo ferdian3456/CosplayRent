@@ -1,14 +1,10 @@
 package review
 
-import (
-	"time"
-)
-
 type ReviewCreateRequest struct {
-	User_id        string
-	Costume_id     int
-	Description    string
-	Review_picture *string
-	Rating         int
-	Created_at     *time.Time
+	Order_id       string  `validate:"required" json:"order_id"`
+	Customer_id    string  `json:"-"`
+	Costume_id     int     `validate:"required" json:"costume_id"`
+	Description    string  `validate:"required" json:"description"`
+	Review_picture *string `validate:"required" json:"review_picture"`
+	Rating         int     `validate:"required" json:"rating"`
 }

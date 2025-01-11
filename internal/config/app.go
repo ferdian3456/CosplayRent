@@ -30,8 +30,16 @@ func Server(config *ServerConfig) {
 	userController := controller.NewUserController(userUsecase, config.Log)
 
 	costumeRepository := repository.NewCostumeRepository(config.Log)
-	costumeUsecase := usecase.NewCostumeUsecase(userRepository, costumeRepository, config.DB, config.Validate, config.Log, config.Config)
+	costumeUsecase := usecase.NewCostumeUsecase(userRepository, costumeRepository, repository.NewCategoryRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
 	costumeController := controller.NewCostumeController(costumeUsecase, config.Log)
+
+	categoryRepository := repository.NewCategoryRepository(config.Log)
+	categoryUsecase := usecase.NewCategoryUsecase(categoryRepository, config.DB, config.Validate, config.Log, config.Config)
+	categoryController := controller.NewCategoryController(categoryUsecase, config.Log)
+
+	wishlistRepository := repository.NewWishlistRepository(config.Log)
+	wishlistUsecase := usecase.NewWishlistUsecase(wishlistRepository, costumeRepository, config.DB, config.Validate, config.Log, config.Config)
+	wishlistController := controller.NewWishlistController(wishlistUsecase, config.Log)
 
 	midtransUsecase := usecase.NewMidtransUsecase(userRepository, repository.NewOrderRepository(config.Log), repository.NewTopUpOrderRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
 	midtransController := controller.NewMidtransController(midtransUsecase, config.Log)
@@ -41,8 +49,15 @@ func Server(config *ServerConfig) {
 	topUpOrderController := controller.NewTopUpOrderController(topUpOrderUsecase, config.Log)
 
 	orderRepository := repository.NewOrderRepository(config.Log)
-	orderUsecase := usecase.NewOrderUsecase(userRepository, costumeRepository, orderRepository, midtransUsecase, config.DB, config.Validate, config.Log, config.Config)
+	orderUsecase := usecase.NewOrderUsecase(userRepository, costumeRepository, categoryRepository, orderRepository, midtransUsecase, config.DB, config.Validate, config.Log, config.Config)
 	orderController := controller.NewOrderController(orderUsecase, config.Log)
+
+	reviewRepository := repository.NewReviewRepository(config.Log)
+	reviewUsecase := usecase.NewReviewUsecase(userRepository, costumeRepository, reviewRepository, config.DB, config.Validate, config.Log, config.Config)
+	reviewController := controller.NewReviewController(reviewUsecase, config.Log)
+
+	rajaongkirUsecase := usecase.NewRajaOngkirUsecase(config.Memcache, config.Validate, config.Log, config.Config)
+	rajaongkirController := controller.NewRajaOngkirController(rajaongkirUsecase, config.Log)
 
 	authMiddleware := middleware.NewAuthMiddleware(config.Router, config.Log, config.Config, userUsecase)
 
@@ -50,9 +65,13 @@ func Server(config *ServerConfig) {
 		Router:               config.Router,
 		UserController:       userController,
 		CostumeController:    costumeController,
+		CategoryController:   categoryController,
+		WishlistController:   wishlistController,
 		OrderController:      orderController,
+		ReviewController:     reviewController,
 		TopUpOrderController: topUpOrderController,
 		MidtransController:   midtransController,
+		RajaOngkirController: rajaongkirController,
 		AuthMiddleware:       authMiddleware,
 	}
 

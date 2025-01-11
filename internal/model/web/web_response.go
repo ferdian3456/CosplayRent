@@ -11,9 +11,13 @@ type TokenResponse struct {
 }
 
 type OrderStatusResponse struct {
-	Status_payment bool `json:"status_payment"`
+	Status_payment string `json:"status_payment"`
 }
 
 type AppResponse struct {
 	AppVersion string `json:"app_version"`
+}
+
+type WishlistStatusResponse struct {
+	Status_wishlist string `json:"status_wishlist"`
 }

@@ -11,7 +11,7 @@ func NewKoanf() *koanf.Koanf {
 	k := koanf.New(".")
 	err := k.Load(file.Provider("../.env"), dotenv.Parser())
 	if err != nil {
-		log.Fatal().Msg("Failed to load config.json")
+		log.Fatal().Msg("Failed to load .env files")
 	}
 	return k
 

@@ -48,3 +48,27 @@ func (controller TopUpOrderController) CreateTopUpOrder(writer http.ResponseWrit
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller TopUpOrderController) CheckTopUpOrderByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	orderID := params.ByName("orderID")
+
+	topuporderResult, err := controller.TopUpOrderUsecase.CheckTopUpOrderByOrderId(request.Context(), orderID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   topuporderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

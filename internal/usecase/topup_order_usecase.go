@@ -5,6 +5,7 @@ import (
 	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/domain"
 	"cosplayrent/internal/model/web/midtrans"
+	"cosplayrent/internal/model/web/topup_order"
 	"cosplayrent/internal/model/web/user"
 	"cosplayrent/internal/repository"
 	"database/sql"
@@ -66,17 +67,37 @@ func (usecase *TopUpOrderUsecase) CreateTopUpOrder(ctx context.Context, userRequ
 	orderid := googleuuid.New()
 
 	topuporder := domain.TopUpOrder{
-		Id:             orderid.String(),
-		User_id:        uuid,
-		TopUp_amount:   userRequest.Emoney_amount,
-		Status_payment: false,
-		Created_at:     &now,
-		Updated_at:     &now,
+		Id:           orderid.String(),
+		User_id:      uuid,
+		TopUp_amount: userRequest.Emoney_amount,
+		Created_at:   &now,
+		Updated_at:   &now,
 	}
 
 	usecase.TopUpOrderRepository.CreateTopUpOrder(ctx, tx, topuporder)
 
 	midtransResult := usecase.MidtransUsecase.CreateOrderTopUp(ctx, topuporder, user)
+	expiredTime := now.Add(24 * time.Hour)
+
+	midtransResult.MidtransExpired = expiredTime.Format("2006-01-02 15:04:05")
 
 	return midtransResult, nil
+}
+
+func (usecase *TopUpOrderUsecase) CheckTopUpOrderByOrderId(ctx context.Context, orderID string) (topup_order.TopupOrderResponse, error) {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	topuporderResult, err := usecase.TopUpOrderRepository.CheckTopUpOrderByOrderId(ctx, tx, orderID)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return topuporderResult, err
+	}
+
+	return topuporderResult, nil
 }

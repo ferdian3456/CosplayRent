@@ -10,7 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -130,13 +129,22 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 		}
 	}
 
+	var fixKategoriId int
+	if costumeKategori != "" {
+		fixKategoriId, err = strconv.Atoi(costumeKategori)
+		if err != nil {
+			respErr := errors.New("error converting string to int")
+			controller.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	}
+
 	userRequest := costume.CostumeCreateRequest{
 		Name:        costumeName,
 		Description: costumeDescription,
 		Bahan:       costumeBahan,
 		Ukuran:      costumeUkuran,
 		Berat:       fixBerat,
-		Kategori:    costumeKategori,
+		Kategori:    fixKategoriId,
 		Price:       fixPrice,
 		Picture:     costumePicturePath,
 	}
@@ -181,7 +189,8 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 	costumeBahan := request.FormValue("bahan")
 	costumeUkuran := request.FormValue("ukuran")
 	costumeBerat := request.FormValue("berat")
-	costumeKategori := request.FormValue("kategori")
+	costumeKategoriId := request.FormValue("kategori")
+	costumeAvailable := request.FormValue("available")
 	costumePrice := request.FormValue("price")
 
 	var costumePicturePath *string
@@ -248,7 +257,15 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 		}
 	}
 
-	log.Println("costume path:", costumePicturePath)
+	var fixKategoriId int
+	if costumeKategoriId != "" {
+		fixKategoriId, err = strconv.Atoi(costumeKategoriId)
+		if err != nil {
+			respErr := errors.New("error converting string to int")
+			controller.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	}
+
 	costumeRequest := costume.CostumeUpdateRequest{
 		Id:          fixId,
 		Name:        costumeName,
@@ -256,12 +273,23 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 		Bahan:       costumeBahan,
 		Ukuran:      costumeUkuran,
 		Berat:       fixBerat,
-		Kategori:    costumeKategori,
+		Kategori:    fixKategoriId,
+		Available:   costumeAvailable,
 		Price:       fixPrice,
 		Picture:     costumePicturePath,
 	}
 
-	controller.CostumeUsecase.Update(request.Context(), costumeRequest, userUUID)
+	err = controller.CostumeUsecase.Update(request.Context(), costumeRequest, userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
 
 	webResponse := web.WebResponse{
 		Code:   200,

@@ -5,7 +5,6 @@ import (
 	"cosplayrent/internal/helper"
 	"cosplayrent/internal/model/domain"
 	midtransWeb "cosplayrent/internal/model/web/midtrans"
-	"cosplayrent/internal/model/web/order"
 	"cosplayrent/internal/repository"
 	"database/sql"
 	"errors"
@@ -41,8 +40,8 @@ func NewMidtransUsecase(userRepository *repository.UserRepository, orderReposito
 	}
 }
 
-func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userRequest order.DirectlyOrderToMidtrans) midtransWeb.MidtransResponse {
-	server_key := usecase.Config.String("payment_gateway.midtrans.server_key")
+func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userRequest domain.OrderToMidtrans) midtransWeb.MidtransResponse {
+	server_key := usecase.Config.String("MIDTRANS_SERVER_KEY")
 
 	//fmt.Println("request.Id =", request.Id)
 	//fmt.Println("request.Costumer_id =", request.Costumer_id)
@@ -72,12 +71,12 @@ func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userReque
 				Price:        int64(userRequest.Costume_price),
 				Qty:          1,
 				Category:     userRequest.Costume_category,
-				MerchantName: userRequest.Merchant_name,
+				MerchantName: userRequest.Seller_name,
 			},
 			{
 				ID:           "COSPLAYRENT-1-TAX",
 				Name:         "Tax From CosplayRent",
-				Price:        int64(userRequest.TotalAmount) - int64(userRequest.Costume_price),
+				Price:        int64(userRequest.Total_amount) - int64(userRequest.Costume_price),
 				Category:     "Tax",
 				Qty:          1,
 				MerchantName: "CosplayRent",
@@ -85,7 +84,7 @@ func (usecase *MidtransUsecase) CreateTransaction(ctx context.Context, userReque
 		},
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  userRequest.Id,
-			GrossAmt: int64(userRequest.TotalAmount),
+			GrossAmt: int64(userRequest.Total_amount),
 		},
 	}
 
@@ -125,27 +124,44 @@ func (usecase *MidtransUsecase) MidtransCallBack(ctx context.Context, midtransWe
 
 	midtransDomain := domain.Midtrans{
 		Order_id:      midtransWeb.OrderID,
-		Order_amount:  floatOrderAmount,
+		Order_amount:  floatOrderAmount - 3000,
 		TopUpUser_id:  userResult,
 		OrderBuyer_id: buyerResult,
 		Updated_at:    &now,
+	}
+
+	orderEvent := domain.OrderEvents{
+		User_id:    buyerResult,
+		Order_id:   midtransWeb.OrderID,
+		Status:     "Paid",
+		Created_at: &now,
 	}
 
 	if errTopUpOrder != nil {
 		if errOrder != nil {
 			return
 		} else {
-			usecase.OrderRepository.Update(ctx, tx, midtransDomain)
-
 			var sellerid string
 
-			midtransDomain.OrderSeller_id = sellerid
 			sellerid, err = usecase.OrderRepository.FindSellerIdByOrderId(ctx, tx, midtransDomain.Order_id)
 			if err != nil {
 				return
 			}
 
-			usecase.UserRepository.AfterBuy(ctx, tx, midtransDomain)
+			midtransDomain.OrderSeller_id = sellerid
+
+			usecase.OrderRepository.Update(ctx, tx, midtransDomain)
+			paymentMethod, err := usecase.OrderRepository.FindPaymentMethodByOrderId(ctx, tx, midtransWeb.OrderID)
+			if err != nil {
+				return
+			}
+			if paymentMethod == "Emoney" {
+				usecase.UserRepository.AfterBuy(ctx, tx, midtransDomain.Order_amount, midtransDomain.Updated_at, midtransDomain.OrderBuyer_id, midtransDomain.OrderSeller_id)
+				usecase.OrderRepository.CreateOrderEvents(ctx, tx, orderEvent)
+			} else {
+				usecase.UserRepository.AfterBuyForSeller(ctx, tx, midtransDomain.Order_amount, midtransDomain.Updated_at, midtransDomain.OrderSeller_id)
+				usecase.OrderRepository.CreateOrderEvents(ctx, tx, orderEvent)
+			}
 		}
 	} else {
 		if errOrder == nil {
@@ -159,7 +175,7 @@ func (usecase *MidtransUsecase) MidtransCallBack(ctx context.Context, midtransWe
 }
 
 func (usecase *MidtransUsecase) CreateOrderTopUp(ctx context.Context, topuporder domain.TopUpOrder, user domain.User) midtransWeb.MidtransResponse {
-	server_key := usecase.Config.String("payment_gateway.midtrans.server_key")
+	server_key := usecase.Config.String("MIDTRANS_SERVER_KEY")
 
 	midtrans.DefaultLoggerLevel = &midtrans.LoggerImplementation{LogLevel: midtrans.NoLogging}
 

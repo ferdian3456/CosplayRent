@@ -24,9 +24,9 @@ type UserController struct {
 	Log         *zerolog.Logger
 }
 
-func NewUserController(UserUsecase *usecase.UserUsecase, zerolog *zerolog.Logger) *UserController {
+func NewUserController(userUsecase *usecase.UserUsecase, zerolog *zerolog.Logger) *UserController {
 	return &UserController{
-		UserUsecase: UserUsecase,
+		UserUsecase: userUsecase,
 		Log:         zerolog,
 	}
 }
@@ -219,6 +219,7 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 
 	var originCityIdFinal int
 	if userOriginCityId != "" {
+		fmt.Println("id :", userOriginCityId)
 		originCityIdFinal, err = strconv.Atoi(userOriginCityId)
 		if err != nil {
 			respErr := errors.New("error converting string to int")
@@ -467,6 +468,30 @@ func (controller UserController) CheckUserStatus(writer http.ResponseWriter, req
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
+func (controller UserController) CheckSellerStatus(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	statusResult, err := controller.UserUsecase.CheckSellerStatus(request.Context(), userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   statusResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
 func (controller UserController) FindSellerAddressDetailByCostumeId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
@@ -493,6 +518,19 @@ func (controller UserController) FindSellerAddressDetailByCostumeId(writer http.
 		Code:   200,
 		Status: "OK",
 		Data:   sellerAddressResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller UserController) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	controller.UserUsecase.Delete(request.Context(), userUUID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)

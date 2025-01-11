@@ -36,6 +36,7 @@ func NewAuthMiddleware(handler http.Handler, zerolog *zerolog.Logger, koanf *koa
 func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.Handle {
 	return func(writer http.ResponseWriter, request *http.Request, p httprouter.Params) {
 		headerToken := request.Header.Get("Authorization")
+
 		if headerToken == "" {
 			writer.Header().Set("Content-Type", "application/json")
 			writer.WriteHeader(http.StatusUnauthorized)
@@ -67,7 +68,7 @@ func (middleware *AuthMiddleware) ServeHTTP(next httprouter.Handle) httprouter.H
 			return
 		}
 
-		secretKey := middleware.Config.String("application.secret_key")
+		secretKey := middleware.Config.String("SECRET_KEY")
 		secretKeyByte := []byte(secretKey)
 
 		token, err := jwt.Parse(splitToken[1], func(token *jwt.Token) (interface{}, error) {
