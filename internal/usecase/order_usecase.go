@@ -106,6 +106,13 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 		Updated_at:     &now,
 	}
 
+	event := domain.OrderEvents{
+		User_id:    uuid,
+		Order_id:   orderid,
+		Status:     "Paid",
+		Created_at: &now,
+	}
+
 	err = usecase.UserRepository.CheckUserExistance(ctx, tx, userRequest.Seller_id)
 	if err != nil {
 		usecase.Log.Warn().Msg(err.Error())
@@ -124,6 +131,7 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 		usecase.UserRepository.AfterBuy(ctx, tx, userRequest.TotalAmount, &now, uuid, userRequest.Seller_id)
 		payment.Status = "Paid"
 		usecase.OrderRepository.CreatePayment(ctx, tx, payment)
+		usecase.OrderRepository.CreateOrderEvents(ctx, tx, event)
 		return midtrans.MidtransResponse{}, nil
 	}
 
