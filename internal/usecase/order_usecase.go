@@ -122,6 +122,7 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 
 	if userRequest.Payment_method == "Emoney" {
 		usecase.UserRepository.AfterBuy(ctx, tx, userRequest.TotalAmount, &now, uuid, userRequest.Seller_id)
+		payment.Status = "Paid"
 		usecase.OrderRepository.CreatePayment(ctx, tx, payment)
 		return midtrans.MidtransResponse{}, nil
 	}
