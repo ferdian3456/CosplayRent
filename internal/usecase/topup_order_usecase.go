@@ -78,7 +78,7 @@ func (usecase *TopUpOrderUsecase) CreateTopUpOrder(ctx context.Context, userRequ
 
 	midtransResult := usecase.MidtransUsecase.CreateOrderTopUp(ctx, topuporder, user)
 	expiredTime := now.Add(24 * time.Hour)
-
+	midtransResult.MidtransCreated_at = now.Format("2006-01-02 15:04:05")
 	midtransResult.MidtransExpired = expiredTime.Format("2006-01-02 15:04:05")
 
 	return midtransResult, nil

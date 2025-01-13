@@ -140,7 +140,7 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 	payment.Midtrans_url_expired_time = now.Add(24 * time.Hour)
 	usecase.OrderRepository.CreatePayment(ctx, tx, payment)
 	expiredTime := now.Add(24 * time.Hour)
-
+	result.MidtransCreated_at = now.Format("2006-01-02 15:04:05")
 	result.MidtransExpired = expiredTime.Format("2006-01-02 15:04:05")
 
 	return result, nil
@@ -180,11 +180,13 @@ func (usecase *OrderUsecase) FindPaymentInfoByPaymentId(ctx context.Context, uui
 	}
 
 	formattedDate := paymentResult.Midtrans_url_expired_time.Format("2006-01-02 15:04:05")
+	formattedDate2 := paymentResult.Created_at.Format("2006-01-02 15:04:05")
 
 	paymentFormatted := order.PaymentInfo{
 		Payment_amount:                     paymentResult.Amount,
 		Midtrans_redirect_url:              paymentResult.Midtrans_redirect_url,
 		Midtrans_redirect_url_expired_time: formattedDate,
+		Midtrans_redirect_url_created_at:   formattedDate2,
 		Status:                             paymentResult.Status,
 	}
 
@@ -231,7 +233,7 @@ func (usecase *OrderUsecase) FindListPaymentTransaction(ctx context.Context, uui
 
 		orders[i].Payment_id = payment.Id
 		orders[i].Payment_status = payment.Status
-
+		orders[i].Midtrans_redirect_url_created_at = payment.Created_at.Format("2006-01-02 15:04:05")
 		orders[i].Midtrans_redirect_url_expired_time = payment.Midtrans_url_expired_time.Format("2006-01-02 15:04:05")
 	}
 

@@ -138,7 +138,7 @@ func (repository *OrderRepository) FindPaymentMethodByOrderId(ctx context.Contex
 }
 
 func (repository *OrderRepository) FindPaymentInfoByPaymentId(ctx context.Context, tx *sql.Tx, paymentid int, customerid string) (domain.Payments, error) {
-	query := "SELECT amount,status,midtrans_redirect_url,midtrans_url_expired_time FROM payments WHERE id=$1 AND customer_id=$2"
+	query := "SELECT amount,status,midtrans_redirect_url,midtrans_url_expired_time,created_at FROM payments WHERE id=$1 AND customer_id=$2"
 	row, err := tx.QueryContext(ctx, query, paymentid, customerid)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -150,7 +150,7 @@ func (repository *OrderRepository) FindPaymentInfoByPaymentId(ctx context.Contex
 	payment := domain.Payments{}
 
 	if row.Next() {
-		err = row.Scan(&payment.Amount, &payment.Status, &payment.Midtrans_redirect_url, &payment.Midtrans_url_expired_time)
+		err = row.Scan(&payment.Amount, &payment.Status, &payment.Midtrans_redirect_url, &payment.Midtrans_url_expired_time, &payment.Created_at)
 		if err != nil {
 			respErr := errors.New("failed to scan query result")
 			repository.Log.Panic().Err(err).Msg(respErr.Error())
@@ -163,7 +163,7 @@ func (repository *OrderRepository) FindPaymentInfoByPaymentId(ctx context.Contex
 }
 
 func (repository *OrderRepository) FindPaymentInfoByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (domain.Payments, error) {
-	query := "SELECT id,status,midtrans_url_expired_time FROM payments WHERE order_id=$1"
+	query := "SELECT id,status,midtrans_url_expired_time,created_at FROM payments WHERE order_id=$1"
 	row, err := tx.QueryContext(ctx, query, orderid)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -175,7 +175,7 @@ func (repository *OrderRepository) FindPaymentInfoByOrderId(ctx context.Context,
 	payment := domain.Payments{}
 
 	if row.Next() {
-		err = row.Scan(&payment.Id, &payment.Status, &payment.Midtrans_url_expired_time)
+		err = row.Scan(&payment.Id, &payment.Status, &payment.Midtrans_url_expired_time, &payment.Created_at)
 		if err != nil {
 			respErr := errors.New("failed to scan query result")
 			repository.Log.Panic().Err(err).Msg(respErr.Error())

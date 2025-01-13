@@ -86,6 +86,7 @@ type PaymentTransationForOrderResponse struct {
 	Costume_price                      float64 `json:"costume_price"`
 	Costume_size                       string  `json:"costume_size"`
 	Midtrans_redirect_url_expired_time string  `json:"midtrans_expired_time"`
+	Midtrans_redirect_url_created_at   string  `json:"midtrans_created_at"`
 	Payment_id                         int     `json:"payment_id"`
 }
 
@@ -93,5 +94,6 @@ type PaymentInfo struct {
 	Payment_amount                     float64 `json:"payment_amount"`
 	Status                             string  `json:"payment_status"`
 	Midtrans_redirect_url              string  `json:"midtrans_redirect_url"`
+	Midtrans_redirect_url_created_at   string  `json:"midtrans_created_at"`
 	Midtrans_redirect_url_expired_time string  `json:"midtrans_expired_time"`
 }
