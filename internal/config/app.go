@@ -54,7 +54,7 @@ func Server(config *ServerConfig) {
 
 	reviewRepository := repository.NewReviewRepository(config.Log)
 	reviewUsecase := usecase.NewReviewUsecase(userRepository, costumeRepository, reviewRepository, config.DB, config.Validate, config.Log, config.Config)
-	reviewController := controller.NewReviewController(reviewUsecase, config.Log)
+	reviewController := controller.NewReviewController(reviewUsecase, orderUsecase, config.Log)
 
 	rajaongkirUsecase := usecase.NewRajaOngkirUsecase(config.Memcache, config.Validate, config.Log, config.Config)
 	rajaongkirController := controller.NewRajaOngkirController(rajaongkirUsecase, config.Log)

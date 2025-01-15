@@ -28,4 +28,5 @@ type OrderToMidtrans struct {
 	Costume_category string
 	Costume_price    float64
 	Total_amount     float64
+	Created_at       time.Time
 }

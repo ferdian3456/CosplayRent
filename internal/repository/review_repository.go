@@ -138,5 +138,67 @@ func (repository *ReviewRepository) FindReviewPictureById(ctx context.Context, t
 	} else {
 		return nil
 	}
+}
 
+func (repository *ReviewRepository) FindAllReviewedOrder(ctx context.Context, tx *sql.Tx, uuid string) ([]domain.Review, error) {
+	query := "SELECT order_id,created_at,rating,description,costume_id FROM reviews where customer_id=$1"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	hasData := false
+
+	defer rows.Close()
+
+	reviews := []domain.Review{}
+	for rows.Next() {
+		review := domain.Review{}
+		err = rows.Scan(&review.Order_id, &review.Created_at, &review.Rating, &review.Description, &review.Costume_id)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		reviews = append(reviews, review)
+		hasData = true
+	}
+
+	if hasData == false {
+		return reviews, errors.New("review not found")
+	}
+
+	return reviews, nil
+}
+
+func (repository *ReviewRepository) FindReviewInfoByOrderId(ctx context.Context, tx *sql.Tx, uuid string, orderid string) (review.ReviewInfo, error) {
+	query := "SELECT id,rating,review_picture,description FROM reviews where customer_id=$1 AND order_id=$2"
+	rows, err := tx.QueryContext(ctx, query, uuid, orderid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer rows.Close()
+
+	review := review.ReviewInfo{}
+	if rows.Next() {
+		err = rows.Scan(&review.Review_id, &review.Review_rating, &review.Review_picture, &review.Review_description)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return review, nil
+	} else {
+		return review, errors.New("review not found")
+	}
+}
+
+func (repository *ReviewRepository) DeleteUserReviewByReviewID(ctx context.Context, tx *sql.Tx, uuid string, reviewid int) {
+	query := "DELETE FROM reviews WHERE id=$1 AND customer_id=$2"
+	_, err := tx.ExecContext(ctx, query, reviewid, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
 }

@@ -20,12 +20,14 @@ import (
 
 type ReviewController struct {
 	ReviewUsecase *usecase.ReviewUsecase
+	OrderUsecase  *usecase.OrderUsecase
 	Log           *zerolog.Logger
 }
 
-func NewReviewController(reviewUsecase *usecase.ReviewUsecase, zerolog *zerolog.Logger) *ReviewController {
+func NewReviewController(reviewUsecase *usecase.ReviewUsecase, orderUsecase *usecase.OrderUsecase, zerolog *zerolog.Logger) *ReviewController {
 	return &ReviewController{
 		ReviewUsecase: reviewUsecase,
+		OrderUsecase:  orderUsecase,
 		Log:           zerolog,
 	}
 }
@@ -313,6 +315,110 @@ func (controller ReviewController) FindByCostumeId(writer http.ResponseWriter, r
 		Code:   200,
 		Status: "OK",
 		Data:   reviewDomain,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller ReviewController) FindAllUserReview(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	detailOrderResult, err := controller.ReviewUsecase.FindAllUserReview(request.Context(), userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   detailOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller ReviewController) FindReviewInfoByOrderId(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	orderID := params.ByName("orderID")
+
+	detailOrderResult, err := controller.ReviewUsecase.FindReviewInfoByOrderId(request.Context(), userUUID, orderID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   detailOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller ReviewController) FindAllReviewedOrder(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	detailOrderResult, err := controller.ReviewUsecase.FindAllReviewedOrder(request.Context(), userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   detailOrderResult,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller ReviewController) DeleteUserReviewByReviewID(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	reviewID := params.ByName("reviewID")
+	finalReviewID, err := strconv.Atoi(reviewID)
+	if err != nil {
+		respErr := errors.New("error converting string to int")
+		controller.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	err = controller.ReviewUsecase.DeleteUserReviewByReviewID(request.Context(), userUUID, finalReviewID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
 	}
 
 	helper.WriteToResponseBody(writer, webResponse)

@@ -263,6 +263,30 @@ func (repository *OrderRepository) FindUserAndCostumeById(ctx context.Context, t
 	}
 }
 
+func (repository *OrderRepository) FindCostumeIdByOrderId(ctx context.Context, tx *sql.Tx, orderid string) (int, error) {
+	query := "SELECT costume_id FROM orders WHERE id=$1"
+	row, err := tx.QueryContext(ctx, query, orderid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	var costumeid int
+
+	if row.Next() {
+		err = row.Scan(&costumeid)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		return costumeid, nil
+	} else {
+		return costumeid, errors.New("costume not found")
+	}
+}
+
 func (repository *OrderRepository) GetEventDetail(ctx context.Context, tx *sql.Tx, orderid string) domain.OrderEvents {
 	query := "SELECT notes,shipment_receipt_user_id FROM order_events WHERE order_id=$1"
 	row, err := tx.QueryContext(ctx, query, orderid)
@@ -494,6 +518,79 @@ func (repository *OrderRepository) FindListOrderByCostumeId(ctx context.Context,
 	}
 
 	return orders, nil
+}
+
+func (repository *OrderRepository) FindAllUserOrder(ctx context.Context, tx *sql.Tx, uuid string) ([]domain.Review, error) {
+	query := "SELECT id FROM orders WHERE customer_id=$1"
+	rows, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+	hasData := false
+
+	defer rows.Close()
+
+	reviews := []domain.Review{}
+	for rows.Next() {
+		review := domain.Review{}
+		err = rows.Scan(&review.Order_id)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		reviews = append(reviews, review)
+		hasData = true
+	}
+	if hasData == false {
+		return reviews, errors.New("order not found")
+	}
+
+	return reviews, nil
+}
+
+func (repository *OrderRepository) FindAllNonReviewedOrder(ctx context.Context, tx *sql.Tx, orderid string) []domain.Review {
+	query := `
+    SELECT 
+        oe.order_id,
+        oe.created_at
+    FROM 
+        order_events oe
+    WHERE
+        oe.status = 'Completed'
+      	AND oe.order_id = $1
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM reviews r
+            WHERE r.order_id = oe.order_id
+        )
+	`
+
+	rows, err := tx.QueryContext(ctx, query, orderid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+	hasData := false
+
+	defer rows.Close()
+
+	reviews := []domain.Review{}
+	for rows.Next() {
+		review := domain.Review{}
+		err = rows.Scan(&review.Order_id, &review.Created_at)
+		if err != nil {
+			respErr := errors.New("failed to scan query result")
+			repository.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+		reviews = append(reviews, review)
+		hasData = true
+	}
+	if hasData == false {
+		return reviews
+	}
+
+	return reviews
 }
 
 func (repository *OrderRepository) CheckIfUserOrSeller(ctx context.Context, tx *sql.Tx, userid string, orderid string) error {

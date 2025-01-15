@@ -49,9 +49,11 @@ func (c *RouteConfig) SetupRoute() {
 
 	c.Router.GET("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindUserReview))
 	c.Router.POST("/api/review", c.AuthMiddleware.ServeHTTP(c.ReviewController.Create))
-	//c.Router.GET("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindUserReviewByReviewID))
+	c.Router.GET("/api/userreview", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindAllUserReview))
+	c.Router.GET("/api/allreviewedorder", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindAllReviewedOrder))
 	c.Router.PATCH("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.Update))
-	//c.Router.DELETE("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.DeleteUserReviewByReviewID))
+	c.Router.GET("/api/reviewinfo/:orderID", c.AuthMiddleware.ServeHTTP(c.ReviewController.FindReviewInfoByOrderId))
+	c.Router.DELETE("/api/review/:reviewID", c.AuthMiddleware.ServeHTTP(c.ReviewController.DeleteUserReviewByReviewID))
 	c.Router.GET("/api/costume/:costumeID/review", c.ReviewController.FindByCostumeId)
 
 	c.Router.POST("/api/order", c.AuthMiddleware.ServeHTTP(c.OrderController.Create))
