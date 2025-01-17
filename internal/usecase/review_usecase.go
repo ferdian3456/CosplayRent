@@ -101,17 +101,29 @@ func (usecase *ReviewUsecase) Update(ctx context.Context, request review.ReviewU
 
 	now := time.Now()
 
-	review := domain.Review{
-		Id:             reviewid,
-		Review_picture: request.Review_picture,
-		Description:    request.Description,
-		Rating:         request.Rating,
-		Updated_at:     &now,
+	if request.Review_picture != nil {
+		review := domain.Review{
+			Id:             reviewid,
+			Review_picture: *request.Review_picture,
+			Description:    request.Description,
+			Rating:         request.Rating,
+			Updated_at:     &now,
+		}
+
+		usecase.ReviewRepository.Update(ctx, tx, review)
+		return nil
+
+	} else {
+		review := domain.Review{
+			Id:          reviewid,
+			Description: request.Description,
+			Rating:      request.Rating,
+			Updated_at:  &now,
+		}
+
+		usecase.ReviewRepository.Update(ctx, tx, review)
+		return nil
 	}
-
-	usecase.ReviewRepository.Update(ctx, tx, review)
-
-	return nil
 }
 
 func (usecase *ReviewUsecase) FindUserReview(ctx context.Context, uuid string) ([]review.UserReviewResponse, error) {

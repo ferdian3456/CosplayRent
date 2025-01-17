@@ -242,7 +242,7 @@ func (controller ReviewController) Update(writer http.ResponseWriter, request *h
 	}
 
 	reviewRequest := review.ReviewUpdateRequest{
-		Review_picture: *reviewPicturePath,
+		Review_picture: reviewPicturePath,
 		Description:    reviewDescription,
 		Rating:         finalRating,
 	}
