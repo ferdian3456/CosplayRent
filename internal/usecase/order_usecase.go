@@ -100,7 +100,7 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 		Customer_id:    uuid,
 		Seller_id:      userRequest.Seller_id,
 		Status:         "Pending",
-		Amount:         userRequest.TotalAmount - 3000,
+		Amount:         userRequest.TotalAmount,
 		Payment_method: userRequest.Payment_method,
 		Created_at:     &now,
 		Updated_at:     &now,
@@ -135,6 +135,7 @@ func (usecase *OrderUsecase) Create(ctx context.Context, uuid string, userReques
 		return midtrans.MidtransResponse{}, nil
 	}
 
+	userRequest.TotalAmount = userRequest.TotalAmount + 3000
 	result := usecase.MidtransUsecase.CreateTransaction(ctx, SendOrderToMidtrans)
 	payment.Midtrans_redirect_url = result.RedirectUrl
 	payment.Midtrans_url_expired_time = now.Add(24 * time.Hour)
