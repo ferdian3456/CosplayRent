@@ -21,6 +21,8 @@ type RouteConfig struct {
 }
 
 func (c *RouteConfig) SetupRoute() {
+	c.Router.GET("/api/middleware", c.AuthMiddleware.WebMiddleware)
+
 	c.Router.POST("/api/register", c.UserController.Register)
 	c.Router.GET("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.GetIdentityCard))
 	c.Router.PUT("/api/identitycard", c.AuthMiddleware.ServeHTTP(c.UserController.AddOrUpdateIdentityCard))
@@ -29,6 +31,7 @@ func (c *RouteConfig) SetupRoute() {
 	c.Router.POST("/api/login", c.UserController.Login)
 	c.Router.GET("/api/userdetail", c.AuthMiddleware.ServeHTTP(c.UserController.FindByUUID))
 	c.Router.GET("/api/user", c.AuthMiddleware.ServeHTTP(c.UserController.FindAll))
+	c.Router.POST("/api/userverification", c.AuthMiddleware.EmailMiddleware(c.UserController.VerifyCode))
 	c.Router.PATCH("/api/userdetail", c.AuthMiddleware.ServeHTTP(c.UserController.Update))
 	c.Router.DELETE("/api/useraccount", c.AuthMiddleware.ServeHTTP(c.UserController.Delete))
 	c.Router.GET("/api/checksellerstatus", c.AuthMiddleware.ServeHTTP(c.UserController.CheckSellerStatus))

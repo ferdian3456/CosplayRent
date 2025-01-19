@@ -31,6 +31,15 @@ func (repository *UserRepository) Create(ctx context.Context, tx *sql.Tx, user d
 	}
 }
 
+func (repository *UserRepository) CreateUserVerification(ctx context.Context, tx *sql.Tx, user domain.UserVerification) {
+	query := "INSERT INTO user_verifications (user_id,verification_code,created_at,updated_at,expired_at) VALUES ($1,$2,$3,$4,$5)"
+	_, err := tx.ExecContext(ctx, query, user.User_id, user.Verification_code, user.Created_at, user.Updated_at, user.Expired_at)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+}
+
 func (repository *UserRepository) CheckCredentialUnique(ctx context.Context, tx *sql.Tx, user domain.User) error {
 	query := "SELECT name, email from users WHERE name=$1 OR email=$2 LIMIT 1"
 	row, err := tx.QueryContext(ctx, query, user.Name, user.Email)
@@ -49,7 +58,7 @@ func (repository *UserRepository) CheckCredentialUnique(ctx context.Context, tx 
 }
 
 func (repository *UserRepository) Login(ctx context.Context, tx *sql.Tx, name string) (domain.User, error) {
-	query := "SELECT id,email,password FROM users where email=$1"
+	query := "SELECT id,email,password FROM users where email=$1 AND is_verified='Yes'"
 	rows, err := tx.QueryContext(ctx, query, name)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -99,7 +108,7 @@ func (repository *UserRepository) FindByUUID(ctx context.Context, tx *sql.Tx, uu
 }
 
 func (repository *UserRepository) CheckUserExistance(ctx context.Context, tx *sql.Tx, uuid string) error {
-	query := "SELECT id FROM users where id=$1"
+	query := "SELECT id FROM users where id=$1 AND is_verified='Yes'"
 	row, err := tx.QueryContext(ctx, query, uuid)
 	if err != nil {
 		respErr := errors.New("failed to query into database")
@@ -112,6 +121,53 @@ func (repository *UserRepository) CheckUserExistance(ctx context.Context, tx *sq
 		return nil
 	} else {
 		return errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) CheckUserExistanceForNonActivated(ctx context.Context, tx *sql.Tx, uuid string) error {
+	query := "SELECT id FROM users where id=$1 AND is_verified='No'"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	if row.Next() {
+		return nil
+	} else {
+		return errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) VerifyCode(ctx context.Context, tx *sql.Tx, uuid string) (domain.UserVerification, error) {
+	query := "SELECT verification_code,expired_at FROM user_verifications where user_id=$1"
+	row, err := tx.QueryContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer row.Close()
+
+	userVerification := domain.UserVerification{}
+
+	if row.Next() {
+		err = row.Scan(&userVerification.Verification_code, &userVerification.Expired_at)
+
+		return userVerification, nil
+	} else {
+		return userVerification, errors.New("user not found")
+	}
+}
+
+func (repository *UserRepository) ChangeVerificationStatus(ctx context.Context, tx *sql.Tx, uuid string) {
+	query := "UPDATE users SET is_verified='Yes' WHERE id=$1"
+	_, err := tx.ExecContext(ctx, query, uuid)
+	if err != nil {
+		respErr := errors.New("failed to query into database")
+		repository.Log.Panic().Err(err).Msg(respErr.Error())
 	}
 }
 

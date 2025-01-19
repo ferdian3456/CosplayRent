@@ -87,6 +87,32 @@ func (controller UserController) Login(writer http.ResponseWriter, request *http
 	helper.WriteToResponseBody(writer, webResponse)
 }
 
+func (controller UserController) VerifyCode(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
+	userVerificationCodeRequest := user.UserVerificationCode{}
+	helper.ReadFromRequestBody(request, &userVerificationCodeRequest)
+
+	userUUID, _ := request.Context().Value("user_uuid").(string)
+
+	err := controller.UserUsecase.VerifyCode(request.Context(), userVerificationCodeRequest, userUUID)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Data:   err.Error(),
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+		return
+	}
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
 func (controller UserController) FindByUUID(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 

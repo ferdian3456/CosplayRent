@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users(
     password varchar(60) NOT NULL,
     profile_picture varchar(255),
     identitycard_picture varchar(255),
+    is_verified varchar(3) DEFAULT 'No',
     emoney_amount decimal(10,2) DEFAULT 0,
     origincity_name varchar(30),
     origincity_id int,

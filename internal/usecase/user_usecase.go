@@ -6,8 +6,11 @@ import (
 	"cosplayrent/internal/model/domain"
 	"cosplayrent/internal/model/web/user"
 	"cosplayrent/internal/repository"
+	"crypto/rand"
 	"database/sql"
 	"errors"
+	"fmt"
+	"math/big"
 	"os"
 	"time"
 
@@ -21,22 +24,24 @@ import (
 )
 
 type UserUsecase struct {
-	UserRepository    *repository.UserRepository
-	CostumeRepository *repository.CostumeRepository
-	DB                *sql.DB
-	Validate          *validator.Validate
-	Log               *zerolog.Logger
-	Config            *koanf.Koanf
+	UserRepository      *repository.UserRepository
+	CostumeRepository   *repository.CostumeRepository
+	NotificationUsecase *NotificationUsecase
+	DB                  *sql.DB
+	Validate            *validator.Validate
+	Log                 *zerolog.Logger
+	Config              *koanf.Koanf
 }
 
-func NewUserUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
+func NewUserUsecase(userRepository *repository.UserRepository, costumeRepository *repository.CostumeRepository, notificationUsecase *NotificationUsecase, DB *sql.DB, validate *validator.Validate, zerolog *zerolog.Logger, koanf *koanf.Koanf) *UserUsecase {
 	return &UserUsecase{
-		UserRepository:    userRepository,
-		CostumeRepository: costumeRepository,
-		DB:                DB,
-		Validate:          validate,
-		Log:               zerolog,
-		Config:            koanf,
+		UserRepository:      userRepository,
+		CostumeRepository:   costumeRepository,
+		NotificationUsecase: notificationUsecase,
+		DB:                  DB,
+		Validate:            validate,
+		Log:                 zerolog,
+		Config:              koanf,
 	}
 }
 
@@ -94,6 +99,31 @@ func (usecase *UserUsecase) Create(ctx context.Context, request user.UserCreateR
 		respErr := errors.New("failed to sign a token")
 		usecase.Log.Panic().Err(err).Msg(respErr.Error())
 	}
+
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	code := make([]byte, 5)
+	for i := range code {
+		randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		code[i] = charset[randomIndex.Int64()]
+	}
+
+	expiredAt := now.Add(5 * time.Minute)
+
+	UserVerification := domain.UserVerification{
+		User_id:           user.Id,
+		Verification_code: string(code),
+		Created_at:        &now,
+		Updated_at:        &now,
+		Expired_at:        &expiredAt,
+	}
+
+	usecase.UserRepository.CreateUserVerification(ctx, tx, UserVerification)
+
+	usecase.NotificationUsecase.SendRegisterNotification(ctx, tx, user.Name, user.Email, string(code))
 
 	return tokenString, nil
 }
@@ -192,6 +222,64 @@ func (usecase *UserUsecase) CheckUserExistance(ctx context.Context, uuid string)
 	}
 
 	return nil
+}
+
+func (usecase *UserUsecase) CheckUserExistanceForNonActivated(ctx context.Context, uuid string) error {
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	err = usecase.UserRepository.CheckUserExistanceForNonActivated(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (usecase *UserUsecase) VerifyCode(ctx context.Context, request user.UserVerificationCode, uuid string) error {
+	err := usecase.Validate.Struct(request)
+	if err != nil {
+		respErr := errors.New("invalid request body")
+		usecase.Log.Warn().Err(respErr).Msg(err.Error())
+		return respErr
+	}
+
+	tx, err := usecase.DB.Begin()
+	if err != nil {
+		respErr := errors.New("failed to start transaction")
+		usecase.Log.Panic().Err(err).Msg(respErr.Error())
+	}
+
+	defer helper.CommitOrRollback(tx)
+
+	user, err := usecase.UserRepository.VerifyCode(ctx, tx, uuid)
+	if err != nil {
+		usecase.Log.Warn().Msg(err.Error())
+		return err
+	}
+
+	if request.Code == user.Verification_code {
+		now := time.Now().UTC()
+		fmt.Println("now:", &now)
+		fmt.Println("verification code expired_at:", user.Expired_at)
+		if now.After(*user.Expired_at) {
+			respErr := errors.New("verification code expired")
+			usecase.Log.Warn().Err(respErr).Msg(respErr.Error())
+			return respErr
+		}
+		usecase.UserRepository.ChangeVerificationStatus(ctx, tx, uuid)
+		return nil
+	} else {
+		respErr := errors.New("invalid verification code")
+		usecase.Log.Warn().Err(respErr).Msg(respErr.Error())
+		return respErr
+	}
 }
 
 func (usecase *UserUsecase) FindAll(ctx context.Context, uuid string) ([]user.UserResponse, error) {

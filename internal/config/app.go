@@ -25,8 +25,11 @@ type ServerConfig struct {
 }
 
 func Server(config *ServerConfig) {
+	notificationRepository := repository.NewNotificationRepository(config.Log)
+	notificationUsecase := usecase.NewNotificationUsecase(notificationRepository, config.DB, config.Validate, config.Log, config.Config)
+
 	userRepository := repository.NewUserRepository(config.Log)
-	userUsecase := usecase.NewUserUsecase(userRepository, repository.NewCostumeRepository(config.Log), config.DB, config.Validate, config.Log, config.Config)
+	userUsecase := usecase.NewUserUsecase(userRepository, repository.NewCostumeRepository(config.Log), notificationUsecase, config.DB, config.Validate, config.Log, config.Config)
 	userController := controller.NewUserController(userUsecase, config.Log)
 
 	costumeRepository := repository.NewCostumeRepository(config.Log)
