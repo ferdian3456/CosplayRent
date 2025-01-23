@@ -92,6 +92,7 @@ type PaymentTransationForOrderResponse struct {
 
 type PaymentInfo struct {
 	Payment_amount                     float64 `json:"payment_amount"`
+	Payment_method                     string  `json:"payment_method"`
 	Status                             string  `json:"payment_status"`
 	Midtrans_redirect_url              string  `json:"midtrans_redirect_url"`
 	Midtrans_redirect_url_created_at   string  `json:"midtrans_created_at"`

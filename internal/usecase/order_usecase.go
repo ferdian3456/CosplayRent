@@ -185,6 +185,7 @@ func (usecase *OrderUsecase) FindPaymentInfoByPaymentId(ctx context.Context, uui
 
 	paymentFormatted := order.PaymentInfo{
 		Payment_amount:                     paymentResult.Amount,
+		Payment_method:                     paymentResult.Method,
 		Midtrans_redirect_url:              paymentResult.Midtrans_redirect_url,
 		Midtrans_redirect_url_expired_time: formattedDate,
 		Midtrans_redirect_url_created_at:   formattedDate2,

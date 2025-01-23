@@ -8,6 +8,7 @@ type Payments struct {
 	Customer_id               string
 	Seller_id                 string
 	Status                    string
+	Method                    string
 	Amount                    float64
 	Payment_method            string
 	Midtrans_redirect_url     string
