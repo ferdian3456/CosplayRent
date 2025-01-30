@@ -4,7 +4,7 @@
 
 <h1 align="center">CosplayRent (Backend)</h1>
 
-<p align="center" style="font-size:18px">
+<p align="center" style="font-size:25px">
     <em>The ultimate costume rental platform—easy, safe, and reliable.</em>
 </p>
 
