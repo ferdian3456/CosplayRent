@@ -16,6 +16,16 @@ CosplayRent is a **centralized costume rental application** that simplifies the 
 
 ---
 
+
+---
+
+## 📚 Repositories
+
+- 🔗 **Frontend Repo:** [CosplayRent Frontend](https://github.com/AdrianRafli/cosplayrent-frontend)
+- 🔗 **Backend Repo:** [CosplayRent Backend](https://github.com/ferdian3456/CosplayRent)
+
+---
+
 ## 🛠 Tech Stack
 
 <p align="center">
@@ -68,6 +78,7 @@ CosplayRent is a **centralized costume rental application** that simplifies the 
 - **Integrated Payments & Shipping** – **Midtrans for payments** and **RajaOngkir for real costs**.  
 
 ---
+
 
 ## 📩 Get in Touch  
 
