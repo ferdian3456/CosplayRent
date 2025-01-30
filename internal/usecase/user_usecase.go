@@ -265,7 +265,7 @@ func (usecase *UserUsecase) VerifyCode(ctx context.Context, request user.UserVer
 	}
 
 	if request.Code == user.Verification_code {
-		now := time.Now().UTC()
+		now := time.Now()
 		fmt.Println("now:", &now)
 		fmt.Println("verification code expired_at:", user.Expired_at)
 		if now.After(*user.Expired_at) {
