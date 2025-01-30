@@ -51,7 +51,7 @@ CosplayRent is a **centralized costume rental application** that simplifies the 
 - 🔄 **Order Cancellation** – Cancel orders if unexpected issues arise.  
 
 ✔ **Convenient Payment & Wishlist**  
-- 💰 **Payment** – Easily purchase rental price with your preffered payment method.  
+- 💰 **Payment** – Convenient payments using your preferred method.  
 - ⭐ **Wishlist** – Save your favorite costumes for future rentals.  
 - ⭐ **Leave Reviews** – Share your rental experience to help the community.  
 
@@ -73,6 +73,6 @@ CosplayRent is a **centralized costume rental application** that simplifies the 
 
 Have questions or feedback? Feel free to reach out!  
 
-📧 **Email:** [cosplayrent12@gmail.com](mailto:cosplayrent12@gmail.com)    
-📱 **Social Media:** [Instagram](#cosplayrent3000)  
+📧 **Email:** [cosplayrent12@gmail.com](https://gmail.com)    
+📱 **Social Media:** [Instagram](https://www.instagram.com/cosplayrent3000)  
 
