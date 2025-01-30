@@ -14,10 +14,7 @@
 
 CosplayRent is a **centralized costume rental application** that simplifies the process of finding, renting, and securely paying for costumes. No more searching endlessly on social media—everything is now in one place!
 
----
 
-
----
 
 ## 📚 Repositories
 
