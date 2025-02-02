@@ -46,6 +46,10 @@ func (controller ReviewController) Create(writer http.ResponseWriter, request *h
 
 		} else if err.Error() == "http: request body too large" {
 			respErr := errors.New("request exceeded 5 mb")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -65,6 +69,10 @@ func (controller ReviewController) Create(writer http.ResponseWriter, request *h
 		fileType := fileHeader.Header.Get("Content-Type")
 		if fileType != "image/jpeg" && fileType != "image/png" {
 			respErr := errors.New("file is not image")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -134,6 +142,9 @@ func (controller ReviewController) Create(writer http.ResponseWriter, request *h
 
 	err = controller.ReviewUsecase.Create(request.Context(), reviewRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -166,6 +177,10 @@ func (controller ReviewController) Update(writer http.ResponseWriter, request *h
 
 		} else if err.Error() == "http: request body too large" {
 			respErr := errors.New("request exceeded 5 mb")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -185,6 +200,10 @@ func (controller ReviewController) Update(writer http.ResponseWriter, request *h
 		fileType := fileHeader.Header.Get("Content-Type")
 		if fileType != "image/jpeg" && fileType != "image/png" {
 			respErr := errors.New("file is not image")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -249,6 +268,9 @@ func (controller ReviewController) Update(writer http.ResponseWriter, request *h
 
 	err = controller.ReviewUsecase.Update(request.Context(), reviewRequest, userUUID, finalReviewId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -272,6 +294,9 @@ func (controller ReviewController) FindUserReview(writer http.ResponseWriter, re
 
 	reviewResponse, err := controller.ReviewUsecase.FindUserReview(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -301,6 +326,9 @@ func (controller ReviewController) FindByCostumeId(writer http.ResponseWriter, r
 
 	reviewDomain, err := controller.ReviewUsecase.FindByCostumeId(request.Context(), costumeId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -325,6 +353,9 @@ func (controller ReviewController) FindAllUserReview(writer http.ResponseWriter,
 
 	detailOrderResult, err := controller.ReviewUsecase.FindAllUserReview(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -351,6 +382,9 @@ func (controller ReviewController) FindReviewInfoByOrderId(writer http.ResponseW
 
 	detailOrderResult, err := controller.ReviewUsecase.FindReviewInfoByOrderId(request.Context(), userUUID, orderID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -375,6 +409,9 @@ func (controller ReviewController) FindAllReviewedOrder(writer http.ResponseWrit
 
 	detailOrderResult, err := controller.ReviewUsecase.FindAllReviewedOrder(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -406,6 +443,9 @@ func (controller ReviewController) DeleteUserReviewByReviewID(writer http.Respon
 
 	err = controller.ReviewUsecase.DeleteUserReviewByReviewID(request.Context(), userUUID, finalReviewID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
