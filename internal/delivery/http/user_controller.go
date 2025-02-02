@@ -37,6 +37,8 @@ func (controller UserController) Register(writer http.ResponseWriter, request *h
 
 	token, err := controller.UserUsecase.Create(request.Context(), userCreateRequest)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -65,6 +67,8 @@ func (controller UserController) Login(writer http.ResponseWriter, request *http
 
 	token, err := controller.UserUsecase.Login(request.Context(), userLoginRequest)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -95,6 +99,8 @@ func (controller UserController) VerifyCode(writer http.ResponseWriter, request 
 
 	err := controller.UserUsecase.VerifyCode(request.Context(), userVerificationCodeRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -119,6 +125,8 @@ func (controller UserController) FindByUUID(writer http.ResponseWriter, request 
 	userResponse, err := controller.UserUsecase.FindByUUID(request.Context(), userUUID)
 
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -143,6 +151,8 @@ func (controller UserController) FindAll(writer http.ResponseWriter, request *ht
 
 	userResponse, err := controller.UserUsecase.FindAll(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -176,6 +186,9 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 
 		} else if err.Error() == "http: request body too large" {
 			respErr := errors.New("request exceeded 5 mb")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -195,6 +208,10 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 		fileType := fileHeader.Header.Get("Content-Type")
 		if fileType != "image/jpeg" && fileType != "image/png" {
 			respErr := errors.New("file is not image")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -276,6 +293,9 @@ func (controller UserController) Update(writer http.ResponseWriter, request *htt
 	err = controller.UserUsecase.Update(request.Context(), userRequest, userUUID)
 
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -304,6 +324,10 @@ func (controller UserController) AddOrUpdateIdentityCard(writer http.ResponseWri
 	if err != nil {
 		if err.Error() == "http: no such file" {
 			respErr := errors.New("identity_card is empty")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -316,6 +340,10 @@ func (controller UserController) AddOrUpdateIdentityCard(writer http.ResponseWri
 			return
 		}
 		respErr := errors.New("request exceeded 5 mb")
+
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -331,6 +359,10 @@ func (controller UserController) AddOrUpdateIdentityCard(writer http.ResponseWri
 	fileType := fileHeader.Header.Get("Content-Type")
 	if fileType != "image/jpeg" && fileType != "image/png" {
 		respErr := errors.New("file is not image")
+
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -383,6 +415,9 @@ func (controller UserController) AddOrUpdateIdentityCard(writer http.ResponseWri
 
 	err = controller.UserUsecase.AddOrUpdateIdentityCard(request.Context(), userUUID, userRequest)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -406,6 +441,8 @@ func (controller UserController) GetIdentityCard(writer http.ResponseWriter, req
 
 	userResponse, err := controller.UserUsecase.GetIdentityCard(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -444,6 +481,8 @@ func (controller UserController) GetEMoneyTransactionHistory(writer http.Respons
 
 	eMoneyChangeResponse, err := controller.UserUsecase.GetEMoneyTransactionHistory(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -475,6 +514,8 @@ func (controller UserController) CheckUserStatus(writer http.ResponseWriter, req
 
 	statusResult, err := controller.UserUsecase.CheckUserStatus(request.Context(), userUUID, finalCostumeID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -499,6 +540,8 @@ func (controller UserController) CheckSellerStatus(writer http.ResponseWriter, r
 
 	statusResult, err := controller.UserUsecase.CheckSellerStatus(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -530,6 +573,8 @@ func (controller UserController) FindSellerAddressDetailByCostumeId(writer http.
 
 	sellerAddressResult, err := controller.UserUsecase.FindSellerAddressDetailByCostumeId(request.Context(), userUUID, finalCostumeId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
