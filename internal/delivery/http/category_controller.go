@@ -24,6 +24,9 @@ func NewCategoryController(categoryUsecase *usecase.CategoryUsecase, zerolog *ze
 func (controller CategoryController) FindAllCategory(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	categoryResponse, err := controller.CategoryUsecase.FindAllCategory(request.Context())
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
