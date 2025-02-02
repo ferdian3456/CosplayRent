@@ -44,6 +44,10 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 
 		} else if err.Error() == "http: request body too large" {
 			respErr := errors.New("request exceeded 5 mb")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -63,6 +67,10 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 		fileType := fileHeader.Header.Get("Content-Type")
 		if fileType != "image/jpeg" && fileType != "image/png" {
 			respErr := errors.New("file is not image")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
 			webResponse := web.WebResponse{
 				Code:   http.StatusBadRequest,
 				Status: "Bad Request",
@@ -151,6 +159,9 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 
 	err = controller.CostumeUsecase.Create(request.Context(), userRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -172,32 +183,59 @@ func (controller CostumeController) Create(writer http.ResponseWriter, request *
 func (controller CostumeController) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	userUUID, _ := request.Context().Value("user_uuid").(string)
 
-	err := request.ParseMultipartForm(10 << 20)
-	if err != nil {
-		if request.MultipartForm == nil || len(request.MultipartForm.Value) == 0 {
-			respErr := errors.New("request contains no data or only empty fields")
-			controller.Log.Panic().Err(err).Msg(respErr.Error())
-		} else {
-			respErr := errors.New("request exceeded 10 MB")
-			controller.Log.Panic().Err(err).Msg(respErr.Error())
-		}
-	}
+	request.Body = http.MaxBytesReader(writer, request.Body, 5*1024*1024) // 5 MB
 
-	costumeID := params.ByName("costumeID")
-	costumeName := request.FormValue("name")
-	costumeDescription := request.FormValue("description")
-	costumeBahan := request.FormValue("bahan")
-	costumeUkuran := request.FormValue("ukuran")
-	costumeBerat := request.FormValue("berat")
-	costumeKategoriId := request.FormValue("kategori")
-	costumeAvailable := request.FormValue("available")
-	costumePrice := request.FormValue("price")
+	file, fileHeader, err := request.FormFile("costume_picture")
 
 	var costumePicturePath *string
 
-	file, handler, err := request.FormFile("costume_picture")
-	if err == nil {
+	if file == nil {
+		var emptyPicture string = ""
+		costumePicturePath = &emptyPicture
+	}
+
+	if err != nil {
+		if err.Error() == "http: no such file" {
+
+		} else if err.Error() == "http: request body too large" {
+			respErr := errors.New("request exceeded 5 mb")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		} else {
+			respErr := errors.New("unexpected error handling file upload")
+			controller.Log.Panic().Err(err).Msg(respErr.Error())
+		}
+	} else if file != nil {
 		defer file.Close()
+
+		fileType := fileHeader.Header.Get("Content-Type")
+		if fileType != "image/jpeg" && fileType != "image/png" {
+			respErr := errors.New("file is not image")
+
+			writer.Header().Set("Content-Type", "application/json")
+			writer.WriteHeader(http.StatusBadRequest)
+
+			webResponse := web.WebResponse{
+				Code:   http.StatusBadRequest,
+				Status: "Bad Request",
+				Data:   respErr.Error(),
+			}
+
+			controller.Log.Warn().Err(err).Msg(respErr.Error())
+			helper.WriteToResponseBody(writer, webResponse)
+			return
+		}
 
 		_, err := os.Stat("../static/costume/")
 		if os.IsNotExist(err) {
@@ -208,7 +246,7 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 			}
 		}
 
-		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(handler.Filename))
+		fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename))
 		costumeImagePath := filepath.Join("../static/costume/", fileName)
 
 		destFile, err := os.Create(costumeImagePath)
@@ -228,10 +266,17 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 		costumeImageTrimPath := strings.TrimPrefix(costumeImagePath, "..")
 
 		costumePicturePath = &costumeImageTrimPath
-	} else {
-		var emptyPicture string = ""
-		costumePicturePath = &emptyPicture
 	}
+
+	costumeID := params.ByName("costumeID")
+	costumeName := request.FormValue("name")
+	costumeDescription := request.FormValue("description")
+	costumeBahan := request.FormValue("bahan")
+	costumeUkuran := request.FormValue("ukuran")
+	costumeBerat := request.FormValue("berat")
+	costumeKategoriId := request.FormValue("kategori")
+	costumeAvailable := request.FormValue("available")
+	costumePrice := request.FormValue("price")
 
 	fixId, err := strconv.Atoi(costumeID)
 	if err != nil {
@@ -281,6 +326,9 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 
 	err = controller.CostumeUsecase.Update(request.Context(), costumeRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -302,6 +350,9 @@ func (controller CostumeController) Update(writer http.ResponseWriter, request *
 func (controller CostumeController) FindAll(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	costumeResponse, err := controller.CostumeUsecase.FindAll(request.Context())
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -326,6 +377,9 @@ func (controller CostumeController) FindSellerCostume(writer http.ResponseWriter
 
 	costumeReturn, err := controller.CostumeUsecase.FindSellerCostume(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -355,6 +409,9 @@ func (controller CostumeController) FindById(writer http.ResponseWriter, request
 
 	costumeResponse, err := controller.CostumeUsecase.FindById(request.Context(), id)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -386,6 +443,9 @@ func (controller CostumeController) FindSellerCostumeByCostumeID(writer http.Res
 
 	costumeReturn, err := controller.CostumeUsecase.FindSellerCostumeByCostumeID(request.Context(), userUUID, finalCostumeID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -417,6 +477,9 @@ func (controller CostumeController) Delete(writer http.ResponseWriter, request *
 
 	err = controller.CostumeUsecase.Delete(request.Context(), id, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusUnauthorized)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusUnauthorized,
 			Status: "Unauthorized",

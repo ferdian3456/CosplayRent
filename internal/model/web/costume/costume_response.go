@@ -1,6 +1,6 @@
 package costume
 
-type 	CostumeResponse struct {
+type CostumeResponse struct {
 	Id              int     `json:"id"`
 	User_id         string  `json:"user_id"`
 	Username        string  `json:"username"`

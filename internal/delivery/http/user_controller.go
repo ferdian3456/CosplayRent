@@ -443,6 +443,7 @@ func (controller UserController) GetIdentityCard(writer http.ResponseWriter, req
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -483,6 +484,7 @@ func (controller UserController) GetEMoneyTransactionHistory(writer http.Respons
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -516,6 +518,7 @@ func (controller UserController) CheckUserStatus(writer http.ResponseWriter, req
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -542,6 +545,7 @@ func (controller UserController) CheckSellerStatus(writer http.ResponseWriter, r
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -575,6 +579,7 @@ func (controller UserController) FindSellerAddressDetailByCostumeId(writer http.
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
+		
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",

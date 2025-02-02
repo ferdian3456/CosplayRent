@@ -10,5 +10,5 @@ type CostumeUpdateRequest struct {
 	Kategori    int     `validate:"max=30" json:"kategori,omitempty"`
 	Available   string  `validate:"max=13" json:"available,omitempty"`
 	Price       float64 `json:"price,omitempty"`
-	Picture     *string `validate:"max=254" json:"costume_picture,omitempty"`
+	Picture     *string `json:"costume_picture,omitempty"`
 }
