@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog"
 	"net/http"
-)
+)StatusBadRequest
 
 type RajaOngkirController struct {
 	RajaOngkirUsecase *usecase.RajaOngkirUsecase
@@ -54,6 +54,9 @@ func (controller RajaOngkirController) CheckShippment(writer http.ResponseWriter
 
 	rajaOngkirCostResponse, err := controller.RajaOngkirUsecase.CheckShippment(request.Context(), shipmentRequest)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
