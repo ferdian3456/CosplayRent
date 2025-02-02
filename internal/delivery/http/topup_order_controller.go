@@ -30,6 +30,9 @@ func (controller TopUpOrderController) CreateTopUpOrder(writer http.ResponseWrit
 
 	midtransResponse, err := controller.TopUpOrderUsecase.CreateTopUpOrder(request.Context(), userRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -54,6 +57,9 @@ func (controller TopUpOrderController) CheckTopUpOrderByOrderId(writer http.Resp
 
 	topuporderResult, err := controller.TopUpOrderUsecase.CheckTopUpOrderByOrderId(request.Context(), orderID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
