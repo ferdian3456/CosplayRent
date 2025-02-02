@@ -35,6 +35,9 @@ func (controller WishlistController) AddWishlist(writer http.ResponseWriter, req
 
 	err = controller.WishlistUsecase.AddWishlist(request.Context(), userUUID, fixCostumeId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -64,6 +67,9 @@ func (controller WishlistController) DeleteWishlist(writer http.ResponseWriter, 
 
 	err = controller.WishlistUsecase.DeleteWishlist(request.Context(), userUUID, fixCostumeId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -93,6 +99,9 @@ func (controller WishlistController) CheckWishlistStatus(writer http.ResponseWri
 
 	err = controller.WishlistUsecase.CheckWishlistStatus(request.Context(), userUUID, fixCostumeId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -121,6 +130,9 @@ func (controller *WishlistController) FindAllWishListByUserId(writer http.Respon
 
 	wishlistResponse, err := controller.WishlistUsecase.FindAllWishListByUserId(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
