@@ -32,6 +32,9 @@ func (controller OrderController) Create(writer http.ResponseWriter, request *ht
 
 	midtransResult, err := controller.OrderUsecase.Create(request.Context(), userUUID, orderRequest)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -71,6 +74,9 @@ func (controller OrderController) CreateOrderEvents(writer http.ResponseWriter, 
 
 	err := controller.OrderUsecase.CreateOrderEvent(request.Context(), userUUID, orderRequest, orderId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -94,6 +100,9 @@ func (controller OrderController) CheckStatusPayment(writer http.ResponseWriter,
 
 	orderStatus, err := controller.OrderUsecase.CheckStatusPayment(request.Context(), orderId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -122,6 +131,9 @@ func (controller OrderController) GetAllSellerOrder(writer http.ResponseWriter, 
 
 	sellerOrderResult, err := controller.OrderUsecase.GetAllSellerOrder(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -147,6 +159,9 @@ func (controller OrderController) GetDetailOrderByOrderId(writer http.ResponseWr
 
 	detailOrderResult, err := controller.OrderUsecase.GetDetailOrderByOrderId(request.Context(), userUUID, orderId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -171,6 +186,9 @@ func (controller OrderController) FindListPaymentTransaction(writer http.Respons
 
 	detailOrderResult, err := controller.OrderUsecase.FindListPaymentTransaction(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -197,6 +215,9 @@ func (controller OrderController) GetUserDetailOrder(writer http.ResponseWriter,
 
 	userOrderResult, err := controller.OrderUsecase.GetUserDetailOrder(request.Context(), userUUID, orderId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -221,6 +242,9 @@ func (controller OrderController) GetAllUserOrder(writer http.ResponseWriter, re
 
 	userOrderResult, err := controller.OrderUsecase.GetAllUserOrder(request.Context(), userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -251,6 +275,9 @@ func (controller OrderController) CheckBalanceWithOrderAmount(writer http.Respon
 
 	userOrderResult, err := controller.OrderUsecase.CheckBalanceWithOrderAmount(request.Context(), checkBalanceWithOrderAmountRequest, userUUID)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
@@ -280,6 +307,9 @@ func (controller OrderController) UpdateOrder(writer http.ResponseWriter, reques
 
 	err := controller.OrderUsecase.UpdateOrder(request.Context(), updateRequest, userUUID, orderId)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
@@ -310,6 +340,9 @@ func (controller OrderController) FindPaymentInfoByPaymentId(writer http.Respons
 
 	paymentResponse, err := controller.OrderUsecase.FindPaymentInfoByPaymentId(request.Context(), userUUID, fixPaymentid)
 	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
 		webResponse := web.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",

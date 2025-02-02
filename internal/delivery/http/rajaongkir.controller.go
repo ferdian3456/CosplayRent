@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog"
 	"net/http"
-)StatusBadRequest
+)
 
 type RajaOngkirController struct {
 	RajaOngkirUsecase *usecase.RajaOngkirUsecase
